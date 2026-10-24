@@ -1,0 +1,124 @@
+@model IEnumerable<PizzeriaContable.Models.Compra>
+
+@{
+    ViewData["Title"] = "Compras a Proveedores";
+    var searchString = (string?)ViewData["SearchString"];
+    var soloCredito = (bool)(ViewData["SoloCredito"] ?? false);
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">Registro de Compras de Materias Primas</h1>
+            <p class="text-muted small mb-0">Adquisición de insumos, entradas a inventario, compras a crédito y control de saldos.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> + Registrar Factura de Compra
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="searchString" class="form-control border-start-0" placeholder="Buscar por N° factura o proveedor..." value="@searchString" />
+                        <button type="submit" class="btn btn-secondary">Buscar</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" name="soloCredito" value="true" id="checkCredito" @(soloCredito ? "checked" : "") onchange="this.form.submit()" />
+                        <label class="form-check-label small fw-semibold text-danger" for="checkCredito">
+                            Ver solo compras a crédito con saldo pendiente
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    @if (!string.IsNullOrEmpty(searchString) || soloCredito)
+                    {
+                        <a asp-action="Index" class="btn btn-sm btn-link text-decoration-none">Limpiar</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>N° Factura</th>
+                        <th>Fecha</th>
+                        <th>Proveedor</th>
+                        <th>Condición</th>
+                        <th class="text-center">Ítems</th>
+                        <th class="text-end">Total Compra</th>
+                        <th class="text-end">Saldo Pendiente</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end" style="width: 140px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                No se encontraron compras registradas.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="font-monospace fw-bold">@c.NumeroFactura</td>
+                                <td>@c.FechaCompra.ToString("dd/MM/yyyy")</td>
+                                <td class="fw-semibold">@(c.Proveedor?.Nombre ?? "-")</td>
+                                <td>
+                                    <span class="badge @(c.EsCredito ? "bg-warning-subtle text-warning-emphasis border" : "bg-light text-dark border")">
+                                        @(c.EsCredito ? "Crédito" : "Contado")
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border">
+                                        @c.Detalles.Count ingredientes
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold text-dark">@c.Total.ToString("C2")</td>
+                                <td class="text-end fw-bold @(c.SaldoPendiente > 0 ? "text-danger" : "text-muted")">
+                                    @c.SaldoPendiente.ToString("C2")
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(c.Estado == "Completada" ? "bg-success" : "bg-danger")">
+                                        @c.Estado
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver / Pagar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,186 @@
+@model PizzeriaContable.Models.Compra
+
+@{
+    ViewData["Title"] = "Registrar Factura de Compra";
+    var ingredientes = (List<PizzeriaContable.Models.Ingrediente>)ViewBag.Ingredientes;
+}
+
+<div class="container py-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+            <h2 class="h5 mb-0 fw-bold">Registrar Compra a Proveedor y Entrada a Inventario</h2>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post" id="compraForm">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="ProveedorId" class="form-label fw-semibold"></label>
+                        <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.Proveedores" required>
+                            <option value="">-- Seleccionar proveedor --</option>
+                        </select>
+                        <span asp-validation-for="ProveedorId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="NumeroFactura" class="form-label fw-semibold"></label>
+                        <input asp-for="NumeroFactura" class="form-control font-monospace" placeholder="FAC-00123" required />
+                        <span asp-validation-for="NumeroFactura" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="FechaCompra" class="form-label fw-semibold"></label>
+                        <input asp-for="FechaCompra" class="form-control" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label asp-for="MetodoPago" class="form-label fw-semibold"></label>
+                        <select asp-for="MetodoPago" class="form-select">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia Bancaria</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch mt-4 pt-2">
+                            <input class="form-check-input" type="checkbox" asp-for="EsCredito" id="esCreditoSwitch" onchange="toggleCredito(this.checked)" />
+                            <label class="form-check-label fw-semibold" for="esCreditoSwitch">Compra a Crédito</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4" id="vencimientoContainer" style="display: none;">
+                        <label asp-for="FechaVencimiento" class="form-label fw-semibold"></label>
+                        <input asp-for="FechaVencimiento" class="form-control" type="date" />
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 mb-0 fw-bold text-dark">Detalle de Ingredientes Comprados</h3>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="agregarFila()">
+                        <i class="bi bi-plus-circle"></i> Agregar Ingrediente
+                    </button>
+                </div>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered align-middle small" id="tablaDetalles">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 45%;">Ingrediente</th>
+                                <th style="width: 20%;">Cantidad</th>
+                                <th style="width: 20%;">Costo Unitario (C$)</th>
+                                <th style="width: 15%;" class="text-end">Subtotal</th>
+                                <th style="width: 5%;" class="text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="detallesBody">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="3" class="text-end">Total Factura:</td>
+                                <td class="text-end text-primary fs-6" id="totalVisual">C$ 0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Observaciones" class="form-label fw-semibold"></label>
+                    <textarea asp-for="Observaciones" class="form-control" rows="2" placeholder="Notas sobre entrega, condiciones o número de guía..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold">Procesar Compra e Ingreso a Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ingredientesCatalogo = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            ingredientes.Select(i => new { i.Id, i.Nombre, i.UnidadMedida, i.CostoUnitario })
+        ));
+
+        function toggleCredito(esCredito) {
+            document.getElementById('vencimientoContainer').style.display = esCredito ? 'block' : 'none';
+        }
+
+        function agregarFila() {
+            const tbody = document.getElementById('detallesBody');
+            const row = document.createElement('tr');
+
+            let options = '<option value="">-- Seleccionar --</option>';
+            ingredientesCatalogo.forEach(ing => {
+                options += `<option value="${ing.Id}" data-costo="${ing.CostoUnitario}">${ing.Nombre} (${ing.UnidadMedida})</option>`;
+            });
+
+            row.innerHTML = `
+                <td>
+                    <select name="ingredienteIds" class="form-select form-select-sm" required onchange="seleccionarIngrediente(this)">
+                        ${options}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.001" min="0.001" name="cantidades" class="form-control form-control-sm cantidad-input" required placeholder="0.00" oninput="calcularFila(this)" />
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="0.01" name="costosUnitarios" class="form-control form-control-sm costo-input" required placeholder="0.00" oninput="calcularFila(this)" />
+                </td>
+                <td class="text-end fw-bold subtotal-item">
+                    C$ 0.00
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarFila(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function seleccionarIngrediente(selectElem) {
+            const opt = selectElem.options[selectElem.selectedIndex];
+            const costo = opt.getAttribute('data-costo');
+            if (costo) {
+                const row = selectElem.closest('tr');
+                row.querySelector('.costo-input').value = parseFloat(costo).toFixed(2);
+                calcularFila(selectElem);
+            }
+        }
+
+        function calcularFila(elem) {
+            const row = elem.closest('tr');
+            const cant = parseFloat(row.querySelector('.cantidad-input').value) || 0;
+            const costo = parseFloat(row.querySelector('.costo-input').value) || 0;
+            const sub = cant * costo;
+            row.querySelector('.subtotal-item').innerText = 'C$ ' + sub.toFixed(2);
+            recalcularTotal();
+        }
+
+        function recalcularTotal() {
+            let total = 0;
+            document.querySelectorAll('#detallesBody tr').forEach(r => {
+                const cant = parseFloat(r.querySelector('.cantidad-input')?.value) || 0;
+                const costo = parseFloat(r.querySelector('.costo-input')?.value) || 0;
+                total += (cant * costo);
+            });
+            document.getElementById('totalVisual').innerText = 'C$ ' + total.toFixed(2);
+        }
+
+        function eliminarFila(btn) {
+            btn.closest('tr').remove();
+            recalcularTotal();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            agregarFila();
+        });
+    </script>
+}

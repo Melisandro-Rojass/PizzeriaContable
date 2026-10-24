@@ -1,0 +1,136 @@
+@model IEnumerable<PizzeriaContable.Models.Gasto>
+
+@{
+    ViewData["Title"] = "Gastos Operativos";
+    decimal total = (decimal)(ViewBag.TotalGastos ?? 0m);
+    var categoria = (string?)ViewData["Categoria"];
+    var desde = (string?)ViewData["Desde"];
+    var hasta = (string?)ViewData["Hasta"];
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">Gastos Operativos y Administrativos</h1>
+            <p class="text-muted small mb-0">Control de servicios públicos, sueldos, alquiler, mantenimiento y compras operativas.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> + Registrar Gasto
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Total Card -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <span class="text-muted small fw-semibold text-uppercase">Total de Gastos del Período</span>
+                <h3 class="h4 mb-0 fw-bold text-danger">@total.ToString("C2")</h3>
+                <small class="text-muted">Desembolsos y pasivos devengados</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <select name="categoria" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Todas las categorías --</option>
+                        <option value="Alquiler" selected="@(categoria == "Alquiler")">Alquiler de Local</option>
+                        <option value="Electricidad" selected="@(categoria == "Electricidad")">Electricidad / Luz</option>
+                        <option value="Agua" selected="@(categoria == "Agua")">Agua Potable</option>
+                        <option value="Internet" selected="@(categoria == "Internet")">Internet y Telefonía</option>
+                        <option value="Salarios" selected="@(categoria == "Salarios")">Sueldos y Salarios</option>
+                        <option value="Mantenimiento" selected="@(categoria == "Mantenimiento")">Mantenimiento y Reparaciones</option>
+                        <option value="Transporte" selected="@(categoria == "Transporte")">Transporte y Combustible</option>
+                        <option value="Publicidad" selected="@(categoria == "Publicidad")">Publicidad y Marketing</option>
+                        <option value="Otro" selected="@(categoria == "Otro")">Otros Gastos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="desde" value="@desde" class="form-control" placeholder="Desde" />
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="hasta" value="@hasta" class="form-control" placeholder="Hasta" />
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+                    <a asp-action="Index" class="btn btn-link btn-sm text-decoration-none">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha Gasto</th>
+                        <th>Categoría</th>
+                        <th>Descripción</th>
+                        <th>Proveedor / Beneficiario</th>
+                        <th>N° Recibo / Factura</th>
+                        <th>Método / Estado</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end" style="width: 120px;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                No se encontraron gastos registrados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var g in Model)
+                        {
+                            <tr class="@(g.Estado == "Anulado" ? "table-light text-muted text-decoration-line-through" : "")">
+                                <td>@g.FechaGasto.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge bg-light text-dark border">@g.CategoriaGasto</span></td>
+                                <td class="fw-semibold">@g.Descripcion</td>
+                                <td>@(g.Proveedor?.Nombre ?? "-")</td>
+                                <td class="font-monospace small">@(g.NumeroComprobante ?? "-")</td>
+                                <td>@g.MetodoPago</td>
+                                <td class="text-end fw-bold text-danger">@g.Monto.ToString("C2")</td>
+                                <td class="text-center">
+                                    <span class="badge @(g.Estado == "Pagado" ? "bg-success" : g.Estado == "Pendiente" ? "bg-warning text-dark" : "bg-secondary")">
+                                        @g.Estado
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    @if (g.Estado != "Anulado")
+                                    {
+                                        <form asp-action="Anular" asp-route-id="@g.Id" method="post" class="d-inline" onsubmit="return confirm('¿Seguro que deseas anular este gasto y revertir el asiento contable?')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Anular gasto">
+                                                Anular
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

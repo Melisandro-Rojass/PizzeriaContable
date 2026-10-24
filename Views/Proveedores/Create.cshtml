@@ -1,0 +1,77 @@
+@model PizzeriaContable.Models.Proveedor
+
+@{
+    ViewData["Title"] = "Nuevo Proveedor";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h5 mb-0 fw-bold">Registrar Nuevo Proveedor</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Nombre" class="form-label fw-semibold"></label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej. Distribuidora Quesos y Harinas S.A." autofocus />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Contacto" class="form-label fw-semibold"></label>
+                                <input asp-for="Contacto" class="form-control" placeholder="Nombre del asesor o vendedor" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="IdentificacionTributaria" class="form-label fw-semibold">RUC / Cédula</label>
+                                <input asp-for="IdentificacionTributaria" class="form-control font-monospace" placeholder="J0310000000000" />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Telefono" class="form-label fw-semibold"></label>
+                                <input asp-for="Telefono" class="form-control" placeholder="+505 8888-0000" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="CorreoElectronico" class="form-label fw-semibold"></label>
+                                <input asp-for="CorreoElectronico" class="form-control" placeholder="ventas@proveedor.com" />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label asp-for="Direccion" class="form-label fw-semibold"></label>
+                                <input asp-for="Direccion" class="form-control" placeholder="Ciudad, departamento, dirección física" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="DiasCredito" class="form-label fw-semibold">Días de Crédito</label>
+                                <input asp-for="DiasCredito" class="form-control" type="number" min="0" value="0" />
+                                <span class="form-text small">0 para operaciones de contado.</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="Activo" />
+                            <label class="form-check-label" asp-for="Activo">Proveedor activo para compras</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">Guardar Proveedor</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

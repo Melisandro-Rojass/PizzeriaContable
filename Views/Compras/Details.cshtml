@@ -1,0 +1,167 @@
+@model PizzeriaContable.Models.Compra
+
+@{
+    ViewData["Title"] = $"Factura de Compra #{Model.NumeroFactura}";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted small">Factura de Compra:</span>
+                        <h2 class="h5 mb-0 fw-bold font-monospace">@Model.NumeroFactura</h2>
+                    </div>
+                    <span class="badge @(Model.Estado == "Completada" ? "bg-success" : "bg-danger") fs-6">
+                        @Model.Estado
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <span class="text-muted small">Proveedor</span>
+                            <div class="fw-bold">@Model.Proveedor?.Nombre</div>
+                            <div class="text-muted small">@(Model.Proveedor?.Telefono ?? "")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Fecha de Emisión</span>
+                            <div class="fw-bold">@Model.FechaCompra.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Condición de Pago</span>
+                            <div class="fw-bold">@(Model.EsCredito ? "Crédito" : "Contado") (@Model.MetodoPago)</div>
+                            @if (Model.EsCredito && Model.FechaVencimiento.HasValue)
+                            {
+                                <div class="text-muted small">Vence: @Model.FechaVencimiento.Value.ToString("dd/MM/yyyy")</div>
+                            }
+                        </div>
+                        <div class="col-md-3 text-md-end">
+                            <span class="text-muted small">Saldo Pendiente</span>
+                            <div class="h4 fw-bold @(Model.SaldoPendiente > 0 ? "text-danger" : "text-success") mb-0">
+                                @Model.SaldoPendiente.ToString("C2")
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="h6 fw-bold border-bottom pb-2 mb-3">Detalle de Ingredientes Recibidos</h3>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Ingrediente</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th class="text-end">Costo Unitario</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var d in Model.Detalles)
+                                {
+                                    <tr>
+                                        <td class="font-monospace">@d.Ingrediente?.Codigo</td>
+                                        <td class="fw-semibold">@d.Ingrediente?.Nombre</td>
+                                        <td class="text-end">@d.Cantidad.ToString("0.###") @d.Ingrediente?.UnidadMedida</td>
+                                        <td class="text-end">@d.CostoUnitario.ToString("C2")</td>
+                                        <td class="text-end fw-bold">@d.Subtotal.ToString("C2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td colspan="4" class="text-end">Total de la Factura:</td>
+                                    <td class="text-end text-primary fs-6">@Model.Total.ToString("C2")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Payment History & Abono Form -->
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-7">
+                            <h3 class="h6 fw-bold border-bottom pb-2 mb-3">Historial de Pagos y Abonos</h3>
+                            @if (!Model.Pagos.Any())
+                            {
+                                <p class="text-muted small">No se han registrado pagos para esta compra.</p>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush small">
+                                    @foreach (var p in Model.Pagos.OrderBy(p => p.Fecha))
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+                                            <div>
+                                                <span class="fw-semibold">@p.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+                                                <span class="badge bg-light text-dark border ms-1">@p.MetodoPago</span>
+                                                <div class="text-muted small">@(p.Referencia ?? "-")</div>
+                                            </div>
+                                            <span class="fw-bold text-success">@p.Monto.ToString("C2")</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+
+                        @if (Model.SaldoPendiente > 0)
+                        {
+                            <div class="col-md-5">
+                                <div class="card bg-light border-0 p-3">
+                                    <h4 class="h6 fw-bold mb-3"><i class="bi bi-cash-stack text-success me-1"></i> Registrar Abono a Cuenta</h4>
+                                    <form asp-action="RegistrarPago" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="compraId" value="@Model.Id" />
+
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-semibold">Monto a Pagar (C$)</label>
+                                            <input type="number" step="0.01" min="0.01" max="@Model.SaldoPendiente" name="monto" class="form-control form-control-sm" value="@Model.SaldoPendiente" required />
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-semibold">Método de Pago</label>
+                                            <select name="metodoPago" class="form-select form-select-sm">
+                                                <option value="Efectivo">Efectivo de Caja</option>
+                                                <option value="Transferencia">Transferencia Bancaria</option>
+                                                <option value="Cheque">Cheque</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">N° Comprobante / Referencia</label>
+                                            <input type="text" name="referencia" class="form-control form-control-sm" placeholder="Ej. Minuta o transferencia" />
+                                        </div>
+
+                                        <button type="submit" class="btn btn-success btn-sm w-100 fw-semibold">
+                                            Aplicar Pago y Contabilizar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-4 border-top mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Volver al listado</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

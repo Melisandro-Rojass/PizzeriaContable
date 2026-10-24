@@ -1,0 +1,77 @@
+@model PizzeriaContable.Models.Producto
+
+@{
+    ViewData["Title"] = "Detalle del Producto";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0 fw-bold">Ficha de Producto</h2>
+                    <span class="badge @(Model.Activo ? "bg-success" : "bg-secondary")">
+                        @(Model.Activo ? "Activo para Venta" : "Inactivo")
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <dl class="row mb-4">
+                        <dt class="col-sm-4 text-muted">Código / SKU</dt>
+                        <dd class="col-sm-8 font-monospace fw-bold">@Model.Codigo</dd>
+
+                        <dt class="col-sm-4 text-muted">Nombre</dt>
+                        <dd class="col-sm-8 fw-bold fs-5">@Model.Nombre</dd>
+
+                        <dt class="col-sm-4 text-muted">Categoría</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-light text-dark border">
+                                @(Model.Categoria?.Nombre ?? "Sin categoría")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Presentación</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Tamano) ? "No especificado" : Model.Tamano)</dd>
+
+                        <dt class="col-sm-4 text-muted">Precio de Venta</dt>
+                        <dd class="col-sm-8 fw-bold text-success fs-5">@Model.Precio.ToString("C2")</dd>
+
+                        <dt class="col-sm-4 text-muted">Descripción</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Descripcion) ? "Sin descripción" : Model.Descripcion)</dd>
+
+                        <dt class="col-sm-4 text-muted">Receta de Producción</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Receta != null)
+                            {
+                                <span class="badge bg-info text-dark">
+                                    <i class="bi bi-journal-check"></i> Configurada (@Model.Receta.Detalles.Count ingredientes)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sin receta vinculada</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    <div class="d-flex justify-content-between pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Volver al catálogo</a>
+                        <div class="d-flex gap-2">
+                            <form asp-action="Desactivar" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                @if (Model.Activo)
+                                {
+                                    <button type="submit" class="btn btn-outline-warning">Desactivar</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-outline-success">Activar</button>
+                                }
+                            </form>
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

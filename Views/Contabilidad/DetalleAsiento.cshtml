@@ -1,0 +1,79 @@
+@model PizzeriaContable.Models.AsientoContable
+@{
+    ViewData["Title"] = $"Asiento {Model.NumeroAsiento}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h3 fw-bold text-dark mb-0">Asiento Contable @Model.NumeroAsiento</h2>
+                <span class="badge bg-secondary fs-6">@Model.TipoOrigen</span>
+                @if (Model.Anulado)
+                {
+                    <span class="badge bg-danger fs-6">ANULADO</span>
+                }
+                else
+                {
+                    <span class="badge bg-success fs-6">CONTABILIZADO</span>
+                }
+            </div>
+            <p class="text-muted small mb-0">Fecha contable: @Model.Fecha.ToString("dd/MM/yyyy") | Registrado por: @(Model.CreadoPor ?? "Sistema")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-dark" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Imprimir Póliza
+            </button>
+            <a asp-action="Asientos" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Volver al Diario
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title fw-bold mb-0">Concepto / Glosa General</h5>
+        </div>
+        <div class="card-body">
+            <p class="fs-5 mb-0 text-dark">@Model.Concepto</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title fw-bold mb-0"><i class="bi bi-journal-text me-2 text-primary"></i>Detalle de Partida Doble</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 160px;">Código</th>
+                        <th>Cuenta Contable</th>
+                        <th>Descripción del Movimiento</th>
+                        <th class="text-end" style="width: 150px;">Debe</th>
+                        <th class="text-end" style="width: 150px;">Haber</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var det in Model.Detalles)
+                    {
+                        <tr>
+                            <td class="font-monospace fw-bold">@det.CuentaContable?.Codigo</td>
+                            <td>@det.CuentaContable?.Nombre</td>
+                            <td class="text-muted small">@det.Descripcion</td>
+                            <td class="text-end fw-bold text-dark">@(det.Debe > 0 ? $"C$ {det.Debe:N2}" : "-")</td>
+                            <td class="text-end fw-bold text-dark">@(det.Haber > 0 ? $"C$ {det.Haber:N2}" : "-")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light fs-5 fw-bold">
+                    <tr>
+                        <td colspan="3" class="text-end">Sumas Iguales:</td>
+                        <td class="text-end text-primary">C$ @Model.Detalles.Sum(d => d.Debe).ToString("N2")</td>
+                        <td class="text-end text-success">C$ @Model.Detalles.Sum(d => d.Haber).ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,179 @@
+@model IEnumerable<PizzeriaContable.Models.Ingrediente>
+
+@{
+    ViewData["Title"] = "Inventario de Ingredientes";
+    var searchString = (string?)ViewData["SearchString"];
+    var soloBajoStock = (bool)(ViewData["SoloBajoStock"] ?? false);
+    decimal valorTotal = (decimal)(ViewBag.ValorTotalInventario ?? 0m);
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">Inventario de Ingredientes y Materias Primas</h1>
+            <p class="text-muted small mb-0">Control de existencias, costos unitarios, stock mínimo y mermas.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> + Nuevo Ingrediente
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Top Summary Card -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <span class="text-muted small fw-semibold text-uppercase">Valor Total del Inventario</span>
+                <h3 class="h4 mb-0 fw-bold text-primary">@valorTotal.ToString("C2")</h3>
+                <small class="text-muted">Costo valorizado actual</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <span class="text-muted small fw-semibold text-uppercase">Total de Ingredientes</span>
+                <h3 class="h4 mb-0 fw-bold text-dark">@Model.Count()</h3>
+                <small class="text-muted">Insumos registrados en catálogo</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <span class="text-muted small fw-semibold text-uppercase">Alertas de Stock Bajo</span>
+                <h3 class="h4 mb-0 fw-bold @(Model.Any(i => i.StockActual <= i.StockMinimo) ? "text-danger" : "text-success")">
+                    @Model.Count(i => i.StockActual <= i.StockMinimo)
+                </h3>
+                <small class="text-muted">Requieren reabastecimiento</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="searchString" class="form-control border-start-0" placeholder="Buscar por código o nombre..." value="@searchString" />
+                        <button type="submit" class="btn btn-secondary">Buscar</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" name="soloBajoStock" value="true" id="checkStock" @(soloBajoStock ? "checked" : "") onchange="this.form.submit()" />
+                        <label class="form-check-label small fw-semibold text-danger" for="checkStock">
+                            <i class="bi bi-exclamation-triangle"></i> Ver solo stock bajo / agotado
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    @if (!string.IsNullOrEmpty(searchString) || soloBajoStock)
+                    {
+                        <a asp-action="Index" class="btn btn-sm btn-link text-decoration-none">Limpiar filtros</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Código</th>
+                        <th>Ingrediente</th>
+                        <th>Proveedor Habitual</th>
+                        <th class="text-end">Costo Unitario</th>
+                        <th class="text-center">Stock Actual</th>
+                        <th class="text-center">Stock Mínimo</th>
+                        <th class="text-end">Valor Total</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end" style="width: 250px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                No se encontraron ingredientes con los criterios seleccionados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            bool stockBajo = item.StockActual <= item.StockMinimo;
+                            <tr class="@(stockBajo ? "table-danger-subtle" : "")">
+                                <td class="font-monospace small">@item.Codigo</td>
+                                <td class="fw-semibold">@item.Nombre</td>
+                                <td>@(item.ProveedorHabitual?.Nombre ?? "No asignado")</td>
+                                <td class="text-end">@item.CostoUnitario.ToString("C2") / @item.UnidadMedida</td>
+                                <td class="text-center">
+                                    <span class="badge @(stockBajo ? "bg-danger" : "bg-success-subtle text-success border border-success-subtle") fs-6">
+                                        @item.StockActual.ToString("0.###") @item.UnidadMedida
+                                    </span>
+                                </td>
+                                <td class="text-center text-muted small">
+                                    @item.StockMinimo.ToString("0.###") @item.UnidadMedida
+                                </td>
+                                <td class="text-end fw-bold">
+                                    @((item.StockActual * item.CostoUnitario).ToString("C2"))
+                                </td>
+                                <td class="text-center">
+                                    @if (item.Activo)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border">Inactivo</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Movimientos" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Kardex / Historial">
+                                            <i class="bi bi-clock-history"></i> Kardex
+                                        </a>
+                                        <a asp-action="Ajuste" asp-route-id="@item.Id" class="btn btn-outline-warning" title="Ajuste / Merma">
+                                            <i class="bi bi-sliders"></i> Ajuste
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                    <form asp-action="Desactivar" asp-route-id="@item.Id" method="post" class="d-inline ms-1">
+                                        @Html.AntiForgeryToken()
+                                        @if (item.Activo)
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar">
+                                                <i class="bi bi-power"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activar">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        }
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

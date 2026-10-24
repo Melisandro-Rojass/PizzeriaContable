@@ -1,0 +1,170 @@
+@model PizzeriaContable.Models.Venta
+@{
+    Layout = null;
+    var config = ViewBag.Configuracion as PizzeriaContable.Models.ConfiguracionEmpresa;
+    string nombreEmpresa = config?.NombreComercial ?? "PIZZERÍA CONTABLE";
+    string ruc = config?.IdentificacionTributaria ?? "J0310000000000";
+    string direccion = config?.Direccion ?? "Managua, Nicaragua";
+    string telefono = config?.Telefono ?? "+505 2222-3333";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket - @Model.NumeroComprobante</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: #000;
+            background: #fff;
+            margin: 0;
+            padding: 10px;
+        }
+        .ticket-container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .text-center { text-align: center; }
+        .text-end { text-align: right; }
+        .fw-bold { font-weight: bold; }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+        }
+        .double-divider {
+            border-top: 2px dashed #000;
+            margin: 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 2px 0;
+        }
+        .no-print {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .btn-print {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        @@media print {
+            .no-print { display: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimir Ticket</button>
+        <button class="btn-print" style="background:#64748b;" onclick="window.close()">Cerrar</button>
+    </div>
+
+    <div class="ticket-container">
+        <div class="text-center">
+            <h2 style="margin: 0 0 4px 0; font-size: 18px;">@nombreEmpresa.ToUpper()</h2>
+            <div>RUC: @ruc</div>
+            <div>@direccion</div>
+            <div>Tel: @telefono</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+            <div><strong>TICKET:</strong> @Model.NumeroComprobante</div>
+            <div><strong>FECHA:</strong> @Model.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</div>
+            <div><strong>CAJERO:</strong> @(Model.UsuarioId ?? "Cajero")</div>
+            <div><strong>CLIENTE:</strong> @(Model.ClienteNombre ?? "Cliente General")</div>
+            @if (Model.CajaSesionId.HasValue)
+            {
+                <div><strong>CAJA:</strong> Sesión #@Model.CajaSesionId</div>
+            }
+        </div>
+
+        <div class="divider"></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th align="left">Cant. Descripción</th>
+                    <th align="right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var det in Model.Detalles)
+                {
+                    <tr>
+                        <td align="left">
+                            @det.Cantidad x @(det.Producto?.Nombre ?? "Item")
+                            <br /><small style="font-size: 11px;">(a C$ @det.PrecioUnitario.ToString("N2"))</small>
+                        </td>
+                        <td align="right" valign="top">
+                            C$ @det.Subtotal.ToString("N2")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="divider"></div>
+
+        <table>
+            <tr>
+                <td align="left">SUBTOTAL:</td>
+                <td align="right">C$ @Model.Subtotal.ToString("N2")</td>
+            </tr>
+            <tr>
+                <td align="left">IVA (15%):</td>
+                <td align="right">C$ @Model.Impuesto.ToString("N2")</td>
+            </tr>
+            @if (Model.Descuento > 0)
+            {
+                <tr>
+                    <td align="left">DESCUENTO:</td>
+                    <td align="right">-C$ @Model.Descuento.ToString("N2")</td>
+                </tr>
+            }
+            <tr class="fw-bold" style="font-size: 15px;">
+                <td align="left">TOTAL:</td>
+                <td align="right">C$ @Model.Total.ToString("N2")</td>
+            </tr>
+        </table>
+
+        <div class="divider"></div>
+
+        <div><strong>FORMAS DE PAGO:</strong></div>
+        <table>
+            @foreach (var pago in Model.Pagos)
+            {
+                <tr>
+                    <td align="left">@pago.MetodoPago:</td>
+                    <td align="right">C$ @pago.Monto.ToString("N2")</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(pago.Referencia))
+                {
+                    <tr>
+                        <td colspan="2" style="font-size: 11px; padding-left: 10px;">Ref: @pago.Referencia</td>
+                    </tr>
+                }
+            }
+        </table>
+
+        <div class="double-divider"></div>
+
+        <div class="text-center" style="font-size: 12px; margin-top: 10px;">
+            <div>¡GRACIAS POR SU PREFERENCIA!</div>
+            <div>Por favor conserve este comprobante.</div>
+            <div style="margin-top: 5px; font-size: 10px; color: #555;">Software Pizzería Contable</div>
+        </div>
+    </div>
+</body>
+</html>

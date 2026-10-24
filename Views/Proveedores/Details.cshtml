@@ -1,0 +1,100 @@
+@model PizzeriaContable.Models.Proveedor
+
+@{
+    ViewData["Title"] = $"Ficha de Proveedor: {Model.Nombre}";
+    decimal saldoTotalPendiente = Model.Compras.Where(c => c.Estado != "Anulada").Sum(c => c.SaldoPendiente);
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0 fw-bold">Ficha de Proveedor: @Model.Nombre</h2>
+                    <span class="badge @(Model.Activo ? "bg-success" : "bg-secondary")">
+                        @(Model.Activo ? "Activo" : "Inactivo")
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <span class="text-muted small">Contacto</span>
+                            <div class="fw-bold">@(Model.Contacto ?? "Sin contacto")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Teléfono</span>
+                            <div class="fw-bold">@(Model.Telefono ?? "-")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">RUC</span>
+                            <div class="font-monospace fw-bold">@(Model.IdentificacionTributaria ?? "-")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Saldo Pendiente (CxP)</span>
+                            <div class="h5 fw-bold @(saldoTotalPendiente > 0 ? "text-danger" : "text-success") mb-0">
+                                @saldoTotalPendiente.ToString("C2")
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="h6 fw-bold border-bottom pb-2 mt-4 mb-3">Historial de Compras Realizadas</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Fecha</th>
+                                    <th>Método</th>
+                                    <th>Condición</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Saldo Pendiente</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Compras.Any())
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center py-3 text-muted">
+                                            No hay compras registradas para este proveedor.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var c in Model.Compras.OrderByDescending(c => c.FechaCompra))
+                                    {
+                                        <tr>
+                                            <td class="font-monospace fw-bold">@c.NumeroFactura</td>
+                                            <td>@c.FechaCompra.ToString("dd/MM/yyyy")</td>
+                                            <td>@c.MetodoPago</td>
+                                            <td>@(c.EsCredito ? "Crédito" : "Contado")</td>
+                                            <td class="text-end fw-bold">@c.Total.ToString("C2")</td>
+                                            <td class="text-end @(c.SaldoPendiente > 0 ? "text-danger fw-bold" : "text-muted")">
+                                                @c.SaldoPendiente.ToString("C2")
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge @(c.Estado == "Completada" ? "bg-success" : "bg-danger")">
+                                                    @c.Estado
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <a asp-controller="Compras" asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-4 border-top mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Volver al listado</a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar Proveedor</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

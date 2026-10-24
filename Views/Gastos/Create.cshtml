@@ -1,0 +1,104 @@
+@model PizzeriaContable.Models.Gasto
+
+@{
+    ViewData["Title"] = "Registrar Gasto";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h5 mb-0 fw-bold">Registrar Gasto Operativo o Administrativo</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="CategoriaGasto" class="form-label fw-semibold"></label>
+                                <select asp-for="CategoriaGasto" class="form-select" required>
+                                    <option value="Alquiler">Alquiler de Local</option>
+                                    <option value="Electricidad">Electricidad / Luz (Enel / Disnorte)</option>
+                                    <option value="Agua">Agua Potable (Enacal)</option>
+                                    <option value="Internet">Internet y Telefonía (Claro / Tigo)</option>
+                                    <option value="Salarios">Sueldos y Planilla de Personal</option>
+                                    <option value="Mantenimiento">Mantenimiento y Reparación de Equipos</option>
+                                    <option value="Transporte">Transporte, Entregas y Combustible</option>
+                                    <option value="Publicidad">Publicidad y Redes Sociales</option>
+                                    <option value="Otro">Otros Gastos Generales</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Monto" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="Monto" class="form-control" type="number" step="0.01" min="0.01" placeholder="0.00" required />
+                                </div>
+                                <span asp-validation-for="Monto" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descripcion" class="form-label fw-semibold"></label>
+                            <input asp-for="Descripcion" class="form-control" placeholder="Ej. Pago de factura de luz correspondiente a octubre" required />
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="FechaGasto" class="form-label fw-semibold">Fecha de Devengo / Emisión</label>
+                                <input asp-for="FechaGasto" class="form-control" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="NumeroComprobante" class="form-label fw-semibold">N° Recibo / Factura</label>
+                                <input asp-for="NumeroComprobante" class="form-control font-monospace" placeholder="REC-0099" />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="MetodoPago" class="form-label fw-semibold">Forma de Pago</label>
+                                <select asp-for="MetodoPago" class="form-select">
+                                    <option value="Efectivo">Efectivo de Caja</option>
+                                    <option value="Transferencia">Transferencia Bancaria</option>
+                                    <option value="Cheque">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Estado" class="form-label fw-semibold">Estado de Pago</label>
+                                <select asp-for="Estado" class="form-select">
+                                    <option value="Pagado">Pagado Inmediatamente</option>
+                                    <option value="Pendiente">Pendiente de Pago (Pasivo)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProveedorId" class="form-label fw-semibold">Beneficiario / Proveedor (Opcional)</label>
+                            <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.Proveedores">
+                                <option value="">-- Opcional: Seleccionar proveedor --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Observaciones" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Observaciones" class="form-control" rows="2" placeholder="Notas adicionales..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">Registrar y Contabilizar Gasto</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

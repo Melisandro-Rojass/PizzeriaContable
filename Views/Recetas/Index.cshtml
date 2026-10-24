@@ -1,0 +1,98 @@
+@model IEnumerable<PizzeriaContable.Models.Receta>
+
+@{
+    ViewData["Title"] = "Recetas y Costeo de Producción";
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">Estructura de Recetas y Costeo Teórico</h1>
+            <p class="text-muted small mb-0">Cálculo del costo de ingredientes por pizza, rendimiento, merma y margen bruto estimado.</p>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> + Nueva Receta
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Presentación</th>
+                        <th class="text-center">Ingredientes</th>
+                        <th class="text-center">Rendimiento</th>
+                        <th class="text-center">Merma</th>
+                        <th class="text-end">Costo Ingredientes</th>
+                        <th class="text-end">Precio Venta</th>
+                        <th class="text-end">Margen Bruto</th>
+                        <th class="text-center">Margen %</th>
+                        <th class="text-end" style="width: 180px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                No hay recetas registradas. Configura una receta para calcular el costo de los productos del menú.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in Model)
+                        {
+                            int rend = r.Rendimiento > 0 ? r.Rendimiento : 1;
+                            decimal mermaFactor = 1 + (r.MermaPrevistaPorcentaje / 100m);
+                            decimal costoIngredientes = r.Detalles.Sum(d => 
+                                (d.Cantidad / rend) * mermaFactor * (d.Ingrediente?.CostoUnitario ?? 0m)
+                            );
+                            decimal precioVenta = r.Producto?.Precio ?? 0m;
+                            decimal margenBruto = precioVenta - costoIngredientes;
+                            decimal margenPorc = precioVenta > 0 ? (margenBruto / precioVenta) * 100m : 0m;
+
+                            <tr>
+                                <td class="fw-bold">@r.Producto?.Nombre</td>
+                                <td>@(r.Producto?.Tamano ?? "-")</td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border">
+                                        @r.Detalles.Count insumos
+                                    </span>
+                                </td>
+                                <td class="text-center">@r.Rendimiento un.</td>
+                                <td class="text-center">@r.MermaPrevistaPorcentaje.ToString("0.#")%</td>
+                                <td class="text-end fw-semibold text-danger">@costoIngredientes.ToString("C2")</td>
+                                <td class="text-end fw-bold text-dark">@precioVenta.ToString("C2")</td>
+                                <td class="text-end fw-bold @(margenBruto >= 0 ? "text-success" : "text-danger")">
+                                    @margenBruto.ToString("C2")
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(margenPorc >= 60 ? "bg-success" : margenPorc >= 40 ? "bg-primary" : "bg-warning text-dark")">
+                                        @margenPorc.ToString("0.1")%
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-secondary">Detalles</a>
+                                    <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary ms-1">Editar</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+@model PizzeriaContable.Models.Ingrediente
+
+@{
+    ViewData["Title"] = "Editar Ingrediente";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h2 class="h5 mb-0 fw-bold">Modificar Datos de Ingrediente</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="StockActual" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-5">
+                                <label asp-for="Codigo" class="form-label fw-semibold"></label>
+                                <input asp-for="Codigo" class="form-control font-monospace" />
+                                <span asp-validation-for="Codigo" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-7">
+                                <label asp-for="Nombre" class="form-label fw-semibold"></label>
+                                <input asp-for="Nombre" class="form-control" />
+                                <span asp-validation-for="Nombre" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="UnidadMedida" class="form-label fw-semibold"></label>
+                                <select asp-for="UnidadMedida" class="form-select">
+                                    <option value="kg">Kilogramo (kg)</option>
+                                    <option value="g">Gramo (g)</option>
+                                    <option value="L">Litro (L)</option>
+                                    <option value="ml">Mililitro (ml)</option>
+                                    <option value="unidad">Unidad / Pieza</option>
+                                    <option value="lata">Lata</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CostoUnitario" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="CostoUnitario" class="form-control" type="number" step="0.01" min="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="StockMinimo" class="form-label fw-semibold"></label>
+                                <input asp-for="StockMinimo" class="form-control" type="number" step="0.001" min="0" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProveedorHabitualId" class="form-label fw-semibold"></label>
+                            <select asp-for="ProveedorHabitualId" class="form-select" asp-items="ViewBag.Proveedores">
+                                <option value="">-- Opcional: Proveedor habitual --</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-light border small text-muted">
+                            <i class="bi bi-info-circle me-1"></i> Existencia actual en almacén: <strong>@Model.StockActual.ToString("0.###") @Model.UnidadMedida</strong>. Para modificar las existencias por compras o mermas, utiliza la opción <em>Ajuste de Inventario</em> o el módulo de <em>Compras</em>.
+                        </div>
+
+                        <div class="mb-4 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="Activo" />
+                            <label class="form-check-label" asp-for="Activo">Ingrediente activo en producción</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-warning px-4 fw-bold">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

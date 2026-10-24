@@ -1,0 +1,35 @@
+@model PizzeriaContable.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Mi Perfil de Usuario";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm text-center p-4">
+                <div class="text-primary mb-3">
+                    <i class="bi bi-person-circle display-3"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">@Model.NombreCompleto</h3>
+                <p class="text-muted mb-2">@Model.Email</p>
+                <div>
+                    <span class="badge bg-primary fs-6 px-3 py-2">Rol: @Model.Rol</span>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="text-start">
+                    <div class="mb-2"><strong>ID de Usuario:</strong> <code>@Model.Id</code></div>
+                    <div class="mb-2"><strong>Fecha de Registro:</strong> @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="mb-2"><strong>Estado de Cuenta:</strong> @(Model.Activo ? "Activo" : "Inactivo")</div>
+                </div>
+
+                <div class="mt-4">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-house me-1"></i> Ir al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

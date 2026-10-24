@@ -1,0 +1,97 @@
+@model IEnumerable<PizzeriaContable.Models.Categoria>
+
+@{
+    ViewData["Title"] = "Categorías de Productos";
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">Categorías de Menú</h1>
+            <p class="text-muted small mb-0">Organización del catálogo: Pizzas, Bebidas, Complementos, Postres, etc.</p>
+        </div>
+        <div>
+            <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Catálogo de Productos
+            </a>
+            <a asp-action="Create" class="btn btn-primary">
+                + Nueva Categoría
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" style="width: 80px;">ID</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col" style="width: 140px;" class="text-center">Productos</th>
+                        <th scope="col" style="width: 120px;" class="text-center">Estado</th>
+                        <th scope="col" class="text-end" style="width: 200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                No hay categorías registradas aún.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(!item.Activo ? "table-light text-muted" : "")">
+                                <td>@item.Id</td>
+                                <td class="fw-semibold">@item.Nombre</td>
+                                <td>@(string.IsNullOrEmpty(item.Descripcion) ? "-" : item.Descripcion)</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary-subtle text-primary border">
+                                        @item.Productos.Count productos
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @if (item.Activo)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border">Activa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border">Inactiva</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                                    <form asp-action="Desactivar" asp-route-id="@item.Id" method="post" class="d-inline ms-1">
+                                        @Html.AntiForgeryToken()
+                                        @if (item.Activo)
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">Desactivar</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                                        }
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

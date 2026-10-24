@@ -1,0 +1,489 @@
+@model IEnumerable<PizzeriaContable.Models.Producto>
+@{
+    ViewData["Title"] = "Punto de Venta (POS)";
+    var categorias = ViewBag.Categorias as List<PizzeriaContable.Models.Categoria> ?? new List<PizzeriaContable.Models.Categoria>();
+    var sesionCaja = ViewBag.SesionCaja as PizzeriaContable.Models.CajaSesion;
+    decimal tasaIva = ViewBag.TasaIva != null ? (decimal)ViewBag.TasaIva : 15.00m;
+}
+
+<div class="container-fluid px-0">
+    @if (sesionCaja == null)
+    {
+        <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3 shadow-sm" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading mb-0">No hay un turno de caja abierto</h5>
+                    <p class="mb-0 small text-muted">Para asociar las ventas en efectivo al arqueo físico de caja, te recomendamos abrir un turno.</p>
+                </div>
+            </div>
+            <a asp-controller="Caja" asp-action="Index" class="btn btn-warning fw-bold text-dark">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Abrir Turno de Caja
+            </a>
+        </div>
+    }
+
+    <div class="row g-3">
+        <!-- Panel Izquierdo: Catálogo de Productos -->
+        <div class="col-lg-7 col-xl-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                                <input type="text" id="buscarProducto" class="form-control bg-light border-start-0" placeholder="Buscar por nombre o código..." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Filtro de Categorías -->
+                            <div class="d-flex gap-1 overflow-auto pb-1" id="categoriaTabs">
+                                <button type="button" class="btn btn-sm btn-dark active flex-shrink-0 cat-btn" data-cat="all">Todas</button>
+                                @foreach (var cat in categorias)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 cat-btn" data-cat="@cat.Id">
+                                        @cat.Nombre
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body overflow-auto p-3" style="max-height: calc(100vh - 220px);">
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3" id="catalogoGrid">
+                        @foreach (var prod in Model)
+                        {
+                            <div class="col item-producto" data-id="@prod.Id" data-cat="@prod.CategoriaId" data-nombre="@prod.Nombre.ToLower()" data-precio="@prod.Precio">
+                                <div class="card h-100 product-pos-card border shadow-sm text-center p-2 cursor-pointer position-relative" onclick="agregarAlCarrito(@prod.Id, '@prod.Nombre', @prod.Precio)">
+                                    @if (prod.Receta != null)
+                                    {
+                                        <span class="badge bg-success-subtle text-success position-absolute top-0 end-0 m-1 small" title="Con Receta / Descuenta stock">
+                                            <i class="bi bi-check-circle"></i> Receta
+                                        </span>
+                                    }
+                                    <div class="py-2 text-warning fs-1">
+                                        <i class="bi bi-pie-chart"></i>
+                                    </div>
+                                    <h6 class="card-title fw-bold text-dark mb-1 text-truncate" title="@prod.Nombre">@prod.Nombre</h6>
+                                    <span class="text-muted small d-block text-truncate">@prod.Categoria?.Nombre</span>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <span class="badge bg-primary fs-6 fw-bold">C$ @prod.Precio.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Comanda / Orden Actual -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="card border-0 shadow-sm h-100 d-flex flex-column">
+                <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-cart3 me-2"></i>Orden en Curso</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="limpiarCarrito()">
+                        <i class="bi bi-trash"></i> Vaciar
+                    </button>
+                </div>
+
+                <div class="p-3 bg-light border-bottom">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" id="clienteNombre" class="form-control" placeholder="Nombre del cliente" value="Cliente General" />
+                    </div>
+                </div>
+
+                <!-- Lista de Ítems en la orden -->
+                <div class="card-body overflow-auto p-2 flex-grow-1" style="max-height: 320px;" id="contenedorItems">
+                    <div id="carritoVacio" class="text-center py-5 text-muted">
+                        <i class="bi bi-cart-x fs-1 d-block mb-2 text-secondary"></i>
+                        <span>No hay productos seleccionados</span>
+                    </div>
+                    <ul class="list-group list-group-flush" id="listaCarrito"></ul>
+                </div>
+
+                <!-- Resumen de Totales -->
+                <div class="card-footer bg-white border-top p-3">
+                    <div class="d-flex justify-content-between text-muted mb-1 small">
+                        <span>Subtotal:</span>
+                        <span id="txtSubtotal">C$ 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted mb-1 small">
+                        <span>IVA (@tasaIva%):</span>
+                        <span id="txtImpuesto">C$ 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2 small">
+                        <span class="text-muted">Descuento Global (C$):</span>
+                        <input type="number" id="inpDescuento" class="form-control form-control-sm text-end" style="width: 100px;" value="0" min="0" step="1" onchange="recalcularTotales()" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="fs-5 fw-bold text-dark">TOTAL:</span>
+                        <span class="fs-4 fw-bold text-success" id="txtTotal">C$ 0.00</span>
+                    </div>
+
+                    <button type="button" class="btn btn-success btn-lg w-100 mt-3 fw-bold py-2 shadow-sm" id="btnCobrar" onclick="abrirModalCobro()" disabled>
+                        <i class="bi bi-cash-coin me-1"></i> COBRAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cobro -->
+<div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="modalCobroLabel"><i class="bi bi-wallet2 me-2"></i>Registrar Pago</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4 p-3 bg-light rounded border">
+                    <span class="text-muted d-block small">Monto Total a Cobrar</span>
+                    <span class="fs-2 fw-bold text-success" id="modalTotalCobrar">C$ 0.00</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Método de Pago</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="metodoPago" id="pagoEfectivo" value="Efectivo" checked onchange="cambiarMetodoPago()">
+                        <label class="btn btn-outline-success" for="pagoEfectivo"><i class="bi bi-cash me-1"></i> Efectivo</label>
+
+                        <input type="radio" class="btn-check" name="metodoPago" id="pagoTarjeta" value="Tarjeta" onchange="cambiarMetodoPago()">
+                        <label class="btn btn-outline-primary" for="pagoTarjeta"><i class="bi bi-credit-card me-1"></i> Tarjeta</label>
+
+                        <input type="radio" class="btn-check" name="metodoPago" id="pagoTransf" value="Transferencia" onchange="cambiarMetodoPago()">
+                        <label class="btn btn-outline-info" for="pagoTransf"><i class="bi bi-phone me-1"></i> Transferencia</label>
+                    </div>
+                </div>
+
+                <!-- Sección Efectivo (Monto entregado y cambio) -->
+                <div id="seccionEfectivo" class="mb-3">
+                    <label class="form-label fw-bold">Efectivo Recibido (C$)</label>
+                    <input type="number" id="montoRecibido" class="form-control form-control-lg text-end fw-bold" step="1" oninput="calcularCambio()" />
+                    <div class="d-flex justify-content-between align-items-center mt-2 p-2 bg-light rounded border">
+                        <span class="fw-bold">Cambio a entregar:</span>
+                        <span class="fs-5 fw-bold text-primary" id="txtCambio">C$ 0.00</span>
+                    </div>
+                </div>
+
+                <!-- Sección Tarjeta / Transferencia (Referencia) -->
+                <div id="seccionReferencia" class="mb-3 d-none">
+                    <label class="form-label fw-bold">N° de Autorización / Referencia</label>
+                    <input type="text" id="numReferencia" class="form-control" placeholder="Ej. LOTE-45892 o Voucher" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-muted">Notas / Observaciones de la venta</label>
+                    <textarea id="notasVenta" class="form-control" rows="2" placeholder="Opcional: Para llevar, mesa #3, etc."></textarea>
+                </div>
+
+                <div id="cobroError" class="alert alert-danger d-none small"></div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success fw-bold px-4" id="btnConfirmarVenta" onclick="procesarVenta()">
+                    <span id="spinnerCobro" class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
+                    <i class="bi bi-check-circle me-1"></i> Confirmar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Éxito / Ticket -->
+<div class="modal fade" id="modalExito" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow text-center p-4">
+            <div class="text-success mb-3">
+                <i class="bi bi-check-circle-fill display-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-1">¡Venta Completada con Éxito!</h4>
+            <p class="text-muted" id="txtNumeroTicket">Comprobante #TCK-0000</p>
+            <h3 class="fw-bold text-success mb-4" id="txtTotalExito">C$ 0.00</h3>
+
+            <div class="d-grid gap-2">
+                <a id="btnImprimirTicket" href="#" target="_blank" class="btn btn-outline-dark btn-lg">
+                    <i class="bi bi-printer me-2"></i> Imprimir Ticket Térmico
+                </a>
+                <button type="button" class="btn btn-primary btn-lg" onclick="iniciarNuevaVenta()">
+                    <i class="bi bi-plus-circle me-2"></i> Siguiente Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .product-pos-card {
+        transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .product-pos-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        border-color: #f59e0b !important;
+    }
+</style>
+
+@section Scripts {
+<script>
+    let carrito = [];
+    const tasaIva = @tasaIva;
+    let modalCobroInstancia = null;
+    let modalExitoInstancia = null;
+    let totalGeneralCalculado = 0;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        modalCobroInstancia = new bootstrap.Modal(document.getElementById('modalCobro'));
+        modalExitoInstancia = new bootstrap.Modal(document.getElementById('modalExito'));
+
+        // Filtro buscador
+        document.getElementById('buscarProducto').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.item-producto').forEach(item => {
+                const nombre = item.getAttribute('data-nombre');
+                item.style.display = nombre.includes(query) ? '' : 'none';
+            });
+        });
+
+        // Filtro categorías
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.cat-btn').forEach(b => {
+                    b.classList.remove('btn-dark', 'active');
+                    b.classList.add('btn-outline-secondary');
+                });
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-dark', 'active');
+
+                const cat = this.getAttribute('data-cat');
+                document.querySelectorAll('.item-producto').forEach(item => {
+                    if (cat === 'all' || item.getAttribute('data-cat') === cat) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+
+    function agregarAlCarrito(id, nombre, precio) {
+        const existente = carrito.find(x => x.productoId === id);
+        if (existente) {
+            existente.cantidad += 1;
+        } else {
+            carrito.push({
+                productoId: id,
+                nombre: nombre,
+                precioUnitario: precio,
+                cantidad: 1,
+                descuento: 0
+            });
+        }
+        actualizarVistaCarrito();
+    }
+
+    function cambiarCantidad(id, delta) {
+        const item = carrito.find(x => x.productoId === id);
+        if (!item) return;
+        item.cantidad += delta;
+        if (item.cantidad <= 0) {
+            carrito = carrito.filter(x => x.productoId !== id);
+        }
+        actualizarVistaCarrito();
+    }
+
+    function eliminarItem(id) {
+        carrito = carrito.filter(x => x.productoId !== id);
+        actualizarVistaCarrito();
+    }
+
+    function limpiarCarrito() {
+        carrito = [];
+        actualizarVistaCarrito();
+    }
+
+    function recalcularTotales() {
+        actualizarVistaCarrito();
+    }
+
+    function actualizarVistaCarrito() {
+        const lista = document.getElementById('listaCarrito');
+        const carritoVacio = document.getElementById('carritoVacio');
+        const btnCobrar = document.getElementById('btnCobrar');
+
+        lista.innerHTML = '';
+
+        if (carrito.length === 0) {
+            carritoVacio.style.display = 'block';
+            btnCobrar.disabled = true;
+            document.getElementById('txtSubtotal').innerText = 'C$ 0.00';
+            document.getElementById('txtImpuesto').innerText = 'C$ 0.00';
+            document.getElementById('txtTotal').innerText = 'C$ 0.00';
+            totalGeneralCalculado = 0;
+            return;
+        }
+
+        carritoVacio.style.display = 'none';
+        btnCobrar.disabled = false;
+
+        let subtotal = 0;
+
+        carrito.forEach(item => {
+            const itemSubtotal = (item.cantidad * item.precioUnitario) - item.descuento;
+            subtotal += itemSubtotal;
+
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center px-0 py-2';
+            li.innerHTML = `
+                <div class="me-auto">
+                    <div class="fw-bold text-truncate" style="max-width: 170px;">${item.nombre}</div>
+                    <small class="text-muted">C$ ${item.precioUnitario.toFixed(2)} c/u</small>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" onclick="cambiarCantidad(${item.productoId}, -1)">-</button>
+                    <span class="fw-bold px-2">${item.cantidad}</span>
+                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" onclick="cambiarCantidad(${item.productoId}, 1)">+</button>
+                    <span class="fw-bold text-dark ms-2" style="min-width: 70px; text-align: right;">C$ ${itemSubtotal.toFixed(2)}</span>
+                    <button class="btn btn-sm text-danger ms-1" onclick="eliminarItem(${item.productoId})"><i class="bi bi-x-circle"></i></button>
+                </div>
+            `;
+            lista.appendChild(li);
+        });
+
+        const descuentoGlobal = parseFloat(document.getElementById('inpDescuento').value) || 0;
+        const impuesto = Math.round(subtotal * (tasaIva / 100) * 100) / 100;
+        const total = Math.max(0, subtotal + impuesto - descuentoGlobal);
+        totalGeneralCalculado = total;
+
+        document.getElementById('txtSubtotal').innerText = `C$ ${subtotal.toFixed(2)}`;
+        document.getElementById('txtImpuesto').innerText = `C$ ${impuesto.toFixed(2)}`;
+        document.getElementById('txtTotal').innerText = `C$ ${total.toFixed(2)}`;
+    }
+
+    function abrirModalCobro() {
+        if (carrito.length === 0) return;
+        document.getElementById('modalTotalCobrar').innerText = `C$ ${totalGeneralCalculado.toFixed(2)}`;
+        document.getElementById('montoRecibido').value = totalGeneralCalculado.toFixed(2);
+        document.getElementById('cobroError').classList.add('d-none');
+        cambiarMetodoPago();
+        calcularCambio();
+        modalCobroInstancia.show();
+    }
+
+    function cambiarMetodoPago() {
+        const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
+        const seccionEfectivo = document.getElementById('seccionEfectivo');
+        const seccionRef = document.getElementById('seccionReferencia');
+
+        if (metodo === 'Efectivo') {
+            seccionEfectivo.classList.remove('d-none');
+            seccionRef.classList.add('d-none');
+            calcularCambio();
+        } else {
+            seccionEfectivo.classList.add('d-none');
+            seccionRef.classList.remove('d-none');
+        }
+    }
+
+    function calcularCambio() {
+        const recibido = parseFloat(document.getElementById('montoRecibido').value) || 0;
+        const cambio = Math.max(0, recibido - totalGeneralCalculado);
+        document.getElementById('txtCambio').innerText = `C$ ${cambio.toFixed(2)}`;
+    }
+
+    async function procesarVenta() {
+        const metodo = document.querySelector('input[name="metodoPago"]:checked').value;
+        const cliente = document.getElementById('clienteNombre').value.trim() || 'Cliente General';
+        const notas = document.getElementById('notasVenta').value.trim();
+        const descuentoGlobal = parseFloat(document.getElementById('inpDescuento').value) || 0;
+        const errorDiv = document.getElementById('cobroError');
+        const btnConfirmar = document.getElementById('btnConfirmarVenta');
+        const spinner = document.getElementById('spinnerCobro');
+
+        if (metodo === 'Efectivo') {
+            const recibido = parseFloat(document.getElementById('montoRecibido').value) || 0;
+            if (recibido < totalGeneralCalculado) {
+                errorDiv.innerText = `El monto recibido (C$ ${recibido.toFixed(2)}) es menor que el total a cobrar (C$ ${totalGeneralCalculado.toFixed(2)}).`;
+                errorDiv.classList.remove('d-none');
+                return;
+            }
+        }
+
+        const referencia = metodo !== 'Efectivo' ? document.getElementById('numReferencia').value.trim() : null;
+
+        const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
+
+        const dto = {
+            clienteNombre: cliente,
+            observaciones: notas,
+            descuentoGeneral: descuentoGlobal,
+            items: carrito.map(i => ({
+                productoId: i.productoId,
+                cantidad: i.cantidad,
+                precioUnitario: i.precioUnitario,
+                descuento: i.descuento
+            })),
+            pagos: [
+                {
+                    metodoPago: metodo,
+                    monto: totalGeneralCalculado,
+                    referencia: referencia
+                }
+            ]
+        };
+
+        btnConfirmar.disabled = true;
+        spinner.classList.remove('d-none');
+        errorDiv.classList.add('d-none');
+
+        try {
+            const response = await fetch('/Ventas/Checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(dto)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                modalCobroInstancia.hide();
+                document.getElementById('txtNumeroTicket').innerText = `Ticket N°: ${result.numeroComprobante}`;
+                document.getElementById('txtTotalExito').innerText = `C$ ${result.total.toFixed(2)}`;
+                document.getElementById('btnImprimirTicket').href = `/Ventas/Ticket/${result.ventaId}`;
+                modalExitoInstancia.show();
+            } else {
+                errorDiv.innerText = result.message || 'Error al procesar la venta.';
+                errorDiv.classList.remove('d-none');
+            }
+        } catch (err) {
+            errorDiv.innerText = 'Error de conexión con el servidor: ' + err.message;
+            errorDiv.classList.remove('d-none');
+        } finally {
+            btnConfirmar.disabled = false;
+            spinner.classList.add('d-none');
+        }
+    }
+
+    function iniciarNuevaVenta() {
+        modalExitoInstancia.hide();
+        limpiarCarrito();
+        document.getElementById('clienteNombre').value = 'Cliente General';
+        document.getElementById('inpDescuento').value = 0;
+        document.getElementById('notasVenta').value = '';
+        document.getElementById('numReferencia').value = '';
+    }
+</script>
+}

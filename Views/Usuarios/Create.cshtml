@@ -1,0 +1,79 @@
+@model PizzeriaContable.ViewModels.UsuarioCreateViewModel
+@{
+    ViewData["Title"] = "Registrar Nuevo Usuario";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-0"><i class="bi bi-person-plus me-2 text-primary"></i>Registrar Usuario</h2>
+            <p class="text-muted small mb-0">Crea una nueva cuenta de acceso para un colaborador de la pizzería</p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Volver a la lista
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <div asp-validation-summary="All" class="text-danger mb-0"></div>
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="NombreCompleto" class="form-label fw-bold"></label>
+                            <input asp-for="NombreCompleto" class="form-control" placeholder="Ej. Roberto Morales Sánchez" required />
+                            <span asp-validation-for="NombreCompleto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label fw-bold"></label>
+                                <input asp-for="Email" class="form-control" placeholder="colaborador@pizzeria.local" required />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Rol" class="form-label fw-bold"></label>
+                                <select asp-for="Rol" class="form-select" required>
+                                    <option value="Cajero">Cajero (Punto de Venta y Cobros)</option>
+                                    <option value="EncargadoInventario">Encargado de Inventario (Compras y Stock)</option>
+                                    <option value="Contador">Contador (Libros y Balances)</option>
+                                    <option value="Administrador">Administrador General (Acceso Total)</option>
+                                </select>
+                                <span asp-validation-for="Rol" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label fw-bold"></label>
+                                <input asp-for="Password" class="form-control" placeholder="Mínimo 6 caracteres" required />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label fw-bold"></label>
+                                <input asp-for="ConfirmPassword" class="form-control" placeholder="Repita la contraseña" required />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary fw-bold px-4">
+                                <i class="bi bi-save me-1"></i> Guardar Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

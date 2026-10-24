@@ -1,0 +1,139 @@
+@model PizzeriaContable.Models.Receta
+
+@{
+    ViewData["Title"] = $"Editar Receta: {Model.Producto?.Nombre}";
+    var ingredientes = (List<PizzeriaContable.Models.Ingrediente>)ViewBag.Ingredientes;
+}
+
+<div class="container py-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-warning text-dark py-3">
+            <h2 class="h5 mb-0 fw-bold">Modificar Receta de @Model.Producto?.Nombre</h2>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Edit" method="post" id="recetaForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ProductoId" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Producto</label>
+                        <input class="form-control" value="@Model.Producto?.Nombre (@Model.Producto?.Tamano)" disabled />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Rendimiento" class="form-label fw-semibold">Rendimiento (Unidades)</label>
+                        <input asp-for="Rendimiento" class="form-control" type="number" min="1" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="MermaPrevistaPorcentaje" class="form-label fw-semibold">Merma Estimada (%)</label>
+                        <input asp-for="MermaPrevistaPorcentaje" class="form-control" type="number" step="0.1" min="0" max="100" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Instrucciones" class="form-label fw-semibold">Instrucciones</label>
+                    <textarea asp-for="Instrucciones" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="mb-4 form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="Activo" />
+                    <label class="form-check-label" asp-for="Activo">Receta activa</label>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 mb-0 fw-bold text-dark">Ingredientes Utilizados</h3>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="agregarFilaIngrediente()">
+                        <i class="bi bi-plus-circle"></i> Agregar Ingrediente
+                    </button>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle" id="tablaIngredientes">
+                        <thead class="table-light small">
+                            <tr>
+                                <th style="width: 50%;">Ingrediente</th>
+                                <th style="width: 25%;">Cantidad Requerida</th>
+                                <th style="width: 15%;">Unidad</th>
+                                <th style="width: 10%;" class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ingredientesBody">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-warning px-4 fw-bold">Actualizar Receta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ingredientesCatalogo = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            ingredientes.Select(i => new { i.Id, i.Nombre, i.UnidadMedida, i.CostoUnitario })
+        ));
+
+        const detallesExistentes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Detalles.Select(d => new { d.IngredienteId, d.Cantidad, d.UnidadMedida })
+        ));
+
+        function agregarFilaIngrediente(ingredienteId = '', cantidad = '', unidad = 'kg') {
+            const tbody = document.getElementById('ingredientesBody');
+            const row = document.createElement('tr');
+
+            let options = '<option value="">-- Seleccionar --</option>';
+            ingredientesCatalogo.forEach(ing => {
+                const selected = ing.Id == ingredienteId ? 'selected' : '';
+                options += `<option value="${ing.Id}" data-unidad="${ing.UnidadMedida}" ${selected}>${ing.Nombre} (${ing.UnidadMedida}) - C$ ${ing.CostoUnitario.toFixed(2)}</option>`;
+            });
+
+            row.innerHTML = `
+                <td>
+                    <select name="ingredienteIds" class="form-select form-select-sm" required onchange="actualizarUnidadFila(this)">
+                        ${options}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.001" min="0.001" name="cantidades" class="form-control form-control-sm" value="${cantidad}" required placeholder="0.000" />
+                </td>
+                <td>
+                    <input type="text" name="unidades" class="form-control form-control-sm unidad-input" value="${unidad}" required />
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function actualizarUnidadFila(selectElem) {
+            const selectedOpt = selectElem.options[selectElem.selectedIndex];
+            const unidad = selectedOpt.getAttribute('data-unidad');
+            if (unidad) {
+                const row = selectElem.closest('tr');
+                row.querySelector('.unidad-input').value = unidad;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (detallesExistentes && detallesExistentes.length > 0) {
+                detallesExistentes.forEach(d => {
+                    agregarFilaIngrediente(d.IngredienteId, d.Cantidad, d.UnidadMedida);
+                });
+            } else {
+                agregarFilaIngrediente();
+            }
+        });
+    </script>
+}

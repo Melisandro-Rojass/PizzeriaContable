@@ -1,0 +1,124 @@
+@model IEnumerable<PizzeriaContable.Services.BalanceComprobacionItem>
+@{
+    ViewData["Title"] = "Balance de Comprobación";
+    decimal totalDebe = ViewBag.TotalDebe != null ? (decimal)ViewBag.TotalDebe : 0m;
+    decimal totalHaber = ViewBag.TotalHaber != null ? (decimal)ViewBag.TotalHaber : 0m;
+    decimal totalSaldoDeudor = ViewBag.TotalSaldoDeudor != null ? (decimal)ViewBag.TotalSaldoDeudor : 0m;
+    decimal totalSaldoAcreedor = ViewBag.TotalSaldoAcreedor != null ? (decimal)ViewBag.TotalSaldoAcreedor : 0m;
+
+    bool movimientosCuadrados = Math.Abs(totalDebe - totalHaber) < 0.01m;
+    bool saldosCuadrados = Math.Abs(totalSaldoDeudor - totalSaldoAcreedor) < 0.01m;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-0"><i class="bi bi-clipboard-data me-2 text-primary"></i>Balance de Comprobación</h2>
+            <p class="text-muted small mb-0">Verificación de sumas y saldos de todas las cuentas del catálogo</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="ExportarBalanceComprobacionCsv" asp-route-desde="@ViewBag.Desde" asp-route-hasta="@ViewBag.Hasta" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+            </a>
+            <button class="btn btn-outline-dark" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Imprimir
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Fecha Desde</label>
+                    <input type="date" name="desde" class="form-control form-control-sm" value="@ViewBag.Desde" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Fecha Hasta</label>
+                    <input type="date" name="hasta" class="form-control form-control-sm" value="@ViewBag.Hasta" />
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-filter me-1"></i> Consultar</button>
+                    <a asp-action="BalanceComprobacion" class="btn btn-outline-secondary btn-sm">Ejercicio Completo</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Estado de Cuadre -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm @(movimientosCuadrados ? "border-start border-success border-4" : "border-start border-danger border-4") p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="small text-muted fw-bold">SUMAS DE MOVIMIENTOS</span>
+                        <div class="fw-bold fs-6">Debe: C$ @totalDebe.ToString("N2") | Haber: C$ @totalHaber.ToString("N2")</div>
+                    </div>
+                    <span class="badge @(movimientosCuadrados ? "bg-success" : "bg-danger") fs-6">
+                        @(movimientosCuadrados ? "Sumas Iguales" : "Descuadrado")
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm @(saldosCuadrados ? "border-start border-success border-4" : "border-start border-danger border-4") p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="small text-muted fw-bold">SALDOS FINALES</span>
+                        <div class="fw-bold fs-6">Deudor: C$ @totalSaldoDeudor.ToString("N2") | Acreedor: C$ @totalSaldoAcreedor.ToString("N2")</div>
+                    </div>
+                    <span class="badge @(saldosCuadrados ? "bg-success" : "bg-danger") fs-6">
+                        @(saldosCuadrados ? "Saldos Iguales" : "Descuadrado")
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Balance de Comprobación -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th rowspan="2" class="align-middle">Código</th>
+                        <th rowspan="2" class="align-middle">Cuenta Contable</th>
+                        <th rowspan="2" class="align-middle text-center">Tipo</th>
+                        <th colspan="2" class="text-center border-start border-end">Movimientos</th>
+                        <th colspan="2" class="text-center">Saldos</th>
+                    </tr>
+                    <tr>
+                        <th class="text-end border-start">Debe (C$)</th>
+                        <th class="text-end border-end">Haber (C$)</th>
+                        <th class="text-end">Deudor (C$)</th>
+                        <th class="text-end">Acreedor (C$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="font-monospace small fw-bold">@item.Codigo</td>
+                            <td>@item.Nombre</td>
+                            <td class="text-center small"><span class="badge bg-light text-dark border">@item.TipoCuenta</span></td>
+                            <td class="text-end border-start">@(item.TotalDebe > 0 ? item.TotalDebe.ToString("N2") : "-")</td>
+                            <td class="text-end border-end">@(item.TotalHaber > 0 ? item.TotalHaber.ToString("N2") : "-")</td>
+                            <td class="text-end fw-bold text-primary">@(item.SaldoDeudor > 0 ? item.SaldoDeudor.ToString("N2") : "-")</td>
+                            <td class="text-end fw-bold text-success">@(item.SaldoAcreedor > 0 ? item.SaldoAcreedor.ToString("N2") : "-")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-dark fw-bold">
+                    <tr>
+                        <td colspan="3" class="text-end">SUMAS TOTALES:</td>
+                        <td class="text-end border-start">C$ @totalDebe.ToString("N2")</td>
+                        <td class="text-end border-end">C$ @totalHaber.ToString("N2")</td>
+                        <td class="text-end text-info">C$ @totalSaldoDeudor.ToString("N2")</td>
+                        <td class="text-end text-warning">C$ @totalSaldoAcreedor.ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

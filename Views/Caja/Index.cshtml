@@ -1,0 +1,306 @@
+@model PizzeriaContable.Models.CajaSesion?
+
+@{
+    ViewData["Title"] = "Control de Caja y Turnos";
+    var historial = (List<PizzeriaContable.Models.CajaSesion>)ViewBag.Historial;
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">Gestión de Turnos y Arqueo de Caja</h1>
+            <p class="text-muted small mb-0">Apertura, control de efectivo físico, ventas por método de pago y cuadre de cierre.</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model == null)
+    {
+        <!-- Caja Cerrada: Formulario de Apertura -->
+        <div class="row justify-content-center my-4">
+            <div class="col-md-6 col-lg-5">
+                <div class="card border-0 shadow-sm text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-lock-fill text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    <h2 class="h5 fw-bold text-dark mb-2">No hay turno de caja abierto</h2>
+                    <p class="text-muted small mb-4">Abre un nuevo turno de caja para comenzar a facturar en el Punto de Venta (POS).</p>
+
+                    <form asp-action="Abrir" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3 text-start">
+                            <label class="form-label small fw-semibold">Fondo Inicial de Apertura (C$)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">C$</span>
+                                <input type="number" step="0.01" min="0" name="montoInicial" class="form-control" placeholder="1000.00" value="1000.00" required autofocus />
+                            </div>
+                            <span class="form-text small">Efectivo para cambio inicial disponible en la gaveta.</span>
+                        </div>
+
+                        <div class="mb-4 text-start">
+                            <label class="form-label small fw-semibold">Observaciones (Opcional)</label>
+                            <input type="text" name="observaciones" class="form-control" placeholder="Ej. Turno matutino / Cajero 1" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                            <i class="bi bi-unlock-fill me-1"></i> Abrir Turno de Caja
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Caja Abierta: Dashboard de Turno -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-white text-success fw-bold me-2">TURNO ACTIVO</span>
+                    <span>Iniciado el <strong>@Model.FechaApertura.ToString("dd/MM/yyyy HH:mm")</strong> por @(Model.UsuarioId ?? "Administrador")</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-light fw-bold" data-bs-toggle="modal" data-bs-target="#modalCierre">
+                    <i class="bi bi-door-closed me-1"></i> Cerrar Caja y Arqueo
+                </button>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded text-center">
+                            <span class="text-muted small d-block">Fondo Inicial</span>
+                            <span class="h5 fw-bold text-dark">@Model.MontoInicial.ToString("C2")</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded text-center">
+                            <span class="text-muted small d-block">Ventas en Efectivo</span>
+                            <span class="h5 fw-bold text-success">+@Model.TotalVentasEfectivo.ToString("C2")</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded text-center">
+                            <span class="text-muted small d-block">Ingresos / Egresos Manuales</span>
+                            <span class="h5 fw-bold text-secondary">
+                                +@Model.TotalIngresos.ToString("C2") / -@Model.TotalEgresos.ToString("C2")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-success-subtle border border-success-subtle rounded text-center">
+                            <span class="text-muted small d-block fw-bold text-uppercase">Efectivo Físico Esperado</span>
+                            <span class="h4 fw-bold text-success mb-0">@Model.EfectivoEsperado.ToString("C2")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Métodos no en efectivo -->
+                <div class="p-3 bg-white border rounded mb-4 small">
+                    <div class="row text-center text-muted">
+                        <div class="col-md-6">
+                            <span>Ventas Tarjeta de Crédito/Débito:</span>
+                            <strong class="text-dark">@Model.TotalVentasTarjeta.ToString("C2")</strong>
+                        </div>
+                        <div class="col-md-6">
+                            <span>Ventas por Transferencia Bancaria:</span>
+                            <strong class="text-dark">@Model.TotalVentasTransferencia.ToString("C2")</strong>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2 small text-muted fst-italic">
+                        * Los cobros electrónicos entran a cuentas bancarias y no se suman al efectivo de la gaveta física.
+                    </div>
+                </div>
+
+                <!-- Actions: Registrar movimiento de caja -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 fw-bold mb-0 text-dark">Movimientos de Caja Registrados (Ingresos / Retiros)</h3>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalMovimiento">
+                        + Registrar Retiro / Depósito
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Descripción / Concepto</th>
+                                <th class="text-end">Monto</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Movimientos.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-3 text-muted">No hay movimientos manuales en este turno.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var m in Model.Movimientos.OrderByDescending(m => m.Fecha))
+                                {
+                                    bool esIngreso = m.Tipo == "Ingreso" || m.Tipo == "Deposito";
+                                    <tr>
+                                        <td>@m.Fecha.ToString("HH:mm:ss")</td>
+                                        <td>
+                                            <span class="badge @(esIngreso ? "bg-success" : "bg-danger")">@m.Tipo</span>
+                                        </td>
+                                        <td>@m.Descripcion</td>
+                                        <td class="text-end fw-bold @(esIngreso ? "text-success" : "text-danger")">
+                                            @(esIngreso ? "+" : "-")@m.Monto.ToString("C2")
+                                        </td>
+                                        <td>@(m.UsuarioId ?? "Cajero")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Registrar Movimiento -->
+        <div class="modal fade" id="modalMovimiento" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form asp-action="Movimiento" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="cajaSesionId" value="@Model.Id" />
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">Registrar Movimiento de Efectivo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Tipo</label>
+                                <select name="tipo" class="form-select">
+                                    <option value="Egreso">Egreso / Retiro de Efectivo</option>
+                                    <option value="Ingreso">Ingreso Adicional / Depósito</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Monto (C$)</label>
+                                <input type="number" step="0.01" min="0.01" name="monto" class="form-control" placeholder="0.00" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Concepto / Motivo</label>
+                                <input type="text" name="descripcion" class="form-control" placeholder="Ej. Compra urgente de hielo, retiro a caja fuerte..." required />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary btn-sm fw-semibold">Guardar Movimiento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Cierre de Caja -->
+        <div class="modal fade" id="modalCierre" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form asp-action="Cerrar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="cajaSesionId" value="@Model.Id" />
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title fw-bold">Cierre de Caja y Arqueo Físico</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-light border small text-muted mb-3">
+                                Efectivo Físico Esperado en Gaveta: <strong class="text-success fs-6">@Model.EfectivoEsperado.ToString("C2")</strong>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Efectivo Físico Contado (C$)</label>
+                                <input type="number" step="0.01" min="0" name="efectivoContado" class="form-control" placeholder="0.00" required autofocus />
+                                <span class="form-text small">Digita el total exacto del conteo físico de billetes y monedas en gaveta.</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Observaciones de Cierre</label>
+                                <textarea name="observaciones" class="form-control" rows="2" placeholder="Comentarios sobre faltante, sobrante o entrega de turno..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger btn-sm fw-bold">Confirmar Cierre de Turno</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Historial de Cierres -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white py-3">
+            <h2 class="h6 mb-0 fw-bold text-dark"><i class="bi bi-clock-history me-1"></i> Historial de Turnos de Caja</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Turno</th>
+                        <th>Apertura</th>
+                        <th>Cierre</th>
+                        <th class="text-end">Fondo Inicial</th>
+                        <th class="text-end">Ventas Efectivo</th>
+                        <th class="text-end">Esperado</th>
+                        <th class="text-end">Contado</th>
+                        <th class="text-end">Diferencia</th>
+                        <th class="text-center">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!historial.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">No hay historial de cajas registrado.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in historial)
+                        {
+                            <tr>
+                                <td class="font-monospace fw-bold">#@c.Id</td>
+                                <td>@c.FechaApertura.ToString("dd/MM/yy HH:mm")</td>
+                                <td>@(c.FechaCierre.HasValue ? c.FechaCierre.Value.ToString("dd/MM/yy HH:mm") : "-")</td>
+                                <td class="text-end">@c.MontoInicial.ToString("C2")</td>
+                                <td class="text-end">@c.TotalVentasEfectivo.ToString("C2")</td>
+                                <td class="text-end fw-semibold">@c.EfectivoEsperado.ToString("C2")</td>
+                                <td class="text-end fw-semibold">@c.EfectivoContado.ToString("C2")</td>
+                                <td class="text-end fw-bold @(c.Diferencia < 0 ? "text-danger" : c.Diferencia > 0 ? "text-primary" : "text-success")">
+                                    @c.Diferencia.ToString("C2")
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(c.Estado == "Abierta" ? "bg-success" : "bg-secondary")">
+                                        @c.Estado
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

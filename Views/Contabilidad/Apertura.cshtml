@@ -1,0 +1,264 @@
+@model PizzeriaContable.ViewModels.AperturaContableViewModel
+@{
+    ViewData["Title"] = "Asiento de Apertura Contable";
+    var asientoExistente = ViewBag.AsientoExistente as PizzeriaContable.Models.AsientoContable;
+}
+
+<div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-0"><i class="bi bi-door-open me-2 text-primary"></i>Apertura Contable Inicial</h2>
+            <p class="text-muted small mb-0">Configuración de saldos iniciales para empresas con operaciones previas</p>
+        </div>
+        <a asp-action="Asientos" class="btn btn-secondary">
+            <i class="bi bi-journal-text me-1"></i> Ir al Libro Diario
+        </a>
+    </div>
+
+    @if (asientoExistente != null)
+    {
+        <div class="alert alert-info border shadow-sm mb-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="alert-heading fw-bold mb-1"><i class="bi bi-info-circle-fill me-2"></i>Apertura Contable Ya Registrada</h5>
+                    <p class="mb-0 small text-muted">
+                        Esta empresa ya cuenta con un asiento de apertura registrado (<strong>@asientoExistente.NumeroAsiento</strong> con fecha @asientoExistente.Fecha.ToString("dd/MM/yyyy")).
+                    </p>
+                </div>
+                <a asp-action="DetalleAsiento" asp-route-id="@asientoExistente.Id" class="btn btn-outline-primary btn-sm">
+                    Ver Asiento de Apertura
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border shadow-sm mb-4">
+            <div class="d-flex align-items-start gap-3">
+                <i class="bi bi-lightbulb-fill text-warning fs-3"></i>
+                <div>
+                    <h5 class="fw-bold mb-1">¿Cómo funciona la Apertura Contable?</h5>
+                    <p class="small text-muted mb-0">
+                        Si tu pizzería ya lleva tiempo funcionando, ingresa aquí los saldos reales que tienes al día de inicio: el dinero en caja y bancos, el valor estimado de tus ingredientes en stock, y el valor de tus hornos y mobiliario. La ecuación contable exige que:
+                        <strong>Activo = Pasivo + Capital</strong>. El sistema verificará en tiempo real que tu asiento quede perfectamente cuadrado.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Apertura" method="post" id="formApertura">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-4">
+                <!-- ACTIVOS -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h5 class="card-title fw-bold mb-0"><i class="bi bi-plus-slash-minus me-2"></i>1. Activos Iniciales (Bienes y Derechos)</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label asp-for="FechaApertura" class="form-label fw-bold"></label>
+                                <input asp-for="FechaApertura" type="date" class="form-control" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="EfectivoCaja" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="EfectivoCaja" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Efectivo físico disponible en caja registradora</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="SaldoBancos" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="SaldoBancos" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Dinero en cuentas de cheques o ahorro de la pizzería</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="InventarioInicial" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="InventarioInicial" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Valor de queso, harinas, carnes y cajas en almacén</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="MobiliarioEquipo" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="MobiliarioEquipo" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Mesas, sillas, barras de atención y aire acondicionado</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="HornosYEquipos" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="HornosYEquipos" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Hornos para pizza, amasadoras, rebanadoras y refrigeradores</small>
+                            </div>
+
+                            <div class="p-3 bg-light rounded border mt-4 text-end">
+                                <span class="text-muted d-block small">TOTAL DE ACTIVOS (DEBE):</span>
+                                <span class="fs-4 fw-bold text-primary" id="lblTotalActivos">C$ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PASIVOS Y CAPITAL -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-dark text-white py-3">
+                            <h5 class="card-title fw-bold mb-0"><i class="bi bi-bank me-2"></i>2. Pasivos y Patrimonio (Obligaciones y Capital)</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-danger mb-3">Pasivos (Deudas Existentes)</h6>
+
+                            <div class="mb-3">
+                                <label asp-for="CuentasPorPagarProveedores" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="CuentasPorPagarProveedores" type="number" step="0.01" min="0" class="form-control inp-pasivo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Facturas de materia prima pendientes de pago al día de apertura</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="OtrasObligaciones" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="OtrasObligaciones" type="number" step="0.01" min="0" class="form-control inp-pasivo" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Préstamos bancarios o deudas con terceros</small>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold text-success mb-0">Patrimonio Neto (Capital)</h6>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="autocalcularCapital()">
+                                    <i class="bi bi-magic me-1"></i> Auto-calcular Capital
+                                </button>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="CapitalSocial" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">C$</span>
+                                    <input asp-for="CapitalSocial" type="number" step="0.01" min="0" class="form-control inp-capital" oninput="calcularEcuacion()" />
+                                </div>
+                                <small class="text-muted">Aportación neta acumulada de los propietarios o socios</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Observaciones" class="form-label fw-bold"></label>
+                                <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
+                            </div>
+
+                            <div class="p-3 bg-light rounded border mt-4 text-end">
+                                <span class="text-muted d-block small">TOTAL PASIVOS + CAPITAL (HABER):</span>
+                                <span class="fs-4 fw-bold text-success" id="lblTotalPasivoCapital">C$ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barra Inferior de Verificación y Confirmación -->
+            <div class="card border-0 shadow-sm mt-4 p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold">Ecuación Patrimonial:</span>
+                            <span id="badgeCuadre" class="badge bg-secondary fs-6 p-2">Completar saldos</span>
+                            <span class="text-muted small" id="lblDiferenciaTexto"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold px-4 shadow-sm" id="btnGuardarApertura" disabled>
+                            <i class="bi bi-check-circle me-1"></i> Asentar Apertura Contable
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    }
+</div>
+
+@section Scripts {
+<script>
+    function calcularEcuacion() {
+        let totalActivos = 0;
+        let totalPasivos = 0;
+        let capital = 0;
+
+        document.querySelectorAll('.inp-activo').forEach(i => totalActivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.inp-pasivo').forEach(i => totalPasivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.inp-capital').forEach(i => capital += parseFloat(i.value) || 0);
+
+        const totalPasivoCapital = totalPasivos + capital;
+        const diff = Math.abs(totalActivos - totalPasivoCapital);
+
+        document.getElementById('lblTotalActivos').innerText = `C$ ${totalActivos.toFixed(2)}`;
+        document.getElementById('lblTotalPasivoCapital').innerText = `C$ ${totalPasivoCapital.toFixed(2)}`;
+
+        const badge = document.getElementById('badgeCuadre');
+        const txtDiff = document.getElementById('lblDiferenciaTexto');
+        const btn = document.getElementById('btnGuardarApertura');
+
+        if (totalActivos > 0 && diff < 0.01) {
+            badge.className = 'badge bg-success fs-6 p-2';
+            badge.innerHTML = '<i class="bi bi-check-lg me-1"></i> PERFECTAMENTE CUADRADO';
+            txtDiff.innerText = 'Activo = Pasivo + Capital';
+            btn.disabled = false;
+        } else {
+            badge.className = 'badge bg-danger fs-6 p-2';
+            badge.innerHTML = '<i class="bi bi-x-lg me-1"></i> DESCUADRADO';
+            txtDiff.innerText = `Diferencia de C$ ${diff.toFixed(2)}`;
+            btn.disabled = true;
+        }
+    }
+
+    function autocalcularCapital() {
+        let totalActivos = 0;
+        let totalPasivos = 0;
+        document.querySelectorAll('.inp-activo').forEach(i => totalActivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.inp-pasivo').forEach(i => totalPasivos += parseFloat(i.value) || 0);
+
+        const capitalSugerido = Math.max(0, totalActivos - totalPasivos);
+        document.querySelector('.inp-capital').value = capitalSugerido.toFixed(2);
+        calcularEcuacion();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        if (document.querySelector('.inp-activo')) {
+            calcularEcuacion();
+        }
+    });
+</script>
+}

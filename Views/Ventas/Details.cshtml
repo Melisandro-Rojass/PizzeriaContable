@@ -1,0 +1,246 @@
+@model PizzeriaContable.Models.Venta
+@{
+    ViewData["Title"] = $"Detalle de Venta #{Model.NumeroComprobante}";
+    var asiento = ViewBag.Asiento as PizzeriaContable.Models.AsientoContable;
+    var auditorias = ViewBag.Auditorias as List<PizzeriaContable.Models.AuditoriaRegistro> ?? new List<PizzeriaContable.Models.AuditoriaRegistro>();
+}
+
+<div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h3 fw-bold text-dark mb-0">Comprobante @Model.NumeroComprobante</h2>
+                @if (Model.Estado == "Completada")
+                {
+                    <span class="badge bg-success fs-6">Completada</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger fs-6">Anulada</span>
+                }
+            </div>
+            <p class="text-muted small mb-0">Emitido el @Model.Fecha.ToString("dd/MM/yyyy hh:mm tt") por @(Model.UsuarioId ?? "Cajero")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Ticket" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-dark">
+                <i class="bi bi-printer me-1"></i> Imprimir Ticket
+            </a>
+            @if (Model.Estado == "Completada")
+            {
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalAnular">
+                    <i class="bi bi-x-circle me-1"></i> Anular Venta
+                </button>
+            }
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Volver al Historial
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Detalle de Productos -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title fw-bold mb-0"><i class="bi bi-basket me-2 text-primary"></i>Artículos Facturados</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Descuento</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var det in Model.Detalles)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@det.Producto?.Nombre</div>
+                                        <small class="text-muted">Cód: @(det.Producto?.Codigo ?? "-")</small>
+                                    </td>
+                                    <td class="text-center fw-bold">@det.Cantidad</td>
+                                    <td class="text-end">C$ @det.PrecioUnitario.ToString("N2")</td>
+                                    <td class="text-end text-danger">@(det.Descuento > 0 ? $"-C$ {det.Descuento:N2}" : "C$ 0.00")</td>
+                                    <td class="text-end fw-bold">C$ @det.Subtotal.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end">Subtotal:</td>
+                                <td class="text-end fw-bold">C$ @Model.Subtotal.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end">IVA (15%):</td>
+                                <td class="text-end fw-bold">C$ @Model.Impuesto.ToString("N2")</td>
+                            </tr>
+                            @if (Model.Descuento > 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-end text-danger">Descuento Global:</td>
+                                    <td class="text-end fw-bold text-danger">-C$ @Model.Descuento.ToString("N2")</td>
+                                </tr>
+                            }
+                            <tr class="fs-5">
+                                <td colspan="4" class="text-end fw-bold text-success">TOTAL FACTURADO:</td>
+                                <td class="text-end fw-bold text-success">C$ @Model.Total.ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Asiento Contable Automático Asociado -->
+            @if (asiento != null)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title fw-bold mb-0">
+                            <i class="bi bi-journal-text me-2 text-success"></i>Asiento Contable N° @asiento.NumeroAsiento
+                        </h5>
+                        <span class="badge @(asiento.Anulado ? "bg-danger" : "bg-success")">
+                            @(asiento.Anulado ? "Asiento Anulado" : "Contabilizado")
+                        </span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Cuenta</th>
+                                    <th>Concepto / Detalle</th>
+                                    <th class="text-end">Debe</th>
+                                    <th class="text-end">Haber</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var linea in asiento.Detalles)
+                                {
+                                    <tr>
+                                        <td>
+                                            <code>@linea.CuentaContable?.Codigo</code> - @linea.CuentaContable?.Nombre
+                                        </td>
+                                        <td class="small text-muted">@linea.Descripcion</td>
+                                        <td class="text-end fw-bold text-dark">@(linea.Debe > 0 ? $"C$ {linea.Debe:N2}" : "-")</td>
+                                        <td class="text-end fw-bold text-dark">@(linea.Haber > 0 ? $"C$ {linea.Haber:N2}" : "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td colspan="2" class="text-end">Sumas Iguales:</td>
+                                    <td class="text-end text-success">C$ @asiento.Detalles.Sum(d => d.Debe).ToString("N2")</td>
+                                    <td class="text-end text-success">C$ @asiento.Detalles.Sum(d => d.Haber).ToString("N2")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Panel Lateral: Datos de Cliente, Pago y Auditoría -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title fw-bold mb-0"><i class="bi bi-info-circle me-2 text-primary"></i>Datos de la Venta</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Cliente:</strong> @(Model.ClienteNombre ?? "Cliente General")</p>
+                    <p class="mb-2"><strong>Turno de Caja:</strong> @(Model.CajaSesion != null ? $"Sesión #{Model.CajaSesionId}" : "Sin caja asociada")</p>
+                    <p class="mb-2"><strong>Método Principal:</strong> @Model.MetodoPago</p>
+                    @if (!string.IsNullOrEmpty(Model.Observaciones))
+                    {
+                        <div class="alert alert-light border small mt-3">
+                            <strong>Observaciones:</strong><br />
+                            @Model.Observaciones
+                        </div>
+                    }
+
+                    <h6 class="fw-bold mt-4 mb-2">Desglose de Pagos Recibidos:</h6>
+                    <ul class="list-group list-group-flush border rounded">
+                        @foreach (var pago in Model.Pagos)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">@pago.MetodoPago</span>
+                                    @if (!string.IsNullOrEmpty(pago.Referencia))
+                                    {
+                                        <small class="text-muted d-block">Ref: @pago.Referencia</small>
+                                    }
+                                </div>
+                                <span class="badge bg-light text-dark fs-6 border">C$ @pago.Monto.ToString("N2")</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Registro de Auditoría -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title fw-bold mb-0"><i class="bi bi-clock-history me-2 text-secondary"></i>Trazabilidad</h5>
+                </div>
+                <div class="card-body p-3">
+                    <ul class="list-unstyled mb-0 small">
+                        @foreach (var log in auditorias)
+                        {
+                            <li class="mb-2 pb-2 border-bottom">
+                                <span class="badge bg-secondary">@log.Accion</span>
+                                <span class="text-muted">@log.FechaHora.ToString("dd/MM/yyyy HH:mm")</span> por <strong>@(log.UsuarioNombre ?? "Sistema")</strong>
+                                <div class="text-dark mt-1">@log.Detalle</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Anular Venta -->
+<div class="modal fade" id="modalAnular" tabindex="-1" aria-labelledby="modalAnularLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <form asp-action="Anular" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold" id="modalAnularLabel"><i class="bi bi-shield-exclamation me-2"></i>Anular Venta #@Model.NumeroComprobante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning small">
+                        <strong>Atención:</strong> Esta acción no se puede deshacer. Se revertirán los ingredientes descontados al inventario y se registrará un contra-asiento contable por valor de <strong>C$ @Model.Total.ToString("N2")</strong>.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motivo de Anulación <span class="text-danger">*</span></label>
+                        <textarea name="motivo" class="form-control" rows="3" required placeholder="Especifique la causa justificada (Ej. Error de digitación, orden devuelta por el cliente)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold">Confirmar Anulación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

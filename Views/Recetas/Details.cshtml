@@ -1,0 +1,98 @@
+@model PizzeriaContable.Models.Receta
+
+@{
+    ViewData["Title"] = $"Receta de {Model.Producto?.Nombre}";
+    int rend = Model.Rendimiento > 0 ? Model.Rendimiento : 1;
+    decimal mermaFactor = 1 + (Model.MermaPrevistaPorcentaje / 100m);
+    decimal costoTotal = Model.Detalles.Sum(d => (d.Cantidad / rend) * mermaFactor * (d.Ingrediente?.CostoUnitario ?? 0m));
+    decimal precioVenta = Model.Producto?.Precio ?? 0m;
+    decimal margenBruto = precioVenta - costoTotal;
+    decimal margenPorc = precioVenta > 0 ? (margenBruto / precioVenta) * 100m : 0m;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0 fw-bold">Receta y Escandallo: @Model.Producto?.Nombre</h2>
+                    <span class="badge @(Model.Activo ? "bg-success" : "bg-secondary")">
+                        @(Model.Activo ? "Activa" : "Inactiva")
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4 text-center">
+                        <div class="col-md-3">
+                            <span class="text-muted small">Precio de Venta</span>
+                            <div class="h5 fw-bold text-dark mb-0">@precioVenta.ToString("C2")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Costo Teórico Ingredientes</span>
+                            <div class="h5 fw-bold text-danger mb-0">@costoTotal.ToString("C2")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Margen Bruto</span>
+                            <div class="h5 fw-bold text-success mb-0">@margenBruto.ToString("C2")</div>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="text-muted small">Rentabilidad Bruta</span>
+                            <div class="h5 fw-bold text-primary mb-0">@margenPorc.ToString("0.1")%</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 small">
+                        <div class="col-sm-4 text-muted">Rendimiento:</div>
+                        <div class="col-sm-8 fw-semibold">@Model.Rendimiento porción(es) / unidad(es)</div>
+
+                        <div class="col-sm-4 text-muted">Merma prevista:</div>
+                        <div class="col-sm-8 fw-semibold">@Model.MermaPrevistaPorcentaje.ToString("0.#")%</div>
+
+                        <div class="col-sm-4 text-muted">Instrucciones:</div>
+                        <div class="col-sm-8">@(string.IsNullOrEmpty(Model.Instrucciones) ? "Sin instrucciones adicionales" : Model.Instrucciones)</div>
+                    </div>
+
+                    <h3 class="h6 fw-bold mt-4 mb-3 border-bottom pb-2">Desglose de Ingredientes</h3>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light small">
+                                <tr>
+                                    <th>Ingrediente</th>
+                                    <th class="text-end">Cantidad</th>
+                                    <th>Unidad</th>
+                                    <th class="text-end">Costo Unitario Insumo</th>
+                                    <th class="text-end">Costo por Pizza</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var d in Model.Detalles)
+                                {
+                                    decimal cantPorPizza = (d.Cantidad / rend) * mermaFactor;
+                                    decimal costoItem = cantPorPizza * (d.Ingrediente?.CostoUnitario ?? 0m);
+                                    <tr>
+                                        <td class="fw-semibold">@d.Ingrediente?.Nombre</td>
+                                        <td class="text-end">@d.Cantidad.ToString("0.###")</td>
+                                        <td>@d.UnidadMedida</td>
+                                        <td class="text-end">@((d.Ingrediente?.CostoUnitario ?? 0m).ToString("C2"))</td>
+                                        <td class="text-end fw-bold">@costoItem.ToString("C2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td colspan="4" class="text-end">Costo Total Teórico por Pizza:</td>
+                                    <td class="text-end text-danger fs-6">@costoTotal.ToString("C2")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-4 border-top mt-4">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning px-4 fw-bold">Editar Receta</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
