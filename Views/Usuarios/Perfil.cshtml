@@ -1,33 +1,98 @@
 @model PizzeriaContable.Models.ApplicationUser
 @{
-    ViewData["Title"] = "Mi Perfil de Usuario";
+    ViewData["Title"] = "Mi Perfil de Empleado";
 }
 
 <div class="container-fluid">
-    <div class="row justify-content-center">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="row g-4 justify-content-center">
+        <!-- Tarjeta de Información Laboral -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="avatar-circle mx-auto mb-3 bg-warning text-white fw-bold display-4 d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 90px; height: 90px;">
+                        @(Model.NombreCompleto.Length > 0 ? Model.NombreCompleto.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">@Model.NombreCompleto</h4>
+                    <p class="text-muted small mb-2">@@@Model.UserName</p>
+                    <span class="badge bg-primary px-3 py-2 fs-6 mb-3">Rol: @Model.Rol</span>
+
+                    <div class="list-group list-group-flush text-start small border-top pt-3">
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-briefcase me-1"></i> Puesto / Cargo:</span>
+                            <span class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(Model.Cargo) ? "No especificado" : Model.Cargo)</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-envelope me-1"></i> Correo Electrónico:</span>
+                            <span class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(Model.Email) ? "Sin correo asignado" : Model.Email)</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-shield-check me-1"></i> Estado:</span>
+                            <span class="badge bg-success-subtle text-success">@(Model.Activo ? "Activo" : "Inactivo")</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-calendar-event me-1"></i> Fecha de Registro:</span>
+                            <span class="fw-semibold text-dark">@Model.FechaRegistro.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="bi bi-clock-history me-1"></i> Último Acceso:</span>
+                            <span class="fw-semibold text-dark">@(Model.UltimoAcceso.HasValue ? Model.UltimoAcceso.Value.ToString("dd/MM/yyyy HH:mm") : "Esta sesión")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta para Cambiar Contraseña -->
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm text-center p-4">
-                <div class="text-primary mb-3">
-                    <i class="bi bi-person-circle display-3"></i>
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-key-fill text-warning me-2"></i>Cambiar Mi Contraseña
+                    </h5>
                 </div>
-                <h3 class="fw-bold text-dark mb-1">@Model.NombreCompleto</h3>
-                <p class="text-muted mb-2">@Model.Email</p>
-                <div>
-                    <span class="badge bg-primary fs-6 px-3 py-2">Rol: @Model.Rol</span>
-                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-4">
+                        Por seguridad, actualice periódicamente su contraseña de acceso individual. No comparta su cuenta con otros empleados.
+                    </p>
 
-                <hr class="my-4" />
+                    <form asp-action="CambiarPasswordPropio" method="post">
+                        @Html.AntiForgeryToken()
 
-                <div class="text-start">
-                    <div class="mb-2"><strong>ID de Usuario:</strong> <code>@Model.Id</code></div>
-                    <div class="mb-2"><strong>Fecha de Registro:</strong> @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</div>
-                    <div class="mb-2"><strong>Estado de Cuenta:</strong> @(Model.Activo ? "Activo" : "Inactivo")</div>
-                </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-secondary">Contraseña Actual</label>
+                            <input type="password" name="currentPassword" class="form-control" placeholder="••••••••" required />
+                        </div>
 
-                <div class="mt-4">
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
-                        <i class="bi bi-house me-1"></i> Ir al Inicio
-                    </a>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-secondary">Nueva Contraseña</label>
+                            <input type="password" name="newPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small text-secondary">Confirmar Nueva Contraseña</label>
+                            <input type="password" name="confirmPassword" class="form-control" placeholder="Repita la nueva contraseña" required minlength="6" />
+                        </div>
+
+                        <button type="submit" class="btn btn-warning fw-semibold w-100 py-2">
+                            <i class="bi bi-shield-lock me-1"></i> Actualizar Mi Contraseña
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

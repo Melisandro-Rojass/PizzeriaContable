@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PizzeriaContable.Data;
@@ -6,6 +7,7 @@ using PizzeriaContable.Services;
 
 namespace PizzeriaContable.Controllers;
 
+[Authorize(Roles = "Administrador,Contador,Contabilidad")]
 public class ReportesController : Controller
 {
     private readonly ApplicationDbContext _context;

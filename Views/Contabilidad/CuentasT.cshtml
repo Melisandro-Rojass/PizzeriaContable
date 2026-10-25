@@ -1,0 +1,295 @@
+@model PizzeriaContable.ViewModels.ResumenCuentasTViewModel
+@{
+    ViewData["Title"] = "Módulo de Cuentas T - Esquema de Mayor";
+}
+
+<div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Encabezado de Página -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">
+                <i class="bi bi-layout-split me-2 text-primary"></i>Esquemas de Mayor — Cuentas T
+            </h2>
+            <p class="text-muted small mb-0">
+                Visualización gráfica y analítica de los movimientos contables en SQL Server bajo el principio de partida doble.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <form asp-action="CargarEjemploDidactico" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-success fw-bold shadow-sm" title="Registra un asiento didáctico de venta por C$ 1,000 (Debe: Caja, Haber: Ingresos)">
+                    <i class="bi bi-lightning-charge me-1"></i> Asiento Didáctico (C$ 1,000)
+                </button>
+            </form>
+            <a asp-action="CrearAsiento" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo Asiento
+            </a>
+            <a asp-action="Asientos" class="btn btn-secondary shadow-sm">
+                <i class="bi bi-journal-text me-1"></i> Libro Diario
+            </a>
+        </div>
+    </div>
+
+    <!-- Panel de Balance Global de Cuentas T -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-start border-primary border-4 p-3 bg-white">
+                <span class="text-muted small fw-bold text-uppercase">Sumas del Debe (Débitos)</span>
+                <h3 class="fw-bold mb-0 text-primary">C$ @Model.TotalDebeGeneral.ToString("N2")</h3>
+                <small class="text-muted">Total acumulado en el lado izquierdo</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-start border-success border-4 p-3 bg-white">
+                <span class="text-muted small fw-bold text-uppercase">Sumas del Haber (Créditos)</span>
+                <h3 class="fw-bold mb-0 text-success">C$ @Model.TotalHaberGeneral.ToString("N2")</h3>
+                <small class="text-muted">Total acumulado en el lado derecho</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm border-start @(Model.PartidaDobleEquilibrada ? "border-info" : "border-danger") border-4 p-3 bg-white">
+                <span class="text-muted small fw-bold text-uppercase">Equilibrio de Partida Doble</span>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    @if (Model.PartidaDobleEquilibrada)
+                    {
+                        <span class="badge bg-success fs-6"><i class="bi bi-shield-check me-1"></i> Balance Cuadrado</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger fs-6"><i class="bi bi-exclamation-octagon me-1"></i> Descuadre Detectado</span>
+                    }
+                </div>
+                <small class="text-muted mt-1">Diferencia: C$ @Math.Abs(Model.TotalDebeGeneral - Model.TotalHaberGeneral).ToString("N2")</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Consulta -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary">Buscar Cuenta</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Código o nombre..." value="@Model.Busqueda" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary">Tipo de Cuenta</label>
+                    <select name="tipo" class="form-select form-select-sm">
+                        <option value="">Todos los Tipos</option>
+                        <option value="Activo" selected="@(Model.TipoSeleccionado == "Activo")">1 - Activo</option>
+                        <option value="Pasivo" selected="@(Model.TipoSeleccionado == "Pasivo")">2 - Pasivo</option>
+                        <option value="Capital" selected="@(Model.TipoSeleccionado == "Capital")">3 - Capital</option>
+                        <option value="Ingreso" selected="@(Model.TipoSeleccionado == "Ingreso")">4 - Ingreso</option>
+                        <option value="Costo" selected="@(Model.TipoSeleccionado == "Costo")">5 - Costo de Ventas</option>
+                        <option value="Gasto" selected="@(Model.TipoSeleccionado == "Gasto")">6 - Gastos Operativos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary">Desde</label>
+                    <input type="date" name="desde" class="form-control form-control-sm" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary">Hasta</label>
+                    <input type="date" name="hasta" class="form-control form-control-sm" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1 fw-bold">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                    <a asp-action="CuentasT" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grid de Cuentas T -->
+    <div class="row g-4">
+        @if (!Model.Cuentas.Any(c => c.TieneMovimientos))
+        {
+            <div class="col-12">
+                <div class="card border-0 shadow-sm p-5 text-center text-muted bg-white">
+                    <i class="bi bi-folder-x fs-1 text-secondary mb-2"></i>
+                    <h5 class="fw-bold">No hay movimientos contables registrados para este filtro.</h5>
+                    <p class="small text-muted mb-3">Puedes cargar un asiento didáctico de prueba o registrar un nuevo asiento manual.</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <form asp-action="CargarEjemploDidactico" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-lightning-charge me-1"></i> Cargar Asiento Didáctico (C$ 1,000)
+                            </button>
+                        </form>
+                        <a asp-action="CrearAsiento" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i> Crear Asiento
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @foreach (var cta in Model.Cuentas.Where(c => c.TieneMovimientos))
+        {
+            string badgeTipoColor = cta.TipoCuenta switch
+            {
+                "Activo" => "bg-primary",
+                "Pasivo" => "bg-warning text-dark",
+                "Capital" => "bg-info text-dark",
+                "Ingreso" => "bg-success",
+                "Costo" => "bg-danger",
+                "Gasto" => "bg-secondary",
+                _ => "bg-dark"
+            };
+
+            int maxFilas = Math.Max(cta.MovimientosDebe.Count, cta.MovimientosHaber.Count);
+
+            <div class="col-xl-6 col-lg-12">
+                <div class="card border-0 shadow-sm h-100 cuenta-t-card">
+                    <!-- Cabecera de la Cuenta T -->
+                    <div class="card-header bg-white py-3 border-bottom border-2 border-dark">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <span class="font-monospace fw-bold text-primary fs-5">@cta.Codigo</span>
+                                <span class="fw-bold text-dark fs-5 ms-2">@cta.Nombre</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge @badgeTipoColor">@cta.TipoCuenta</span>
+                                <span class="badge bg-light text-dark border">@cta.Naturaleza</span>
+                                <a asp-action="CuentaT" asp-route-id="@cta.CuentaId" class="btn btn-sm btn-outline-primary ms-2" title="Ver detalle cronológico">
+                                    <i class="bi bi-arrows-fullscreen"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estructura Visual de la T Contable -->
+                    <div class="card-body p-0">
+                        <!-- Barra Horizontal T: DEBE | HABER -->
+                        <div class="row g-0 text-center fw-bold border-bottom border-dark py-2 bg-light">
+                            <div class="col-6 border-end border-dark text-primary">
+                                <i class="bi bi-arrow-down-left me-1"></i> DEBE (Cargas / Débitos)
+                            </div>
+                            <div class="col-6 text-success">
+                                HABER (Abonos / Créditos) <i class="bi bi-arrow-down-right ms-1"></i>
+                            </div>
+                        </div>
+
+                        <!-- Filas de Movimientos Separadas por la Línea Vertical de la T -->
+                        <div class="cuenta-t-filas">
+                            <div class="row g-0">
+                                <!-- Columna Izquierda: DEBE -->
+                                <div class="col-6 border-end border-dark p-2" style="min-height: 140px;">
+                                    @foreach (var mov in cta.MovimientosDebe)
+                                    {
+                                        <div class="d-flex justify-content-between align-items-baseline mb-2 pb-1 border-bottom border-light">
+                                            <div class="text-truncate me-2" style="max-width: 65%;">
+                                                <a asp-action="DetalleAsiento" asp-route-id="@mov.AsientoId" class="font-monospace small text-decoration-none fw-bold text-secondary" title="@mov.NumeroAsiento - @mov.Concepto">
+                                                    @mov.NumeroAsiento
+                                                </a>
+                                                <div class="small text-muted text-truncate" title="@mov.Concepto">@mov.Concepto</div>
+                                            </div>
+                                            <div class="text-end fw-bold text-primary font-monospace">
+                                                C$ @mov.Importe.ToString("N2")
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Columna Derecha: HABER -->
+                                <div class="col-6 p-2" style="min-height: 140px;">
+                                    @foreach (var mov in cta.MovimientosHaber)
+                                    {
+                                        <div class="d-flex justify-content-between align-items-baseline mb-2 pb-1 border-bottom border-light">
+                                            <div class="text-truncate me-2" style="max-width: 65%;">
+                                                <a asp-action="DetalleAsiento" asp-route-id="@mov.AsientoId" class="font-monospace small text-decoration-none fw-bold text-secondary" title="@mov.NumeroAsiento - @mov.Concepto">
+                                                    @mov.NumeroAsiento
+                                                </a>
+                                                <div class="small text-muted text-truncate" title="@mov.Concepto">@mov.Concepto</div>
+                                            </div>
+                                            <div class="text-end fw-bold text-success font-monospace">
+                                                C$ @mov.Importe.ToString("N2")
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pie de la Cuenta T: Totales y Saldo Final -->
+                        <div class="border-top border-dark bg-light">
+                            <!-- Sumas de Movimientos -->
+                            <div class="row g-0 text-center py-2 border-bottom border-secondary border-dashed">
+                                <div class="col-6 border-end border-dark text-end pe-3 font-monospace fw-bold text-primary">
+                                    <span class="small text-muted me-2">Total Debe:</span>
+                                    C$ @cta.TotalDebe.ToString("N2")
+                                </div>
+                                <div class="col-6 text-end pe-3 font-monospace fw-bold text-success">
+                                    <span class="small text-muted me-2">Total Haber:</span>
+                                    C$ @cta.TotalHaber.ToString("N2")
+                                </div>
+                            </div>
+
+                            <!-- Doble Raya Contable y Saldo Según Naturaleza -->
+                            <div class="row g-0 py-2 align-items-center" style="background-color: #f8fafc;">
+                                @if (cta.Naturaleza == "Deudora")
+                                {
+                                    <div class="col-6 border-end border-dark text-end pe-3">
+                                        <span class="badge bg-primary text-uppercase me-2">Saldo Deudor</span>
+                                        <span class="fs-6 fw-bold font-monospace text-primary">C$ @cta.SaldoFinal.ToString("N2")</span>
+                                    </div>
+                                    <div class="col-6 text-center text-muted small">
+                                        <i class="bi bi-check2-all text-muted"></i> Saldado con Haber
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-6 border-end border-dark text-center text-muted small">
+                                        <i class="bi bi-check2-all text-muted"></i> Saldado con Debe
+                                    </div>
+                                    <div class="col-6 text-end pe-3">
+                                        <span class="badge bg-success text-uppercase me-2">Saldo Acreedor</span>
+                                        <span class="fs-6 fw-bold font-monospace text-success">C$ @cta.SaldoFinal.ToString("N2")</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white py-2 text-center border-top">
+                        <a asp-action="CuentaT" asp-route-id="@cta.CuentaId" class="small text-decoration-none fw-bold text-primary">
+                            Ver Desglose Cronológico y Saldo Acumulado <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .cuenta-t-card {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .cuenta-t-filas {
+        background-color: #ffffff;
+    }
+</style>

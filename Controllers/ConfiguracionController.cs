@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PizzeriaContable.Data;
@@ -5,6 +6,7 @@ using PizzeriaContable.Models;
 
 namespace PizzeriaContable.Controllers;
 
+[Authorize(Roles = "Administrador")]
 public class ConfiguracionController : Controller
 {
     private readonly ApplicationDbContext _context;

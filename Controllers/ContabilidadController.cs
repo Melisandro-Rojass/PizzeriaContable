@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PizzeriaContable.Data;
@@ -7,6 +8,7 @@ using PizzeriaContable.ViewModels;
 
 namespace PizzeriaContable.Controllers;
 
+[Authorize(Roles = "Administrador,Contador,Contabilidad")]
 public class ContabilidadController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -41,6 +43,11 @@ public class ContabilidadController : Controller
             .OrderBy(c => c.Codigo)
             .ToListAsync();
 
+        var balanceItems = await _contabilidadService.ObtenerBalanceComprobacionAsync(null, null);
+        ViewBag.Saldos = balanceItems.ToDictionary(
+            b => b.Codigo, 
+            b => b.Naturaleza == "Deudora" ? b.SaldoDeudor : b.SaldoAcreedor);
+
         ViewBag.Search = search;
         ViewBag.Tipo = tipo;
         ViewBag.CuentasPadre = await _context.CuentasContables
@@ -49,6 +56,25 @@ public class ContabilidadController : Controller
             .ToListAsync();
 
         return View(cuentas);
+    }
+
+    // GET: Contabilidad/CuentasT
+    public async Task<IActionResult> CuentasT(DateTime? desde, DateTime? hasta, string? tipo, string? search)
+    {
+        var resumen = await _contabilidadService.ObtenerResumenCuentasTAsync(desde, hasta, tipo, search);
+        return View(resumen);
+    }
+
+    // GET: Contabilidad/CuentaT/5
+    public async Task<IActionResult> CuentaT(int id, DateTime? desde, DateTime? hasta)
+    {
+        var cuentaT = await _contabilidadService.ObtenerCuentaTDetalladaAsync(id, desde, hasta);
+        if (cuentaT == null) return NotFound();
+
+        ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
+        ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
+
+        return View(cuentaT);
     }
 
     // POST: Contabilidad/CrearCuenta
@@ -75,30 +101,22 @@ public class ContabilidadController : Controller
     }
 
     // GET: Contabilidad/Asientos (Libro Diario)
-    public async Task<IActionResult> Asientos(DateTime? desde, DateTime? hasta, string? tipoOrigen)
+    public async Task<IActionResult> Asientos(DateTime? desde, DateTime? hasta, string? tipoOrigen, int? cuentaId, string? search)
     {
         desde ??= new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         hasta ??= DateTime.Today;
 
-        var query = _context.AsientosContables
-            .Include(a => a.Detalles)
-                .ThenInclude(d => d.CuentaContable)
-            .Where(a => a.Fecha.Date >= desde.Value.Date && a.Fecha.Date <= hasta.Value.Date)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(tipoOrigen))
-        {
-            query = query.Where(a => a.TipoOrigen == tipoOrigen);
-        }
-
-        var asientos = await query
-            .OrderByDescending(a => a.Fecha)
-            .ThenByDescending(a => a.Id)
-            .ToListAsync();
+        var asientos = await _contabilidadService.ObtenerLibroDiarioAsync(desde, hasta, tipoOrigen, cuentaId, search);
 
         ViewBag.Desde = desde.Value.ToString("yyyy-MM-dd");
         ViewBag.Hasta = hasta.Value.ToString("yyyy-MM-dd");
         ViewBag.TipoOrigen = tipoOrigen;
+        ViewBag.CuentaId = cuentaId;
+        ViewBag.Search = search;
+        ViewBag.Cuentas = await _context.CuentasContables
+            .Where(c => c.Activa && c.PermiteMovimiento)
+            .OrderBy(c => c.Codigo)
+            .ToListAsync();
 
         ViewBag.TotalDebe = asientos.Where(a => !a.Anulado).Sum(a => a.Detalles.Sum(d => d.Debe));
         ViewBag.TotalHaber = asientos.Where(a => !a.Anulado).Sum(a => a.Detalles.Sum(d => d.Haber));
@@ -138,54 +156,15 @@ public class ContabilidadController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CrearAsiento(AsientoManualViewModel model)
     {
-        if (model.Lineas == null || model.Lineas.Count < 2)
+        try
         {
-            ModelState.AddModelError("", "Un asiento contable de partida doble debe contener al menos 2 líneas de movimiento.");
-        }
-        else
-        {
-            decimal totalDebe = model.Lineas.Sum(l => l.Debe);
-            decimal totalHaber = model.Lineas.Sum(l => l.Haber);
-
-            if (totalDebe <= 0 || totalHaber <= 0)
-            {
-                ModelState.AddModelError("", "El total del Debe y del Haber deben ser mayores a cero.");
-            }
-            else if (Math.Abs(totalDebe - totalHaber) > 0.01m)
-            {
-                ModelState.AddModelError("", $"El asiento está desbalanceado. Suma Debe: {totalDebe:C2} | Suma Haber: {totalHaber:C2}. Diferencia: {Math.Abs(totalDebe - totalHaber):C2}.");
-            }
-        }
-
-        if (ModelState.IsValid)
-        {
-            int totalAsientos = await _context.AsientosContables.CountAsync() + 1;
-            string numAsiento = $"AS-{DateTime.Today.Year}-{totalAsientos:D5}";
-
-            var asiento = new AsientoContable
-            {
-                NumeroAsiento = numAsiento,
-                Fecha = model.Fecha,
-                Concepto = model.Concepto,
-                TipoOrigen = "Manual",
-                Contabilizado = true,
-                Anulado = false,
-                FechaCreacion = DateTime.Now,
-                CreadoPor = User.Identity?.Name ?? "Admin",
-                Detalles = model.Lineas.Select(l => new AsientoDetalle
-                {
-                    CuentaContableId = l.CuentaContableId,
-                    Debe = l.Debe,
-                    Haber = l.Haber,
-                    Descripcion = l.Descripcion
-                }).ToList()
-            };
-
-            _context.AsientosContables.Add(asiento);
-            await _context.SaveChangesAsync();
-
+            var asiento = await _contabilidadService.CrearAsientoManualAsync(model, User.Identity?.Name);
             TempData["SuccessMessage"] = $"Asiento {asiento.NumeroAsiento} registrado correctamente con partida doble equilibrada.";
             return RedirectToAction(nameof(Asientos));
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", ex.Message);
         }
 
         ViewBag.Cuentas = await _context.CuentasContables
@@ -194,6 +173,49 @@ public class ContabilidadController : Controller
             .ToListAsync();
 
         return View(model);
+    }
+
+    // POST: Contabilidad/AnularAsiento
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AnularAsiento(int id, string motivo)
+    {
+        try
+        {
+            bool anulado = await _contabilidadService.AnularAsientoAsync(id, motivo, User.Identity?.Name);
+            if (anulado)
+            {
+                TempData["SuccessMessage"] = "El asiento contable fue anulado exitosamente preservando su trazabilidad de auditoría.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "No se encontró el asiento contable especificado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error al anular el asiento: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(Asientos));
+    }
+
+    // POST: Contabilidad/CargarEjemploDidactico
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CargarEjemploDidactico()
+    {
+        try
+        {
+            var asiento = await _contabilidadService.RegistrarVentaContadoEjemploAsync(User.Identity?.Name);
+            TempData["SuccessMessage"] = $"Ejemplo didáctico registrado ({asiento.NumeroAsiento}): Venta al contado por C$ 1,000.00. Débito a Caja Principal y Crédito a Ingresos reflejados en Cuentas T.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error al registrar el asiento didáctico: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(CuentasT));
     }
 
     // GET: Contabilidad/Apertura

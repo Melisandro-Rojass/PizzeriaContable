@@ -40,5 +40,12 @@ public class AsientoContable
     [Display(Name = "Registrado Por")]
     public string? CreadoPor { get; set; }
 
+    [Display(Name = "Fecha de Anulación")]
+    public DateTime? FechaAnulacion { get; set; }
+
+    [StringLength(250)]
+    [Display(Name = "Motivo de Anulación")]
+    public string? MotivoAnulacion { get; set; }
+
     public ICollection<AsientoDetalle> Detalles { get; set; } = new List<AsientoDetalle>();
 }

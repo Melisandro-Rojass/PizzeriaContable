@@ -1,0 +1,265 @@
+@model PizzeriaContable.ViewModels.CuentaTViewModel
+@{
+    ViewData["Title"] = $"Cuenta T - {Model.Codigo} {Model.Nombre}";
+}
+
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="CuentasT" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h2 class="h3 fw-bold text-dark mb-0">
+                    <span class="font-monospace text-primary">@Model.Codigo</span> — @Model.Nombre
+                </h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">
+                Tipo: <strong>@Model.TipoCuenta</strong> | Naturaleza: <strong>@Model.Naturaleza</strong> | Nivel: <strong>@Model.Nivel</strong>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-dark" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Imprimir Cuenta T
+            </button>
+            <a asp-action="CuentasT" class="btn btn-primary">
+                <i class="bi bi-grid-fill me-1"></i> Todas las Cuentas T
+            </a>
+            <a asp-action="Cuentas" class="btn btn-secondary">
+                <i class="bi bi-diagram-3 me-1"></i> Catálogo
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtro de Fechas -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Fecha Desde</label>
+                    <input type="date" name="desde" class="form-control form-control-sm" value="@ViewBag.Desde" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Fecha Hasta</label>
+                    <input type="date" name="hasta" class="form-control form-control-sm" value="@ViewBag.Hasta" />
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-funnel me-1"></i> Filtrar Período</button>
+                    <a asp-action="CuentaT" asp-route-id="@Model.CuentaId" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Representación Visual de la T Contable -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-dark text-white py-3 text-center">
+            <h4 class="mb-0 fw-bold font-monospace">
+                [ @Model.Codigo ] @Model.Nombre.ToUpper()
+            </h4>
+            <div class="small text-light opacity-75 mt-1">
+                NATURALEZA @Model.Naturaleza.ToUpper() — @Model.TipoCuenta.ToUpper()
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <!-- Barra Superior de la T -->
+            <div class="row g-0 text-center fw-bold border-bottom border-dark py-2 bg-light">
+                <div class="col-6 border-end border-dark text-primary fs-5">
+                    DEBE (Cargas)
+                </div>
+                <div class="col-6 text-success fs-5">
+                    HABER (Abonos)
+                </div>
+            </div>
+
+            <!-- Columnas del Debe y del Haber -->
+            <div class="row g-0">
+                <!-- Lado Izquierdo: DEBE -->
+                <div class="col-6 border-end border-dark p-3" style="min-height: 200px;">
+                    @if (!Model.MovimientosDebe.Any())
+                    {
+                        <div class="text-center text-muted py-4 small">Sin débitos en el período</div>
+                    }
+                    @foreach (var mov in Model.MovimientosDebe)
+                    {
+                        <div class="d-flex justify-content-between align-items-baseline mb-2 pb-2 border-bottom border-light">
+                            <div>
+                                <span class="badge bg-secondary font-monospace">@mov.Fecha.ToString("dd/MM/yy")</span>
+                                <a asp-action="DetalleAsiento" asp-route-id="@mov.AsientoId" class="font-monospace text-decoration-none fw-bold ms-1">
+                                    @mov.NumeroAsiento
+                                </a>
+                                <div class="small text-muted">@mov.Concepto</div>
+                                @if (!string.IsNullOrEmpty(mov.Detalle) && mov.Detalle != mov.Concepto)
+                                {
+                                    <div class="text-secondary small fst-italic">@mov.Detalle</div>
+                                }
+                            </div>
+                            <div class="text-end fw-bold font-monospace text-primary fs-6">
+                                C$ @mov.Importe.ToString("N2")
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Lado Derecho: HABER -->
+                <div class="col-6 p-3" style="min-height: 200px;">
+                    @if (!Model.MovimientosHaber.Any())
+                    {
+                        <div class="text-center text-muted py-4 small">Sin créditos en el período</div>
+                    }
+                    @foreach (var mov in Model.MovimientosHaber)
+                    {
+                        <div class="d-flex justify-content-between align-items-baseline mb-2 pb-2 border-bottom border-light">
+                            <div>
+                                <span class="badge bg-secondary font-monospace">@mov.Fecha.ToString("dd/MM/yy")</span>
+                                <a asp-action="DetalleAsiento" asp-route-id="@mov.AsientoId" class="font-monospace text-decoration-none fw-bold ms-1">
+                                    @mov.NumeroAsiento
+                                </a>
+                                <div class="small text-muted">@mov.Concepto</div>
+                                @if (!string.IsNullOrEmpty(mov.Detalle) && mov.Detalle != mov.Concepto)
+                                {
+                                    <div class="text-secondary small fst-italic">@mov.Detalle</div>
+                                }
+                            </div>
+                            <div class="text-end fw-bold font-monospace text-success fs-6">
+                                C$ @mov.Importe.ToString("N2")
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Base de la T: Totales de Cada Lado -->
+            <div class="border-top border-dark border-2 bg-light">
+                <div class="row g-0 py-3 text-center fw-bold">
+                    <div class="col-6 border-end border-dark text-end pe-4 font-monospace fs-5 text-primary">
+                        <span class="small text-muted me-2">Movimiento Deudor:</span>
+                        C$ @Model.TotalDebe.ToString("N2")
+                    </div>
+                    <div class="col-6 text-end pe-4 font-monospace fs-5 text-success">
+                        <span class="small text-muted me-2">Movimiento Acreedor:</span>
+                        C$ @Model.TotalHaber.ToString("N2")
+                    </div>
+                </div>
+
+                <!-- Doble Raya Contable: Saldo Final -->
+                <div class="row g-0 py-3 border-top border-dark border-3 bg-white align-items-center">
+                    @if (Model.Naturaleza == "Deudora")
+                    {
+                        <div class="col-6 border-end border-dark text-end pe-4">
+                            <span class="badge bg-primary fs-6 me-2">SALDO DEUDOR</span>
+                            <span class="fs-4 fw-bold font-monospace text-primary">C$ @Model.SaldoFinal.ToString("N2")</span>
+                        </div>
+                        <div class="col-6 text-center text-muted small">
+                            (Debe C$ @Model.TotalDebe.ToString("N2") - Haber C$ @Model.TotalHaber.ToString("N2"))
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-6 border-end border-dark text-center text-muted small">
+                            (Haber C$ @Model.TotalHaber.ToString("N2") - Debe C$ @Model.TotalDebe.ToString("N2"))
+                        </div>
+                        <div class="col-6 text-end pe-4">
+                            <span class="badge bg-success fs-6 me-2">SALDO ACREEDOR</span>
+                            <span class="fs-4 fw-bold font-monospace text-success">C$ @Model.SaldoFinal.ToString("N2")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desglose Cronológico de Libro Mayor con Saldo Acumulado -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title fw-bold mb-0">
+                <i class="bi bi-clock-history me-2 text-primary"></i>Trazabilidad Cronológica y Saldo Acumulado
+            </h5>
+            <small class="text-muted">Evolución del saldo movimiento a movimiento según la naturaleza @Model.Naturaleza</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 120px;">Fecha</th>
+                        <th style="width: 140px;">N° Asiento</th>
+                        <th>Concepto / Glosa</th>
+                        <th class="text-end" style="width: 140px;">Debe</th>
+                        <th class="text-end" style="width: 140px;">Haber</th>
+                        <th class="text-end" style="width: 160px;">Saldo Acumulado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        // Unificar movimientos ordenados por fecha
+                        var todosMovimientos = Model.MovimientosDebe
+                            .Select(m => new { m.Fecha, m.NumeroAsiento, m.AsientoId, m.Concepto, m.Detalle, Debe = m.Importe, Haber = 0m })
+                            .Concat(Model.MovimientosHaber.Select(m => new { m.Fecha, m.NumeroAsiento, m.AsientoId, m.Concepto, m.Detalle, Debe = 0m, Haber = m.Importe }))
+                            .OrderBy(m => m.Fecha)
+                            .ThenBy(m => m.AsientoId)
+                            .ToList();
+
+                        decimal acumulado = 0m;
+                    }
+
+                    @if (!todosMovimientos.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No hay transacciones registradas para esta cuenta en el rango seleccionado.
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var mov in todosMovimientos)
+                    {
+                        if (Model.Naturaleza == "Deudora")
+                        {
+                            acumulado += (mov.Debe - mov.Haber);
+                        }
+                        else
+                        {
+                            acumulado += (mov.Haber - mov.Debe);
+                        }
+
+                        <tr>
+                            <td>@mov.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a asp-action="DetalleAsiento" asp-route-id="@mov.AsientoId" class="font-monospace fw-bold text-decoration-none">
+                                    @mov.NumeroAsiento
+                                </a>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@mov.Concepto</div>
+                                @if (!string.IsNullOrEmpty(mov.Detalle) && mov.Detalle != mov.Concepto)
+                                {
+                                    <small class="text-muted">@mov.Detalle</small>
+                                }
+                            </td>
+                            <td class="text-end font-monospace @(mov.Debe > 0 ? "fw-bold text-primary" : "text-muted")">
+                                @(mov.Debe > 0 ? $"C$ {mov.Debe:N2}" : "-")
+                            </td>
+                            <td class="text-end font-monospace @(mov.Haber > 0 ? "fw-bold text-success" : "text-muted")">
+                                @(mov.Haber > 0 ? $"C$ {mov.Haber:N2}" : "-")
+                            </td>
+                            <td class="text-end font-monospace fw-bold fs-6 @(acumulado >= 0 ? "text-dark" : "text-danger")">
+                                C$ @acumulado.ToString("N2")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td colspan="3" class="text-end">Totales y Saldo Final:</td>
+                        <td class="text-end text-primary font-monospace">C$ @Model.TotalDebe.ToString("N2")</td>
+                        <td class="text-end text-success font-monospace">C$ @Model.TotalHaber.ToString("N2")</td>
+                        <td class="text-end font-monospace @(Model.Naturaleza == "Deudora" ? "text-primary" : "text-success") fs-5">
+                            C$ @Model.SaldoFinal.ToString("N2")
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

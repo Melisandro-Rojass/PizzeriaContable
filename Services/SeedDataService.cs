@@ -11,17 +11,20 @@ public class SeedDataService : ISeedDataService
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IContabilidadService _contabilidadService;
+    private readonly IConfiguration _configuration;
 
     public SeedDataService(
         ApplicationDbContext context,
         RoleManager<IdentityRole> roleManager,
         UserManager<ApplicationUser> userManager,
-        IContabilidadService contabilidadService)
+        IContabilidadService contabilidadService,
+        IConfiguration configuration)
     {
         _context = context;
         _roleManager = roleManager;
         _userManager = userManager;
         _contabilidadService = contabilidadService;
+        _configuration = configuration;
     }
 
     public async Task InicializarDatosAsync()
@@ -47,7 +50,7 @@ public class SeedDataService : ISeedDataService
         }
 
         // 2. Roles del Sistema
-        string[] roles = { "Administrador", "Cajero", "EncargadoInventario", "Contador" };
+        string[] roles = { "Administrador", "Contabilidad", "Contador", "Cajero", "Inventario", "EncargadoInventario", "Consulta" };
         foreach (var rol in roles)
         {
             if (!await _roleManager.RoleExistsAsync(rol))
@@ -56,23 +59,29 @@ public class SeedDataService : ISeedDataService
             }
         }
 
-        // 3. Usuario Administrador por Defecto
-        var adminEmail = "admin@pizzeria.local";
-        var adminUser = await _userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+        // 3. Usuario Administrador Inicial (Idempotente y Seguro)
+        // Si ya existe al menos un usuario con rol de Administrador, no se modifica nada.
+        var adminsExistentes = await _userManager.GetUsersInRoleAsync("Administrador");
+        if (!adminsExistentes.Any())
         {
-            adminUser = new ApplicationUser
+            // Obtener clave inicial desde configuración o variable de entorno segura
+            string initialPassword = _configuration["AdminInitialPassword"]
+                ?? Environment.GetEnvironmentVariable("PIZZERIA_ADMIN_PASSWORD")
+                ?? "Pizzeria#Admin2026!";
+
+            var adminUser = new ApplicationUser
             {
-                UserName = adminEmail,
-                Email = adminEmail,
-                NombreCompleto = "Administrador Principal",
+                UserName = "admin",
+                Email = "admin@pizzeria.local",
+                NombreCompleto = "Administrador del Sistema",
+                Cargo = "Gerente General",
                 Rol = "Administrador",
                 Activo = true,
                 EmailConfirmed = true,
                 FechaRegistro = DateTime.Now
             };
 
-            var result = await _userManager.CreateAsync(adminUser, "AdminPizzeria2026!");
+            var result = await _userManager.CreateAsync(adminUser, initialPassword);
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(adminUser, "Administrador");

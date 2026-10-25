@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PizzeriaContable.Data;
@@ -7,6 +8,7 @@ using PizzeriaContable.ViewModels;
 
 namespace PizzeriaContable.Controllers;
 
+[Authorize(Roles = "Administrador,Cajero,Contador,Contabilidad")]
 public class VentasController : Controller
 {
     private readonly ApplicationDbContext _context;

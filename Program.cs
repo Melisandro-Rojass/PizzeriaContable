@@ -18,23 +18,45 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // ASP.NET Core Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
+    // Reglas de contraseña
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 6;
     options.SignIn.RequireConfirmedAccount = false;
+
+    // Bloqueo temporal por intentos fallidos de acceso (fuerza bruta)
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // Permitir cuentas de empleado con nombre de usuario
+    options.User.RequireUniqueEmail = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+// Cookie de Autenticación Segura
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Usuarios/Login";
     options.LogoutPath = "/Usuarios/Logout";
     options.AccessDeniedPath = "/Usuarios/AccessDenied";
+    options.Cookie.Name = "PizzeriaContable.Auth";
     options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
+});
+
+// Política de Autorización Global: Toda la aplicación es privada por defecto
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
 });
 
 // Business Services
@@ -83,5 +105,20 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+    app.MapGet("/test-db", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        bool canConnect = await db.Database.CanConnectAsync();
+        return canConnect
+            ? Results.Ok(new { status = "OK", message = "Conexión a SQL Server exitosa." })
+            : Results.Problem("No se pudo establecer conexión con SQL Server.");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Error al conectar: {ex.Message}");
+    }
+});
 
 app.Run();

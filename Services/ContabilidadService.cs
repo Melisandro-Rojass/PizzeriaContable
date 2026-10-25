@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PizzeriaContable.Data;
 using PizzeriaContable.Models;
+using PizzeriaContable.ViewModels;
 
 namespace PizzeriaContable.Services;
 
@@ -15,8 +16,15 @@ public class ContabilidadService : IContabilidadService
 
     public bool ValidarAsientoEquilibrado(IEnumerable<AsientoDetalle> detalles)
     {
-        var totalDebe = detalles.Sum(d => d.Debe);
-        var totalHaber = detalles.Sum(d => d.Haber);
+        if (detalles == null) return false;
+        var lista = detalles.ToList();
+        if (lista.Count < 2) return false;
+
+        var totalDebe = lista.Sum(d => d.Debe);
+        var totalHaber = lista.Sum(d => d.Haber);
+
+        if (totalDebe <= 0 || totalHaber <= 0) return false;
+
         return Math.Abs(totalDebe - totalHaber) < 0.01m;
     }
 
@@ -27,8 +35,13 @@ public class ContabilidadService : IContabilidadService
         List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)> apuntes,
         string? usuario)
     {
+        if (apuntes == null || apuntes.Count < 2)
+        {
+            throw new InvalidOperationException("Un asiento contable debe contener al menos dos apuntes (partida doble).");
+        }
+
         // 1. Prevención de doble contabilización para el mismo origen
-        if (documentoId.HasValue && tipoOrigen != "Manual")
+        if (documentoId.HasValue && tipoOrigen != "Manual" && tipoOrigen != "Demostracion")
         {
             var existe = await _context.AsientosContables
                 .AnyAsync(a => a.TipoOrigen == tipoOrigen && a.DocumentoOrigenId == documentoId.Value && !a.Anulado);
@@ -39,7 +52,7 @@ public class ContabilidadService : IContabilidadService
             }
         }
 
-        // 2. Resolver cuentas contables por código
+        // 2. Resolver cuentas contables por código y validar importes
         var detalles = new List<AsientoDetalle>();
         foreach (var apunte in apuntes)
         {
@@ -48,12 +61,27 @@ public class ContabilidadService : IContabilidadService
                 continue;
             }
 
+            if (apunte.debe < 0 || apunte.haber < 0)
+            {
+                throw new InvalidOperationException("No se permiten importes contables negativos.");
+            }
+
+            if (apunte.debe > 0 && apunte.haber > 0)
+            {
+                throw new InvalidOperationException("Un apunte no puede registrar importes simultáneos al Debe y al Haber.");
+            }
+
             var cuenta = await _context.CuentasContables
                 .FirstOrDefaultAsync(c => c.Codigo == apunte.codigoCuenta && c.Activa);
 
             if (cuenta == null)
             {
                 throw new InvalidOperationException($"La cuenta contable con código '{apunte.codigoCuenta}' no existe o no está activa.");
+            }
+
+            if (!cuenta.PermiteMovimiento)
+            {
+                throw new InvalidOperationException($"La cuenta '{cuenta.Codigo} - {cuenta.Nombre}' es de agrupación (rubro superior) y no permite movimientos directos.");
             }
 
             detalles.Add(new AsientoDetalle
@@ -73,35 +101,357 @@ public class ContabilidadService : IContabilidadService
             throw new InvalidOperationException($"El asiento no cumple el principio de partida doble. Total Debe: {totalD:C2}, Total Haber: {totalH:C2}. Diferencia: {Math.Abs(totalD - totalH):C2}");
         }
 
-        // 4. Generar consecutivo de asiento
-        int totalAsientos = await _context.AsientosContables.CountAsync() + 1;
-        string numeroAsiento = $"AS-{DateTime.Now.Year}-{totalAsientos:D5}";
-
-        var asiento = new AsientoContable
+        var transaction = _context.Database.IsRelational() ? await _context.Database.BeginTransactionAsync() : null;
+        try
         {
-            NumeroAsiento = numeroAsiento,
-            Fecha = DateTime.Today,
-            Concepto = concepto,
-            TipoOrigen = tipoOrigen,
-            DocumentoOrigenId = documentoId,
-            Contabilizado = true,
-            Anulado = false,
-            FechaCreacion = DateTime.Now,
-            CreadoPor = usuario ?? "Sistema",
-            Detalles = detalles
-        };
+            // 4. Generar consecutivo de asiento
+            int totalAsientos = await _context.AsientosContables.CountAsync() + 1;
+            string numeroAsiento = $"AS-{DateTime.Now.Year}-{totalAsientos:D5}";
 
-        _context.AsientosContables.Add(asiento);
-        await _context.SaveChangesAsync();
-        return asiento;
+            var asiento = new AsientoContable
+            {
+                NumeroAsiento = numeroAsiento,
+                Fecha = DateTime.Today,
+                Concepto = concepto,
+                TipoOrigen = tipoOrigen,
+                DocumentoOrigenId = documentoId,
+                Contabilizado = true,
+                Anulado = false,
+                FechaCreacion = DateTime.Now,
+                CreadoPor = usuario ?? "Sistema",
+                Detalles = detalles
+            };
+
+            _context.AsientosContables.Add(asiento);
+            await _context.SaveChangesAsync();
+            if (transaction != null) await transaction.CommitAsync();
+
+            return asiento;
+        }
+        catch
+        {
+            if (transaction != null) await transaction.RollbackAsync();
+            throw;
+        }
+        finally
+        {
+            if (transaction != null) await transaction.DisposeAsync();
+        }
     }
 
-    public async Task<List<AsientoContable>> ObtenerLibroDiarioAsync(DateTime? desde, DateTime? hasta)
+    public async Task<AsientoContable> CrearAsientoManualAsync(AsientoManualViewModel model, string? usuario)
+    {
+        if (model.Lineas == null || model.Lineas.Count < 2)
+        {
+            throw new InvalidOperationException("Un asiento contable de partida doble debe contener al menos 2 líneas de movimiento.");
+        }
+
+        var detalles = new List<AsientoDetalle>();
+
+        foreach (var linea in model.Lineas)
+        {
+            if (linea.Debe == 0 && linea.Haber == 0) continue;
+
+            if (linea.Debe < 0 || linea.Haber < 0)
+            {
+                throw new InvalidOperationException("No se permiten importes contables negativos.");
+            }
+
+            if (linea.Debe > 0 && linea.Haber > 0)
+            {
+                throw new InvalidOperationException("Una línea contable no puede tener montos simultáneos en Debe y Haber.");
+            }
+
+            var cuenta = await _context.CuentasContables.FindAsync(linea.CuentaContableId);
+            if (cuenta == null || !cuenta.Activa)
+            {
+                throw new InvalidOperationException($"La cuenta seleccionada (ID: {linea.CuentaContableId}) no existe o está inactiva.");
+            }
+
+            if (!cuenta.PermiteMovimiento)
+            {
+                throw new InvalidOperationException($"La cuenta '{cuenta.Codigo} - {cuenta.Nombre}' es de nivel superior y no acepta imputaciones directas.");
+            }
+
+            detalles.Add(new AsientoDetalle
+            {
+                CuentaContableId = cuenta.Id,
+                Debe = Math.Round(linea.Debe, 2),
+                Haber = Math.Round(linea.Haber, 2),
+                Descripcion = string.IsNullOrWhiteSpace(linea.Descripcion) ? model.Concepto : linea.Descripcion
+            });
+        }
+
+        if (!ValidarAsientoEquilibrado(detalles))
+        {
+            decimal totalD = detalles.Sum(d => d.Debe);
+            decimal totalH = detalles.Sum(d => d.Haber);
+            throw new InvalidOperationException($"El asiento no cumple el equilibrio de partida doble. Suma Debe: {totalD:C2} | Suma Haber: {totalH:C2}.");
+        }
+
+        var transaction = _context.Database.IsRelational() ? await _context.Database.BeginTransactionAsync() : null;
+        try
+        {
+            int totalAsientos = await _context.AsientosContables.CountAsync() + 1;
+            string numAsiento = $"AS-{model.Fecha.Year}-{totalAsientos:D5}";
+
+            var asiento = new AsientoContable
+            {
+                NumeroAsiento = numAsiento,
+                Fecha = model.Fecha,
+                Concepto = model.Concepto,
+                TipoOrigen = "Manual",
+                Contabilizado = true,
+                Anulado = false,
+                FechaCreacion = DateTime.Now,
+                CreadoPor = usuario ?? "Admin",
+                Detalles = detalles
+            };
+
+            _context.AsientosContables.Add(asiento);
+            await _context.SaveChangesAsync();
+            if (transaction != null) await transaction.CommitAsync();
+
+            return asiento;
+        }
+        catch
+        {
+            if (transaction != null) await transaction.RollbackAsync();
+            throw;
+        }
+        finally
+        {
+            if (transaction != null) await transaction.DisposeAsync();
+        }
+    }
+
+    public async Task<bool> AnularAsientoAsync(int asientoId, string motivo, string? usuario)
+    {
+        var asiento = await _context.AsientosContables
+            .Include(a => a.Detalles)
+            .FirstOrDefaultAsync(a => a.Id == asientoId);
+
+        if (asiento == null) return false;
+        if (asiento.Anulado)
+        {
+            throw new InvalidOperationException($"El asiento {asiento.NumeroAsiento} ya se encuentra anulado.");
+        }
+
+        var transaction = _context.Database.IsRelational() ? await _context.Database.BeginTransactionAsync() : null;
+        try
+        {
+            asiento.Anulado = true;
+            asiento.FechaAnulacion = DateTime.Now;
+            asiento.MotivoAnulacion = string.IsNullOrWhiteSpace(motivo) ? "Anulado por el usuario" : motivo;
+
+            await _context.SaveChangesAsync();
+            if (transaction != null) await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            if (transaction != null) await transaction.RollbackAsync();
+            throw;
+        }
+        finally
+        {
+            if (transaction != null) await transaction.DisposeAsync();
+        }
+    }
+
+    public async Task<ResumenCuentasTViewModel> ObtenerResumenCuentasTAsync(
+        DateTime? desde, DateTime? hasta, string? tipo, string? search)
+    {
+        var queryCuentas = _context.CuentasContables
+            .Where(c => c.Activa && c.PermiteMovimiento)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(tipo))
+        {
+            queryCuentas = queryCuentas.Where(c => c.TipoCuenta == tipo);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            queryCuentas = queryCuentas.Where(c => c.Codigo.Contains(search) || c.Nombre.Contains(search));
+        }
+
+        var cuentas = await queryCuentas.OrderBy(c => c.Codigo).ToListAsync();
+
+        var queryMovimientos = _context.AsientoDetalles
+            .Include(ad => ad.AsientoContable)
+            .Where(ad => !ad.AsientoContable!.Anulado)
+            .AsQueryable();
+
+        if (desde.HasValue)
+        {
+            queryMovimientos = queryMovimientos.Where(ad => ad.AsientoContable!.Fecha >= desde.Value.Date);
+        }
+
+        if (hasta.HasValue)
+        {
+            queryMovimientos = queryMovimientos.Where(ad => ad.AsientoContable!.Fecha <= hasta.Value.Date);
+        }
+
+        var movimientos = await queryMovimientos
+            .OrderBy(ad => ad.AsientoContable!.Fecha)
+            .ThenBy(ad => ad.AsientoContableId)
+            .ToListAsync();
+
+        var cuentasTVm = new List<CuentaTViewModel>();
+
+        foreach (var c in cuentas)
+        {
+            var movsCuenta = movimientos.Where(m => m.CuentaContableId == c.Id).ToList();
+
+            var vm = new CuentaTViewModel
+            {
+                CuentaId = c.Id,
+                Codigo = c.Codigo,
+                Nombre = c.Nombre,
+                TipoCuenta = c.TipoCuenta,
+                Naturaleza = c.Naturaleza,
+                Nivel = c.Nivel,
+                PermiteMovimiento = c.PermiteMovimiento,
+                MovimientosDebe = movsCuenta
+                    .Where(m => m.Debe > 0)
+                    .Select(m => new MovimientoTLineaDto
+                    {
+                        AsientoId = m.AsientoContableId,
+                        NumeroAsiento = m.AsientoContable?.NumeroAsiento ?? string.Empty,
+                        Fecha = m.AsientoContable?.Fecha ?? DateTime.Today,
+                        Concepto = m.AsientoContable?.Concepto ?? string.Empty,
+                        Detalle = m.Descripcion,
+                        Importe = m.Debe
+                    }).ToList(),
+                MovimientosHaber = movsCuenta
+                    .Where(m => m.Haber > 0)
+                    .Select(m => new MovimientoTLineaDto
+                    {
+                        AsientoId = m.AsientoContableId,
+                        NumeroAsiento = m.AsientoContable?.NumeroAsiento ?? string.Empty,
+                        Fecha = m.AsientoContable?.Fecha ?? DateTime.Today,
+                        Concepto = m.AsientoContable?.Concepto ?? string.Empty,
+                        Detalle = m.Descripcion,
+                        Importe = m.Haber
+                    }).ToList()
+            };
+
+            cuentasTVm.Add(vm);
+        }
+
+        return new ResumenCuentasTViewModel
+        {
+            Desde = desde,
+            Hasta = hasta,
+            TipoSeleccionado = tipo,
+            Busqueda = search,
+            Cuentas = cuentasTVm
+        };
+    }
+
+    public async Task<CuentaTViewModel?> ObtenerCuentaTDetalladaAsync(int cuentaId, DateTime? desde, DateTime? hasta)
+    {
+        var cuenta = await _context.CuentasContables.FindAsync(cuentaId);
+        if (cuenta == null) return null;
+
+        var query = _context.AsientoDetalles
+            .Include(ad => ad.AsientoContable)
+            .Where(ad => ad.CuentaContableId == cuentaId && !ad.AsientoContable!.Anulado)
+            .AsQueryable();
+
+        if (desde.HasValue)
+        {
+            query = query.Where(ad => ad.AsientoContable!.Fecha >= desde.Value.Date);
+        }
+
+        if (hasta.HasValue)
+        {
+            query = query.Where(ad => ad.AsientoContable!.Fecha <= hasta.Value.Date);
+        }
+
+        var movimientos = await query
+            .OrderBy(ad => ad.AsientoContable!.Fecha)
+            .ThenBy(ad => ad.AsientoContableId)
+            .ToListAsync();
+
+        var movsDebe = new List<MovimientoTLineaDto>();
+        var movsHaber = new List<MovimientoTLineaDto>();
+
+        decimal saldoAcumulado = 0m;
+
+        foreach (var m in movimientos)
+        {
+            if (cuenta.Naturaleza == "Deudora")
+            {
+                saldoAcumulado += (m.Debe - m.Haber);
+            }
+            else
+            {
+                saldoAcumulado += (m.Haber - m.Debe);
+            }
+
+            var dto = new MovimientoTLineaDto
+            {
+                AsientoId = m.AsientoContableId,
+                NumeroAsiento = m.AsientoContable?.NumeroAsiento ?? string.Empty,
+                Fecha = m.AsientoContable?.Fecha ?? DateTime.Today,
+                Concepto = m.AsientoContable?.Concepto ?? string.Empty,
+                Detalle = m.Descripcion,
+                Importe = m.Debe > 0 ? m.Debe : m.Haber,
+                SaldoAcumulado = saldoAcumulado
+            };
+
+            if (m.Debe > 0)
+            {
+                movsDebe.Add(dto);
+            }
+            else if (m.Haber > 0)
+            {
+                movsHaber.Add(dto);
+            }
+        }
+
+        return new CuentaTViewModel
+        {
+            CuentaId = cuenta.Id,
+            Codigo = cuenta.Codigo,
+            Nombre = cuenta.Nombre,
+            TipoCuenta = cuenta.TipoCuenta,
+            Naturaleza = cuenta.Naturaleza,
+            Nivel = cuenta.Nivel,
+            PermiteMovimiento = cuenta.PermiteMovimiento,
+            MovimientosDebe = movsDebe,
+            MovimientosHaber = movsHaber
+        };
+    }
+
+    public async Task<AsientoContable> RegistrarVentaContadoEjemploAsync(string? usuario)
+    {
+        await InicializarCatalogoCuentasAsync();
+
+        var apuntes = new List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)>
+        {
+            ("1.1.01.01", 1000.00m, 0.00m, "Venta contado: Ingreso de efectivo a Caja Principal"),
+            ("4.1.01", 0.00m, 1000.00m, "Venta contado: Ingreso devengado por ventas de pizzas")
+        };
+
+        return await CrearAsientoAutomaticoAsync(
+            "Demostración Didáctica: Venta de pizzas de contado por C$ 1,000.00 (Sin impuestos)",
+            "Demostracion",
+            null,
+            apuntes,
+            usuario ?? "Demostración Cuentas T"
+        );
+    }
+
+    public async Task<List<AsientoContable>> ObtenerLibroDiarioAsync(
+        DateTime? desde, DateTime? hasta, string? tipoOrigen = null, int? cuentaId = null, string? search = null)
     {
         IQueryable<AsientoContable> query = _context.AsientosContables
             .Include(a => a.Detalles)
                 .ThenInclude(d => d.CuentaContable)
-            .Where(a => !a.Anulado);
+            .AsQueryable();
 
         if (desde.HasValue)
         {
@@ -113,7 +463,22 @@ public class ContabilidadService : IContabilidadService
             query = query.Where(a => a.Fecha <= hasta.Value.Date);
         }
 
-        return await query.OrderBy(a => a.Fecha).ThenBy(a => a.Id).ToListAsync();
+        if (!string.IsNullOrWhiteSpace(tipoOrigen))
+        {
+            query = query.Where(a => a.TipoOrigen == tipoOrigen);
+        }
+
+        if (cuentaId.HasValue)
+        {
+            query = query.Where(a => a.Detalles.Any(d => d.CuentaContableId == cuentaId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(a => a.NumeroAsiento.Contains(search) || a.Concepto.Contains(search));
+        }
+
+        return await query.OrderByDescending(a => a.Fecha).ThenByDescending(a => a.Id).ToListAsync();
     }
 
     public async Task<(CuentaContable cuenta, List<AsientoDetalle> movimientos, decimal saldoDeudor, decimal saldoAcreedor)> 

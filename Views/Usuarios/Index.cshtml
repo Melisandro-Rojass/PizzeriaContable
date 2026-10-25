@@ -1,73 +1,193 @@
 @model IEnumerable<PizzeriaContable.Models.ApplicationUser>
 @{
-    ViewData["Title"] = "Gestión de Personal y Usuarios";
+    ViewData["Title"] = "Gestión de Personal y Cuentas de Empleados";
+    var rolesDisponibles = ViewBag.RolesDisponibles as List<string> ?? new List<string>();
+    string currentSearch = ViewBag.Search as string ?? "";
+    string currentRol = ViewBag.Rol as string ?? "";
+    bool? currentActivo = ViewBag.Activo as bool?;
 }
 
 <div class="container-fluid">
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="h3 fw-bold text-dark mb-0"><i class="bi bi-people me-2 text-primary"></i>Personal y Roles</h2>
-            <p class="text-muted small mb-0">Control de accesos y responsabilidades (Cajero, Inventario, Contador, Administrador)</p>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
-        <a asp-action="Create" class="btn btn-primary fw-bold">
-            <i class="bi bi-person-plus-fill me-1"></i> Registrar Usuario
+    }
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-0">
+                <i class="bi bi-people-fill text-warning me-2"></i>Cuentas Individuales de Empleados
+            </h2>
+            <p class="text-muted small mb-0">Administración de credenciales, puestos de trabajo, roles y control de acceso del personal</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary fw-semibold shadow-sm">
+            <i class="bi bi-person-plus-fill me-1"></i> Registrar Nuevo Empleado
         </a>
     </div>
 
+    <!-- Filtros de búsqueda -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" asp-action="Index" class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" value="@currentSearch" class="form-control border-start-0" placeholder="Buscar por nombre, usuario, cargo o correo..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="rol" class="form-select">
+                        <option value="">-- Todos los roles --</option>
+                        @foreach (var r in rolesDisponibles)
+                        {
+                            <option value="@r" selected="@(currentRol == r)">@r</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="activo" class="form-select">
+                        <option value="">-- Todos los estados --</option>
+                        <option value="true" selected="@(currentActivo == true)">Solo Activos</option>
+                        <option value="false" selected="@(currentActivo == false)">Solo Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-dark w-100 fw-semibold">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                    @if (!string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentRol) || currentActivo.HasValue)
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary" title="Limpiar filtros">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listado de Empleados -->
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Nombre Completo</th>
-                        <th>Correo Electrónico</th>
-                        <th>Rol Asignado</th>
+                        <th class="ps-3">Colaborador / Usuario</th>
+                        <th>Puesto / Cargo</th>
+                        <th>Rol del Sistema</th>
                         <th class="text-center">Estado</th>
-                        <th>Fecha de Alta</th>
-                        <th class="text-end">Acciones</th>
+                        <th>Último Acceso</th>
+                        <th>Fecha de Registro</th>
+                        <th class="text-end pe-3">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                                No se encontraron empleados con los criterios seleccionados.
+                            </td>
+                        </tr>
+                    }
                     @foreach (var u in Model)
                     {
                         string badgeRol = u.Rol switch
                         {
                             "Administrador" => "bg-danger",
-                            "Contador" => "bg-success",
-                            "EncargadoInventario" => "bg-warning text-dark",
+                            "Contabilidad" or "Contador" => "bg-success",
+                            "EncargadoInventario" or "Inventario" => "bg-warning text-dark",
                             "Cajero" => "bg-primary",
+                            "Consulta" => "bg-info text-dark",
                             _ => "bg-secondary"
                         };
 
                         <tr>
-                            <td class="fw-bold">
-                                <i class="bi bi-person-circle text-secondary me-2"></i>@u.NombreCompleto
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3 bg-light text-dark fw-bold border d-flex align-items-center justify-content-center rounded-circle" style="width: 40px; height: 40px;">
+                                        @(u.NombreCompleto.Length > 0 ? u.NombreCompleto.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@u.NombreCompleto</div>
+                                        <div class="small text-muted">
+                                            <span class="badge bg-light text-secondary border me-1">@@@u.UserName</span>
+                                            @if (!string.IsNullOrEmpty(u.Email))
+                                            {
+                                                <span><i class="bi bi-envelope me-1"></i>@u.Email</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
-                            <td>@u.Email</td>
-                            <td><span class="badge @badgeRol">@u.Rol</span></td>
+                            <td>
+                                <span class="fw-semibold text-secondary">
+                                    @(string.IsNullOrWhiteSpace(u.Cargo) ? "No especificado" : u.Cargo)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge @badgeRol px-2 py-1">@u.Rol</span>
+                            </td>
                             <td class="text-center">
                                 @if (u.Activo)
                                 {
-                                    <span class="badge bg-success-subtle text-success">Activo</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Activo
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-danger-subtle text-danger">Inactivo</span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Inactivo
+                                    </span>
                                 }
                             </td>
+                            <td class="small text-muted">
+                                @(u.UltimoAcceso.HasValue ? u.UltimoAcceso.Value.ToString("dd/MM/yyyy HH:mm") : "Sin registro")
+                            </td>
                             <td class="small text-muted">@u.FechaRegistro.ToString("dd/MM/yyyy")</td>
-                            <td class="text-end">
-                                <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil me-1"></i> Editar
-                                </a>
+                            <td class="text-end pe-3">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-outline-primary" title="Editar empleado">
+                                        <i class="bi bi-pencil me-1"></i> Editar
+                                    </a>
+                                    
+                                    <button type="button" class="btn btn-outline-warning text-dark" title="Restablecer Contraseña" 
+                                            onclick="abrirModalReset('@u.Id', '@u.NombreCompleto', '@u.UserName')">
+                                        <i class="bi bi-key-fill"></i>
+                                    </button>
+
+                                    @if (u.UserName != User.Identity?.Name)
+                                    {
+                                        <form asp-action="ToggleActivo" asp-route-id="@u.Id" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de cambiar el estado de este colaborador?');">
+                                            @Html.AntiForgeryToken()
+                                            @if (u.Activo)
+                                            {
+                                                <button type="submit" class="btn btn-outline-danger" title="Desactivar cuenta (invalida sesiones activas)">
+                                                    <i class="bi bi-person-x-fill"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-outline-success" title="Reactivar cuenta">
+                                                    <i class="bi bi-person-check-fill"></i>
+                                                </button>
+                                            }
+                                        </form>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -76,3 +196,58 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para Restablecer Contraseña -->
+<div class="modal fade" id="modalResetPassword" tabindex="-1" aria-labelledby="modalResetPasswordLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ResetPassword" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="modalResetPasswordLabel">
+                        <i class="bi bi-key-fill text-warning me-2"></i>Restablecer Contraseña
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="UserId" id="resetUserId" />
+                    
+                    <div class="alert alert-info py-2 small mb-3">
+                        Asignando nueva contraseña para: <strong id="resetUserNameDisplay"></strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Nueva Contraseña</label>
+                        <input type="password" name="NewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Confirmar Contraseña</label>
+                        <input type="password" name="ConfirmPassword" class="form-control" placeholder="Repita la nueva contraseña" required minlength="6" />
+                    </div>
+
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Al restablecer la contraseña se invalidarán automáticamente las sesiones activas del colaborador.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning fw-semibold">
+                        <i class="bi bi-shield-lock me-1"></i> Guardar Nueva Clave
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function abrirModalReset(userId, nombre, userName) {
+            document.getElementById('resetUserId').value = userId;
+            document.getElementById('resetUserNameDisplay').textContent = nombre + ' (@@' + userName + ')';
+            var myModal = new bootstrap.Modal(document.getElementById('modalResetPassword'));
+            myModal.show();
+        }
+    </script>
+}

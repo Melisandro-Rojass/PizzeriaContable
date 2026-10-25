@@ -1,4 +1,5 @@
 using PizzeriaContable.Models;
+using PizzeriaContable.ViewModels;
 
 namespace PizzeriaContable.Services;
 
@@ -11,9 +12,19 @@ public interface IContabilidadService
         List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)> apuntes,
         string? usuario);
 
+    Task<AsientoContable> CrearAsientoManualAsync(AsientoManualViewModel model, string? usuario);
+
     bool ValidarAsientoEquilibrado(IEnumerable<AsientoDetalle> detalles);
 
-    Task<List<AsientoContable>> ObtenerLibroDiarioAsync(DateTime? desde, DateTime? hasta);
+    Task<bool> AnularAsientoAsync(int asientoId, string motivo, string? usuario);
+
+    Task<ResumenCuentasTViewModel> ObtenerResumenCuentasTAsync(DateTime? desde, DateTime? hasta, string? tipo, string? search);
+
+    Task<CuentaTViewModel?> ObtenerCuentaTDetalladaAsync(int cuentaId, DateTime? desde, DateTime? hasta);
+
+    Task<AsientoContable> RegistrarVentaContadoEjemploAsync(string? usuario);
+
+    Task<List<AsientoContable>> ObtenerLibroDiarioAsync(DateTime? desde, DateTime? hasta, string? tipoOrigen = null, int? cuentaId = null, string? search = null);
 
     Task<(CuentaContable cuenta, List<AsientoDetalle> movimientos, decimal saldoDeudor, decimal saldoAcreedor)> 
         ObtenerLibroMayorAsync(int cuentaId, DateTime? desde, DateTime? hasta);
