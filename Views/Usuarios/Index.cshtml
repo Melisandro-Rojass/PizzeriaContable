@@ -1,48 +1,48 @@
 @model IEnumerable<PizzeriaContable.Models.ApplicationUser>
 @{
-    ViewData["Title"] = "Gestión de Personal y Cuentas de Empleados";
+    ViewData["Title"] = "Gestión de Personal - Say Cheese Pizza";
     var rolesDisponibles = ViewBag.RolesDisponibles as List<string> ?? new List<string>();
     string currentSearch = ViewBag.Search as string ?? "";
     string currentRol = ViewBag.Rol as string ?? "";
     bool? currentActivo = ViewBag.Activo as bool?;
 }
 
-<div class="container-fluid">
+<div class="container-fluid px-0">
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm border-0 mb-3" role="alert" style="background-color: var(--sc-green-bg); color: #145A32; border-left: 5px solid var(--sc-green) !important;">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>@TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm border-0 mb-3" role="alert" style="background-color: var(--sc-red-bg); color: #78281F; border-left: 5px solid var(--sc-red) !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>@TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
-            <h2 class="h3 fw-bold text-dark mb-0">
-                <i class="bi bi-people-fill text-warning me-2"></i>Cuentas Individuales de Empleados
+            <h2 class="h3 fw-bold text-dark mb-0 font-brand">
+                <i class="bi bi-people-fill text-warning me-2"></i>Equipo y Cuentas de Empleados
             </h2>
-            <p class="text-muted small mb-0">Administración de credenciales, puestos de trabajo, roles y control de acceso del personal</p>
+            <p class="text-muted small mb-0">Administración de credenciales, puestos de trabajo, roles y control de acceso del personal de Say Cheese.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary fw-semibold shadow-sm">
-            <i class="bi bi-person-plus-fill me-1"></i> Registrar Nuevo Empleado
+        <a asp-action="Create" class="btn btn-saycheese-primary fw-bold shadow-sm">
+            <i class="bi bi-person-plus-fill me-1"></i> + Registrar Nuevo Empleado
         </a>
     </div>
 
     <!-- Filtros de búsqueda -->
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card mb-4 shadow-sm">
         <div class="card-body p-3">
             <form method="get" asp-action="Index" class="row g-2 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <span class="input-group-text bg-light text-warning border-end-0"><i class="bi bi-search"></i></span>
                         <input type="text" name="search" value="@currentSearch" class="form-control border-start-0" placeholder="Buscar por nombre, usuario, cargo o correo..." />
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                     </select>
                 </div>
                 <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-dark w-100 fw-semibold">
+                    <button type="submit" class="btn btn-saycheese-primary w-100 fw-semibold">
                         <i class="bi bi-funnel me-1"></i> Filtrar
                     </button>
                     @if (!string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentRol) || currentActivo.HasValue)
@@ -78,17 +78,17 @@
     </div>
 
     <!-- Listado de Empleados -->
-    <div class="card border-0 shadow-sm">
+    <div class="card shadow-sm">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead>
                     <tr>
                         <th class="ps-3">Colaborador / Usuario</th>
                         <th>Puesto / Cargo</th>
                         <th>Rol del Sistema</th>
                         <th class="text-center">Estado</th>
                         <th>Último Acceso</th>
-                        <th>Fecha de Registro</th>
+                        <th>Fecha de Alta</th>
                         <th class="text-end pe-3">Acciones</th>
                     </tr>
                 </thead>
@@ -96,34 +96,34 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
-                                <i class="bi bi-people fs-2 d-block mb-2"></i>
-                                No se encontraron empleados con los criterios seleccionados.
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-people fs-1 d-block mb-2 text-secondary"></i>
+                                No se encontraron colaboradores registrados con los criterios seleccionados.
                             </td>
                         </tr>
                     }
                     @foreach (var u in Model)
                     {
-                        string badgeRol = u.Rol switch
+                        string badgeRolStyle = u.Rol switch
                         {
-                            "Administrador" => "bg-danger",
-                            "Contabilidad" or "Contador" => "bg-success",
-                            "EncargadoInventario" or "Inventario" => "bg-warning text-dark",
-                            "Cajero" => "bg-primary",
-                            "Consulta" => "bg-info text-dark",
-                            _ => "bg-secondary"
+                            "Administrador" => "background-color: var(--sc-brick-red); color: #fff;",
+                            "Contabilidad" or "Contador" => "background-color: var(--sc-green); color: #fff;",
+                            "EncargadoInventario" or "Inventario" => "background-color: var(--sc-yellow); color: var(--sc-crust-dark); font-weight: 700;",
+                            "Cajero" => "background-color: var(--sc-orange); color: #fff;",
+                            "Consulta" => "background-color: #64748b; color: #fff;",
+                            _ => "background-color: #64748b; color: #fff;"
                         };
 
                         <tr>
                             <td class="ps-3">
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-circle me-3 bg-light text-dark fw-bold border d-flex align-items-center justify-content-center rounded-circle" style="width: 40px; height: 40px;">
+                                    <div class="rounded-circle me-3 fw-bold border d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px; background-color: var(--sc-cream); border-color: var(--sc-border-warm) !important; color: var(--sc-brick-red); font-size: 0.95rem;">
                                         @(u.NombreCompleto.Length > 0 ? u.NombreCompleto.Substring(0, 1).ToUpper() : "U")
                                     </div>
                                     <div>
                                         <div class="fw-bold text-dark">@u.NombreCompleto</div>
                                         <div class="small text-muted">
-                                            <span class="badge bg-light text-secondary border me-1">@@@u.UserName</span>
+                                            <span class="badge bg-light text-secondary border me-1 font-monospace">@@@u.UserName</span>
                                             @if (!string.IsNullOrEmpty(u.Email))
                                             {
                                                 <span><i class="bi bi-envelope me-1"></i>@u.Email</span>
@@ -138,26 +138,26 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="badge @badgeRol px-2 py-1">@u.Rol</span>
+                                <span class="badge rounded-pill px-3 py-1" style="@badgeRolStyle">@u.Rol</span>
                             </td>
                             <td class="text-center">
                                 @if (u.Activo)
                                 {
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1">
                                         <i class="bi bi-check-circle-fill me-1"></i> Activo
                                     </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
                                         <i class="bi bi-x-circle-fill me-1"></i> Inactivo
                                     </span>
                                 }
                             </td>
-                            <td class="small text-muted">
+                            <td class="font-numeric text-muted">
                                 @(u.UltimoAcceso.HasValue ? u.UltimoAcceso.Value.ToString("dd/MM/yyyy HH:mm") : "Sin registro")
                             </td>
-                            <td class="small text-muted">@u.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                            <td class="font-numeric text-muted">@u.FechaRegistro.ToString("dd/MM/yyyy")</td>
                             <td class="text-end pe-3">
                                 <div class="btn-group btn-group-sm">
                                     <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-outline-primary" title="Editar empleado">
@@ -175,7 +175,7 @@
                                             @Html.AntiForgeryToken()
                                             @if (u.Activo)
                                             {
-                                                <button type="submit" class="btn btn-outline-danger" title="Desactivar cuenta (invalida sesiones activas)">
+                                                <button type="submit" class="btn btn-outline-danger" title="Desactivar cuenta">
                                                     <i class="bi bi-person-x-fill"></i>
                                                 </button>
                                             }
@@ -199,40 +199,40 @@
 
 <!-- Modal para Restablecer Contraseña -->
 <div class="modal fade" id="modalResetPassword" tabindex="-1" aria-labelledby="modalResetPasswordLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
             <form asp-action="ResetPassword" method="post">
                 @Html.AntiForgeryToken()
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold" id="modalResetPasswordLabel">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #4A120B 0%, #1A0704 100%); border-bottom: 3px solid var(--sc-yellow);">
+                    <h5 class="modal-title fw-bold font-brand text-white" id="modalResetPasswordLabel">
                         <i class="bi bi-key-fill text-warning me-2"></i>Restablecer Contraseña
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <input type="hidden" name="UserId" id="resetUserId" />
                     
-                    <div class="alert alert-info py-2 small mb-3">
-                        Asignando nueva contraseña para: <strong id="resetUserNameDisplay"></strong>
+                    <div class="p-3 rounded-3 small mb-3" style="background-color: var(--sc-cream); border: 1px solid var(--sc-border-warm);">
+                        Asignando nueva contraseña para: <strong class="text-dark" id="resetUserNameDisplay"></strong>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Nueva Contraseña</label>
+                        <label class="form-label fw-bold small text-dark">Nueva Contraseña</label>
                         <input type="password" name="NewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Confirmar Contraseña</label>
+                        <label class="form-label fw-bold small text-dark">Confirmar Contraseña</label>
                         <input type="password" name="ConfirmPassword" class="form-control" placeholder="Repita la nueva contraseña" required minlength="6" />
                     </div>
 
                     <p class="text-muted small mb-0">
-                        <i class="bi bi-info-circle me-1"></i> Al restablecer la contraseña se invalidarán automáticamente las sesiones activas del colaborador.
+                        <i class="bi bi-info-circle text-warning me-1"></i> Al restablecer la contraseña se invalidarán automáticamente las sesiones activas del colaborador.
                     </p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning fw-semibold">
+                <div class="modal-footer bg-light" style="border-top: 1px solid var(--sc-border-warm);">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning btn-sm fw-bold px-3">
                         <i class="bi bi-shield-lock me-1"></i> Guardar Nueva Clave
                     </button>
                 </div>

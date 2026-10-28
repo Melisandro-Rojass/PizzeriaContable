@@ -1,25 +1,38 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = "Error en la Solicitud";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<div class="container-fluid px-0 py-4">
+    <div class="card shadow-sm p-4 p-md-5 border-0" style="border-left: 5px solid var(--sc-red) !important;">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle p-3 text-danger border d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background-color: #FDEDEC;">
+                <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold text-dark mb-1 font-brand">No se pudo procesar la solicitud</h1>
+                <p class="text-muted small mb-0">Ha ocurrido un inconveniente inesperado al procesar la operación solicitada.</p>
+            </div>
+        </div>
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
+        <p class="text-secondary small mb-3">
+            Por favor verifique los datos ingresados e intente nuevamente. Si el problema persiste, comuníquese con el administrador del sistema.
+        </p>
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+        @if (Model.ShowRequestId)
+        {
+            <div class="p-3 bg-light rounded border mb-3 small font-monospace">
+                <strong>Identificador de Solicitud (Request ID):</strong> <code>@Model.RequestId</code>
+            </div>
+        }
+
+        <div class="d-flex gap-2 mt-2">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-saycheese-primary shadow-sm">
+                <i class="bi bi-house-door me-1"></i> Volver al Panel Principal
+            </a>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.history.back();">
+                <i class="bi bi-arrow-left me-1"></i> Regresar
+            </button>
+        </div>
+    </div>
+</div>

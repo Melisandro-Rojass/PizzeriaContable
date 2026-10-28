@@ -442,11 +442,11 @@ public class ContabilidadService : IContabilidadService
         };
 
         return await CrearAsientoAutomaticoAsync(
-            "Demostración Didáctica: Venta de pizzas de contado por C$ 1,000.00 (Sin impuestos)",
+            "Asiento de Prueba: Venta de pizzas de contado por C$ 1,000.00",
             "Demostracion",
             null,
             apuntes,
-            usuario ?? "Demostración Cuentas T"
+            usuario ?? "Asiento de Prueba"
         );
     }
 

@@ -3,10 +3,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Pizzería Contable</title>
+    <title>@ViewData["Title"] - Say Cheese Pizza</title>
     
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Google Fonts: Fredoka & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <!-- Custom Application CSS -->
@@ -16,10 +20,15 @@
     <div class="app-wrapper">
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar" id="sidebarMenu">
-            <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
-                <i class="bi bi-pie-chart-fill"></i>
-                <span>Pizzería Contable</span>
-            </a>
+            <div class="sidebar-brand-wrapper">
+                <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
+                    <img src="~/images/say-cheese-logo.svg" alt="Say Cheese Pizza" class="sidebar-logo-img" />
+                    <div class="sidebar-brand-text">
+                        <span class="sidebar-brand-title">SAY <span>CHEESE</span></span>
+                        <span class="sidebar-brand-sub">Control &amp; POS</span>
+                    </div>
+                </a>
+            </div>
 
             <ul class="sidebar-nav">
                 <!-- Principal: Accesible por todos los usuarios autenticados -->
@@ -33,10 +42,10 @@
 
                 @if (User.IsInRole("Administrador") || User.IsInRole("Cajero"))
                 {
-                    <li>
-                        <a asp-controller="Ventas" asp-action="Pos" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ventas" && ViewContext.RouteData.Values["action"]?.ToString() == "Pos" ? "active" : "")">
+                    <li class="my-1">
+                        <a asp-controller="Ventas" asp-action="Pos" class="nav-link nav-badge-pos @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ventas" && ViewContext.RouteData.Values["action"]?.ToString() == "Pos" ? "active" : "")">
                             <i class="bi bi-cart-plus-fill text-warning"></i>
-                            <span class="fw-bold text-white">Punto de Venta (POS)</span>
+                            <span class="fw-bold">Punto de Venta (POS)</span>
                         </a>
                     </li>
                 }
@@ -215,8 +224,8 @@
                     @if (User.IsInRole("Administrador") || User.IsInRole("Cajero"))
                     {
                         <a asp-controller="Caja" asp-action="Index" class="text-decoration-none">
-                            <span class="badge bg-light text-dark border p-2">
-                                <i class="bi bi-wallet2 text-success me-1"></i> Turno de Caja
+                            <span class="badge bg-light text-dark border p-2 shadow-sm rounded-pill d-flex align-items-center gap-1" style="border-color: var(--sc-border-warm) !important;">
+                                <i class="bi bi-wallet2 text-success me-1"></i> <span>Turno de Caja</span>
                             </span>
                         </a>
                     }
@@ -229,38 +238,39 @@
                                          (User.IsInRole("Inventario") || User.IsInRole("EncargadoInventario")) ? "Inventario" :
                                          User.IsInRole("Consulta") ? "Consulta" : "Empleado";
 
-                        string roleBadgeClass = userRole switch
+                        string roleBadgeStyle = userRole switch
                         {
-                            "Administrador" => "bg-danger",
-                            "Contabilidad" => "bg-success",
-                            "Cajero" => "bg-primary",
-                            "Inventario" => "bg-warning text-dark",
-                            "Consulta" => "bg-info text-dark",
-                            _ => "bg-secondary"
+                            "Administrador" => "background-color: var(--sc-brick-red); color: #fff;",
+                            "Contabilidad" => "background-color: var(--sc-green); color: #fff;",
+                            "Cajero" => "background-color: var(--sc-orange); color: #fff;",
+                            "Inventario" => "background-color: var(--sc-yellow); color: var(--sc-crust-dark); font-weight: 700;",
+                            "Consulta" => "background-color: #64748b; color: #fff;",
+                            _ => "background-color: #64748b; color: #fff;"
                         };
 
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
-                                    @(User.Identity.Name?.Length > 0 ? User.Identity.Name.Substring(0, 1).ToUpper() : "U")
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1 bg-white shadow-sm" style="border-color: var(--sc-border-warm);" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border" style="width: 32px; height: 32px; background: var(--sc-cream); border-color: var(--sc-orange) !important;">
+                                    <img src="~/images/say-cheese-chef.jpg" alt="Chef" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                                    <span style="display: none; font-weight: 800; font-size: 0.85rem; color: var(--sc-brick-red);">@(User.Identity.Name?.Length > 0 ? User.Identity.Name.Substring(0, 1).ToUpper() : "U")</span>
                                 </div>
-                                <span class="fw-semibold">@(User.Identity.Name ?? "Usuario")</span>
-                                <span class="badge @roleBadgeClass ms-1">@userRole</span>
+                                <span class="fw-bold text-dark">@(User.Identity.Name ?? "Usuario")</span>
+                                <span class="badge rounded-pill ms-1" style="@roleBadgeStyle">@userRole</span>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li class="px-3 py-1 small text-muted border-bottom">
-                                    Conectado como <strong>@(User.Identity.Name)</strong>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border-color: var(--sc-border-warm);">
+                                <li class="px-3 py-2 small text-muted border-bottom bg-light rounded-top">
+                                    Conectado como <strong class="text-dark">@(User.Identity.Name)</strong>
                                 </li>
-                                <li><a class="dropdown-item mt-1" asp-controller="Usuarios" asp-action="Perfil"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
+                                <li><a class="dropdown-item mt-1 py-2" asp-controller="Usuarios" asp-action="Perfil"><i class="bi bi-person me-2 text-warning"></i>Mi Perfil</a></li>
                                 @if (User.IsInRole("Administrador"))
                                 {
-                                    <li><a class="dropdown-item" asp-controller="Usuarios" asp-action="Index"><i class="bi bi-people me-2"></i>Gestión de Empleados</a></li>
+                                    <li><a class="dropdown-item py-2" asp-controller="Usuarios" asp-action="Index"><i class="bi bi-people me-2 text-primary"></i>Gestión de Empleados</a></li>
                                 }
-                                <li><hr class="dropdown-divider"></li>
+                                <li><hr class="dropdown-divider my-1"></li>
                                 <li>
                                     <form asp-controller="Usuarios" asp-action="Logout" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item text-danger">
+                                        <button type="submit" class="dropdown-item text-danger py-2">
                                             <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
                                         </button>
                                     </form>
@@ -270,7 +280,7 @@
                     }
                     else
                     {
-                        <a asp-controller="Usuarios" asp-action="Login" class="btn btn-sm btn-outline-primary">
+                        <a asp-controller="Usuarios" asp-action="Login" class="btn btn-sm btn-saycheese-primary">
                             <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
                         </a>
                     }
@@ -283,10 +293,13 @@
             </main>
 
             <!-- Footer -->
-            <footer class="bg-white border-top py-3 px-4 text-muted small text-center text-md-start">
-                <div class="container-fluid d-flex justify-content-between align-items-center flex-column flex-md-row">
-                    <span>&copy; @DateTime.Now.Year - Pizzería Contable (Nicaragua) - Sistema Contable y POS</span>
-                    <span class="text-secondary">Moneda: Córdobas (NIO C$) | Zona: America/Managua</span>
+            <footer class="bg-white border-top py-3 px-4 text-muted small text-center text-md-start" style="border-color: var(--sc-border-warm) !important;">
+                <div class="container-fluid d-flex justify-content-between align-items-center flex-column flex-md-row gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="~/images/say-cheese-logo.svg" alt="Say Cheese" style="height: 22px; width: auto;" />
+                        <span>&copy; @DateTime.Now.Year - <strong>Say Cheese Pizza</strong> &bull; Sistema Contable y POS</span>
+                    </div>
+                    <span class="text-secondary">Moneda: Córdobas (NIO C$) &bull; Managua, Nicaragua</span>
                 </div>
             </footer>
         </div>

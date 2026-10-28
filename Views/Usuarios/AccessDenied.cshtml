@@ -1,14 +1,20 @@
 @{
-    ViewData["Title"] = "Acceso Denegado";
+    ViewData["Title"] = "Acceso Restringido";
 }
 
 <div class="container-fluid text-center py-5">
-    <div class="text-danger mb-3">
-        <i class="bi bi-shield-x display-1"></i>
+    <div class="card p-5 mx-auto shadow-sm border-0" style="max-width: 520px; border-top: 5px solid var(--sc-red) !important; border-radius: 16px;">
+        <div class="text-danger mb-3">
+            <i class="bi bi-shield-lock-fill display-1"></i>
+        </div>
+        <h2 class="h4 fw-bold text-dark font-brand mb-2">Acceso Restringido</h2>
+        <p class="text-muted small mb-4">
+            Su cuenta de usuario no dispone de los permisos requeridos para consultar o realizar operaciones en este módulo. Comuníquese con la administración si requiere autorización.
+        </p>
+        <div>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-saycheese-primary px-4 fw-bold shadow-sm">
+                <i class="bi bi-house-door me-1"></i> Volver al Panel Principal
+            </a>
+        </div>
     </div>
-    <h2 class="fw-bold text-dark">Acceso Restringido</h2>
-    <p class="text-muted">No cuentas con los permisos requeridos para acceder a este módulo del sistema contable.</p>
-    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">
-        <i class="bi bi-arrow-left me-1"></i> Volver al Panel Principal
-    </a>
 </div>

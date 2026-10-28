@@ -52,10 +52,10 @@
             <div class="d-flex align-items-start gap-3">
                 <i class="bi bi-lightbulb-fill text-warning fs-3"></i>
                 <div>
-                    <h5 class="fw-bold mb-1">¿Cómo funciona la Apertura Contable?</h5>
+                    <h5 class="fw-bold mb-1">Directrices para el Asiento de Apertura</h5>
                     <p class="small text-muted mb-0">
-                        Si tu pizzería ya lleva tiempo funcionando, ingresa aquí los saldos reales que tienes al día de inicio: el dinero en caja y bancos, el valor estimado de tus ingredientes en stock, y el valor de tus hornos y mobiliario. La ecuación contable exige que:
-                        <strong>Activo = Pasivo + Capital</strong>. El sistema verificará en tiempo real que tu asiento quede perfectamente cuadrado.
+                        Si la empresa cuenta con saldos operativos previos a la sistematización, registre los importes iniciales a la fecha de corte: efectivo en caja y cuentas bancarias, valor del inventario disponible y activos fijos. La ecuación fundamental exige que:
+                        <strong>Activo = Pasivo + Capital</strong>. El sistema verificará en tiempo real el balance contable antes de permitir el registro.
                     </p>
                 </div>
             </div>
@@ -233,12 +233,12 @@
 
         if (totalActivos > 0 && diff < 0.01) {
             badge.className = 'badge bg-success fs-6 p-2';
-            badge.innerHTML = '<i class="bi bi-check-lg me-1"></i> PERFECTAMENTE CUADRADO';
+            badge.innerHTML = '<i class="bi bi-check-lg me-1"></i> BALANCE CUADRADO';
             txtDiff.innerText = 'Activo = Pasivo + Capital';
             btn.disabled = false;
         } else {
             badge.className = 'badge bg-danger fs-6 p-2';
-            badge.innerHTML = '<i class="bi bi-x-lg me-1"></i> DESCUADRADO';
+            badge.innerHTML = '<i class="bi bi-x-lg me-1"></i> DESCUADRE DETECTADO';
             txtDiff.innerText = `Diferencia de C$ ${diff.toFixed(2)}`;
             btn.disabled = true;
         }

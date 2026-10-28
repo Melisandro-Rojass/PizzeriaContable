@@ -208,11 +208,11 @@ public class ContabilidadController : Controller
         try
         {
             var asiento = await _contabilidadService.RegistrarVentaContadoEjemploAsync(User.Identity?.Name);
-            TempData["SuccessMessage"] = $"Ejemplo didáctico registrado ({asiento.NumeroAsiento}): Venta al contado por C$ 1,000.00. Débito a Caja Principal y Crédito a Ingresos reflejados en Cuentas T.";
+            TempData["SuccessMessage"] = $"Asiento de prueba registrado ({asiento.NumeroAsiento}): Venta al contado por C$ 1,000.00. Débito a Caja General y Crédito a Ingresos reflejados en Cuentas T.";
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = $"Error al registrar el asiento didáctico: {ex.Message}";
+            TempData["ErrorMessage"] = $"Error al registrar el asiento de prueba: {ex.Message}";
         }
 
         return RedirectToAction(nameof(CuentasT));

@@ -76,7 +76,7 @@
                         <tr>
                             <td colspan="2" class="text-end">Diferencia:</td>
                             <td colspan="2" class="text-center">
-                                <span id="txtDiferencia" class="badge bg-success fs-6">CUADRADO (C$ 0.00)</span>
+                                <span id="txtDiferencia" class="badge bg-success fs-6">BALANCE CUADRADO (C$ 0.00)</span>
                             </td>
                             <td></td>
                         </tr>
@@ -180,11 +180,11 @@
 
         if (diff < 0.01 && totalDebe > 0) {
             badgeDiff.className = 'badge bg-success fs-6';
-            badgeDiff.innerText = `CUADRADO (C$ 0.00)`;
+            badgeDiff.innerText = `BALANCE CUADRADO (C$ 0.00)`;
             btnGuardar.disabled = false;
         } else {
             badgeDiff.className = 'badge bg-danger fs-6';
-            badgeDiff.innerText = `DESCUADRADO: C$ ${diff.toFixed(2)}`;
+            badgeDiff.innerText = `DESCUADRE DETECTADO: C$ ${diff.toFixed(2)}`;
             btnGuardar.disabled = true;
         }
     }

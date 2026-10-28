@@ -2,7 +2,7 @@
 @{
     Layout = null;
     var config = ViewBag.Configuracion as PizzeriaContable.Models.ConfiguracionEmpresa;
-    string nombreEmpresa = config?.NombreComercial ?? "PIZZERÍA CONTABLE";
+    string nombreEmpresa = config?.NombreComercial ?? "SAY CHEESE PIZZA";
     string ruc = config?.IdentificacionTributaria ?? "J0310000000000";
     string direccion = config?.Direccion ?? "Managua, Nicaragua";
     string telefono = config?.Telefono ?? "+505 2222-3333";
@@ -65,7 +65,7 @@
 </head>
 <body>
     <div class="no-print">
-        <button class="btn-print" onclick="window.print()">🖨️ Imprimir Ticket</button>
+        <button class="btn-print" onclick="window.print()">Imprimir Ticket</button>
         <button class="btn-print" style="background:#64748b;" onclick="window.close()">Cerrar</button>
     </div>
 
@@ -163,7 +163,7 @@
         <div class="text-center" style="font-size: 12px; margin-top: 10px;">
             <div>¡GRACIAS POR SU PREFERENCIA!</div>
             <div>Por favor conserve este comprobante.</div>
-            <div style="margin-top: 5px; font-size: 10px; color: #555;">Software Pizzería Contable</div>
+            <div style="margin-top: 5px; font-size: 10px; color: #555;">Sistema de Ventas y Contabilidad</div>
         </div>
     </div>
 </body>

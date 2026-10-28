@@ -1,6 +1,42 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "Políticas de Privacidad y Seguridad";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container-fluid px-0">
+    <div class="card shadow-sm p-4 p-md-5">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="rounded-circle p-3 bg-light text-warning border d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                <i class="bi bi-shield-lock-fill fs-3"></i>
+            </div>
+            <div>
+                <h1 class="h3 fw-bold text-dark mb-1 font-brand">Políticas de Privacidad y Seguridad</h1>
+                <p class="text-muted small mb-0">Directrices sobre el tratamiento de datos comerciales, transaccionales y contables.</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark">1. Confidencialidad de la Información Comercial</h5>
+            <p class="text-muted small">
+                Este sistema administrativo y contable procesa información operativa y financiera de la pizzería, incluyendo ventas, costos de recetas, márgenes brutos, inventarios y arqueos de caja. Todos los datos están destinados exclusivamente a la gestión interna de la empresa.
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark">2. Control de Acceso por Roles</h5>
+            <p class="text-muted small">
+                El acceso a los diferentes módulos está restringido mediante perfiles y roles de usuario (Administración, Contabilidad, Caja, Inventario y Consulta). Cada colaborador es responsable de resguardar sus credenciales de acceso y de no compartirlas con terceros.
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark">3. Integridad Transaccional y Auditoría</h5>
+            <p class="text-muted small">
+                Las transacciones comerciales y los registros del libro diario son inmutables y quedan asentados cronológicamente bajo el principio de partida doble en SQL Server. Cualquier ajuste o anulación requiere la generación del contra-asiento correspondiente para preservar la trazabilidad fiscal.
+            </p>
+        </div>
+
+        <div class="pt-3 border-top text-muted small">
+            <span>Sistema PizzeriaContable &bull; Nicaragua (NIO C$) &bull; Todos los derechos reservados.</span>
+        </div>
+    </div>
+</div>
