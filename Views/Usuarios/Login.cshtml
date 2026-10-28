@@ -9,249 +9,213 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Iniciar Sesión - Say Cheese Pizzería Contable</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Google Fonts: Fredoka (Marca Say Cheese) & Plus Jakarta Sans (Texto y Formularios) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <style>
-        body {
-            background-color: #1A0806;
-            background-image: 
-                radial-gradient(circle at 50% 20%, rgba(242, 140, 40, 0.25) 0%, transparent 60%),
-                radial-gradient(circle at 80% 80%, rgba(168, 59, 32, 0.3) 0%, transparent 50%),
-                url('/images/brick-pattern.svg');
-            background-size: auto, auto, 100px 50px;
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            font-family: var(--font-body);
-            position: relative;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(16, 5, 4, 0.65);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .login-wrapper {
-            position: relative;
-            z-index: 1;
-            max-width: 460px;
-            width: 100%;
-        }
-
-        .login-card {
-            border-radius: 20px;
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 201, 40, 0.25);
-            background: #FFFFFF;
-            overflow: hidden;
-            border: 2px solid var(--sc-border-warm);
-        }
-
-        .login-header-banner {
-            background: linear-gradient(135deg, #4A120B 0%, #290906 100%);
-            padding: 1.75rem 1.5rem 1.25rem;
-            text-align: center;
-            position: relative;
-            border-bottom: 3px solid var(--sc-yellow);
-        }
-
-        .chef-avatar-badge {
-            width: 78px;
-            height: 78px;
-            border-radius: 50%;
-            border: 3px solid var(--sc-yellow);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-            margin: 0 auto 0.75rem;
-            overflow: hidden;
-            background: #FFF3DE;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .chef-avatar-badge img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .login-logo {
-            max-width: 190px;
-            height: auto;
-            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
-        }
-
-        .input-group-text {
-            background-color: var(--sc-gray-warm);
-            border-color: var(--sc-border-warm);
-            color: var(--sc-orange);
-            font-size: 1.1rem;
-        }
-
-        .form-control {
-            border-color: var(--sc-border-warm);
-            font-size: 0.95rem;
-            padding: 0.7rem 0.9rem;
-            background-color: #FFFFFF;
-        }
-
-        .form-control:focus {
-            border-color: var(--sc-orange);
-            box-shadow: 0 0 0 0.25rem rgba(242, 140, 40, 0.2);
-        }
-
-        .btn-login {
-            background: linear-gradient(135deg, var(--sc-orange) 0%, var(--sc-brick-red) 100%);
-            border: none;
-            color: #FFFFFF;
-            font-family: var(--font-brand);
-            font-size: 1.15rem;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            padding: 0.8rem;
-            border-radius: 12px;
-            box-shadow: 0 6px 16px rgba(242, 140, 40, 0.35);
-            transition: all 0.2s ease-in-out;
-        }
-
-        .btn-login:hover {
-            background: linear-gradient(135deg, var(--sc-yellow) 0%, var(--sc-orange) 100%);
-            color: var(--sc-crust-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 201, 40, 0.45);
-        }
-
-        .btn-toggle-password {
-            background-color: var(--sc-gray-warm);
-            border-color: var(--sc-border-warm);
-            color: var(--sc-gray-text);
-        }
-
-        .btn-toggle-password:hover {
-            background-color: var(--sc-cream);
-            color: var(--sc-brick-red);
-        }
-
-        .brand-badges-row {
-            display: flex;
-            justify-content: center;
-            gap: 1.25rem;
-            margin-top: 1.25rem;
-            color: #FFE6D5;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .brand-badge-item {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            opacity: 0.85;
-        }
-
-        .brand-badge-item i {
-            color: var(--sc-yellow);
-            font-size: 0.95rem;
-        }
-    </style>
+    
+    <!-- Hoja de Estilos Específica del Login Say Cheese -->
+    <link rel="stylesheet" href="/css/login.css" asp-append-version="true" />
 </head>
-<body>
-    <div class="login-wrapper">
-        <div class="login-card">
-            <!-- Header con Identidad Say Cheese -->
-            <div class="login-header-banner">
-                <div class="chef-avatar-badge">
-                    <img src="~/images/say-cheese-chef.jpg" alt="Chef Say Cheese" onerror="this.src='/images/pizza-slice.svg';" />
-                </div>
-                <img src="~/images/say-cheese-logo.svg" alt="Say Cheese Pizza" class="login-logo mb-1" />
-                <p class="text-white-50 small mb-0 fw-semibold">Sistema Contable &bull; Punto de Venta &bull; Inventario</p>
-            </div>
+<body class="login-body">
+    <div class="login-master-container">
+        <div class="login-split-card">
+            
+            <!-- PANEL IZQUIERDO: IDENTIDAD DE MARCA SAY CHEESE -->
+            <aside class="brand-showcase-panel" aria-label="Identidad de Marca Say Cheese">
+                <div class="brand-showcase-content">
+                    <div class="brand-badge-pill">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <span>Pizzería Artesanal &bull; Managua, Nicaragua</span>
+                    </div>
 
-            <!-- Cuerpo del Formulario -->
-            <div class="p-4 p-md-4 pt-4">
+                    <div class="brand-logo-container">
+                        <img src="/images/say-cheese-logo.svg" alt="Say Cheese Pizza" class="brand-logo-img" />
+                    </div>
+
+                    <!-- Chef Caricaturesco Oficial Say Cheese -->
+                    <div class="chef-hero-frame" title="Chef Maestro Say Cheese">
+                        <img src="/images/say-cheese-chef.jpg" alt="Chef Maestro Say Cheese" onerror="this.src='/images/pizza-slice.svg';" />
+                    </div>
+
+                    <div class="brand-tagline-quote">
+                        <h2>«Buen sabor, <span class="text-cheese">grandes momentos»</span></h2>
+                        <p>Gestión comercial, operativa y financiera centralizada con rigor contable en Córdobas (C$).</p>
+                    </div>
+
+                    <!-- Pilares Funcionales del Sistema -->
+                    <div class="brand-pillars-list">
+                        <div class="pillar-item">
+                            <div class="pillar-icon-box">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                            </div>
+                            <div class="pillar-item-text">
+                                <span class="pillar-item-title">Punto de Venta POS</span>
+                                <span class="pillar-item-desc">Facturación rápida, mesas y órdenes para llevar</span>
+                            </div>
+                        </div>
+
+                        <div class="pillar-item">
+                            <div class="pillar-icon-box">
+                                <i class="bi bi-box-seam-fill"></i>
+                            </div>
+                            <div class="pillar-item-text">
+                                <span class="pillar-item-title">Inventario por Receta</span>
+                                <span class="pillar-item-desc">Deducción automática y control de mermas</span>
+                            </div>
+                        </div>
+
+                        <div class="pillar-item">
+                            <div class="pillar-icon-box">
+                                <i class="bi bi-calculator-fill"></i>
+                            </div>
+                            <div class="pillar-item-text">
+                                <span class="pillar-item-title">Contabilidad y Cuentas T</span>
+                                <span class="pillar-item-desc">Partida doble, libro diario y arqueo de caja</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="brand-showcase-footer">
+                    <span><i class="bi bi-fire me-1"></i> Horneado tradicional</span>
+                    <span><i class="bi bi-shield-check me-1"></i> Control de acceso seguro</span>
+                </div>
+            </aside>
+
+            <!-- PANEL DERECHO: FORMULARIO DE ACCESO AUTENTICADO -->
+            <main class="login-form-panel">
+                <div class="form-header-area">
+                    <span class="form-pretitle">
+                        <i class="bi bi-shield-lock-fill"></i> Sistema Contable y Operativo
+                    </span>
+                    <h1 class="form-main-title">Iniciar Sesión</h1>
+                    <p class="form-subtitle">
+                        Ingrese sus credenciales de colaborador para acceder al panel de administración y operaciones de la pizzería.
+                    </p>
+                </div>
+
+                <!-- Resumen de Errores de Autenticación / Bloqueo -->
                 @if (!ViewData.ModelState.IsValid)
                 {
-                    <div class="alert alert-danger py-2 px-3 small rounded-3 mb-3 border-0 shadow-sm" role="alert" style="background-color: #FDEDEC; color: #78281F; border-left: 4px solid var(--sc-red) !important;">
-                        <div asp-validation-summary="All" class="mb-0 fw-semibold"></div>
+                    <div class="custom-auth-alert" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div class="custom-auth-alert-body">
+                            <div asp-validation-summary="All" class="mb-0"></div>
+                        </div>
                     </div>
                 }
 
-                <form asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl" method="post" id="loginForm">
+                <!-- Formulario Seguro con Anti-Forgery Token -->
+                <form asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl" method="post" id="loginForm" novalidate>
                     @Html.AntiForgeryToken()
 
+                    <!-- Campo Usuario o Correo -->
                     <div class="mb-3">
-                        <label asp-for="UserNameOrEmail" class="form-label fw-bold small text-dark">Usuario o Correo Electrónico</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                            <input asp-for="UserNameOrEmail" class="form-control" placeholder="Usuario o correo electrónico" autofocus required autocomplete="username" />
+                        <label asp-for="UserNameOrEmail" class="form-label-custom">Usuario o Correo Electrónico</label>
+                        <div class="custom-input-group">
+                            <div class="input-icon-cell" aria-hidden="true">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <input asp-for="UserNameOrEmail" 
+                                   class="custom-form-input" 
+                                   placeholder="Ej. admin@pizzeria.local o usuario" 
+                                   autofocus 
+                                   required 
+                                   autocomplete="username" 
+                                   aria-required="true" />
                         </div>
-                        <span asp-validation-for="UserNameOrEmail" class="text-danger small"></span>
+                        <span asp-validation-for="UserNameOrEmail" class="field-error-msg"></span>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label fw-bold small text-dark">Contraseña de Acceso</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                            <input asp-for="Password" id="passwordInput" class="form-control" placeholder="••••••••" required autocomplete="current-password" />
-                            <button class="btn btn-toggle-password" type="button" id="btnTogglePassword" title="Mostrar u ocultar contraseña" tabindex="-1">
+                    <!-- Campo Contraseña con Toggle de Visibilidad -->
+                    <div class="mb-2">
+                        <label asp-for="Password" class="form-label-custom">Contraseña de Acceso</label>
+                        <div class="custom-input-group">
+                            <div class="input-icon-cell" aria-hidden="true">
+                                <i class="bi bi-key-fill"></i>
+                            </div>
+                            <input asp-for="Password" 
+                                   id="passwordInput" 
+                                   type="password"
+                                   class="custom-form-input" 
+                                   placeholder="••••••••••••" 
+                                   required 
+                                   autocomplete="current-password" 
+                                   aria-required="true" />
+                            <button type="button" 
+                                    class="btn-toggle-eye" 
+                                    id="btnTogglePassword" 
+                                    title="Mostrar u ocultar contraseña" 
+                                    aria-label="Mostrar u ocultar contraseña" 
+                                    tabindex="-1">
                                 <i class="bi bi-eye" id="toggleIcon"></i>
                             </button>
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <span asp-validation-for="Password" class="field-error-msg"></span>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check">
-                            <input asp-for="RememberMe" class="form-check-input" id="rememberMeCheck" />
-                            <label asp-for="RememberMe" class="form-check-label small text-muted" for="rememberMeCheck">Recordar sesión</label>
+                    <!-- Opciones de Sesión y Verificación de Seguridad -->
+                    <div class="form-utility-row">
+                        <label class="custom-checkbox-label" for="rememberMeCheck">
+                            <input asp-for="RememberMe" class="custom-checkbox-input" id="rememberMeCheck" />
+                            <span>Recordar sesión en este equipo</span>
+                        </label>
+
+                        <div class="security-badge" title="Canal seguro mediante TLS/HTTPS">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Cifrado Identity</span>
                         </div>
-                        <span class="small text-muted"><i class="bi bi-shield-check text-success me-1"></i>Conexión segura</span>
                     </div>
 
-                    <button type="submit" id="btnSubmit" class="btn btn-login w-100 d-flex align-items-center justify-content-center gap-2">
+                    <!-- Botón Principal de Envío -->
+                    <button type="submit" id="btnSubmit" class="btn-enter-system">
                         <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         <i class="bi bi-box-arrow-in-right fs-5" id="btnIcon"></i>
-                        <span id="btnText">ENTRAR AL SISTEMA</span>
+                        <span id="btnText">INGRESAR AL SISTEMA</span>
                     </button>
                 </form>
 
-                <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--sc-border-warm) !important;">
-                    <span class="text-muted small">&copy; @DateTime.Now.Year - <strong>Say Cheese Pizza</strong> &bull; Managua, Nicaragua C$</span>
+                <!-- Pie del Formulario y Enlace de Soporte -->
+                <div class="form-footer-area">
+                    <p class="support-hint-text">
+                        ¿Olvidó sus credenciales o necesita permisos de turno? Contacte a la <strong>Administración</strong>.
+                    </p>
+                    <p class="system-copyright-text">
+                        &copy; @DateTime.Now.Year <strong>Say Cheese Pizza</strong> &bull; Sistema Contable y Punto de Venta &bull; Managua, Nicaragua (NIO C$)
+                    </p>
                 </div>
-            </div>
+            </main>
+
         </div>
 
-        <!-- Badges Promocionales Inferiores inspirados en Referencia 1 -->
-        <div class="brand-badges-row">
-            <div class="brand-badge-item">
+        <!-- Badges Promocionales Inferiores Inspirados en la Identidad Say Cheese -->
+        <div class="login-bottom-strip">
+            <div class="bottom-strip-badge">
                 <i class="bi bi-fire"></i>
-                <span>Horneadas al momento</span>
+                <span>Pizzas Horneadas al Momento</span>
             </div>
-            <div class="brand-badge-item">
+            <div class="bottom-strip-badge">
                 <i class="bi bi-check2-circle"></i>
-                <span>Ingredientes de calidad</span>
+                <span>Ingredientes de Calidad Superior</span>
             </div>
-            <div class="brand-badge-item">
-                <i class="bi bi-calculator"></i>
-                <span>Cuentas claras</span>
+            <div class="bottom-strip-badge">
+                <i class="bi bi-cash-stack"></i>
+                <span>Cuentas Claras en Córdobas (C$)</span>
             </div>
         </div>
     </div>
 
+    <!-- Scripts de Interacción Segura -->
     <script>
-        // Toggle password visibility
+        // Alternar visibilidad de contraseña
         const btnToggle = document.getElementById('btnTogglePassword');
         const passInput = document.getElementById('passwordInput');
         const toggleIcon = document.getElementById('toggleIcon');
@@ -261,10 +225,11 @@
                 const isPassword = passInput.getAttribute('type') === 'password';
                 passInput.setAttribute('type', isPassword ? 'text' : 'password');
                 toggleIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+                btnToggle.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
             });
         }
 
-        // Submit loading indicator
+        // Indicador de carga durante el envío del formulario
         const loginForm = document.getElementById('loginForm');
         const btnSubmit = document.getElementById('btnSubmit');
         const btnSpinner = document.getElementById('btnSpinner');
@@ -272,7 +237,8 @@
         const btnText = document.getElementById('btnText');
 
         if (loginForm && btnSubmit) {
-            loginForm.addEventListener('submit', function () {
+            loginForm.addEventListener('submit', function (e) {
+                // Validación HTML5 básica antes de activar spinner
                 if (loginForm.checkValidity()) {
                     btnSubmit.setAttribute('disabled', 'disabled');
                     btnSpinner.classList.remove('d-none');
