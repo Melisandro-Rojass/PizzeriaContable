@@ -33,8 +33,8 @@
             </a>
             <form asp-action="CargarEjemploDidactico" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-success fw-bold shadow-sm" title="Venta de contado didáctica por C$ 1,000">
-                    <i class="bi bi-lightning-charge me-1"></i> Asiento Didáctico (C$ 1,000)
+                <button type="submit" class="btn btn-outline-success fw-bold shadow-sm" title="Registrar asiento contable de prueba por C$ 1,000">
+                    <i class="bi bi-lightning-charge me-1"></i> Asiento de Prueba (C$ 1,000)
                 </button>
             </form>
             <a asp-action="CrearAsiento" class="btn btn-primary fw-bold shadow-sm">
@@ -89,7 +89,7 @@
                         <option value="Gasto" selected="@(ViewBag.TipoOrigen == "Gasto")">Gastos</option>
                         <option value="Apertura" selected="@(ViewBag.TipoOrigen == "Apertura")">Apertura</option>
                         <option value="Manual" selected="@(ViewBag.TipoOrigen == "Manual")">Manual</option>
-                        <option value="Demostracion" selected="@(ViewBag.TipoOrigen == "Demostracion")">Demostración</option>
+                        <option value="Demostracion" selected="@(ViewBag.TipoOrigen == "Demostracion")">Ajuste / Prueba</option>
                     </select>
                 </div>
                 <div class="col-md-2">

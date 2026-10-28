@@ -352,7 +352,7 @@ public class UsuariosController : Controller
 
         if (user.UserName == User.Identity?.Name && user.Activo)
         {
-            TempData["ErrorMessage"] = "No puedes desactivar tu propia cuenta activa de administrador.";
+            TempData["ErrorMessage"] = "No es posible desactivar la cuenta propia de administrador en sesión.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -454,7 +454,7 @@ public class UsuariosController : Controller
         if (result.Succeeded)
         {
             await _signInManager.RefreshSignInAsync(user);
-            TempData["SuccessMessage"] = "Tu contraseña ha sido actualizada correctamente.";
+            TempData["SuccessMessage"] = "La contraseña ha sido actualizada correctamente.";
         }
         else
         {

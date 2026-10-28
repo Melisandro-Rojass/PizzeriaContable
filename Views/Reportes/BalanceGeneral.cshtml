@@ -42,7 +42,7 @@
                 <i class="bi @(Model.EstaCuadrado ? "bi-check-circle-fill" : "bi-exclamation-octagon-fill") fs-3 me-3"></i>
                 <div>
                     <h5 class="alert-heading fw-bold mb-0">
-                        @(Model.EstaCuadrado ? "Balance General Perfectamente Equilibrado" : "Balance General con Diferencia")
+                        @(Model.EstaCuadrado ? "Balance General Equilibrado" : "Balance General con Diferencia")
                     </h5>
                     <p class="mb-0 small">
                         Activos (C$ @Model.TotalActivos.ToString("N2")) = Pasivos (C$ @Model.TotalPasivos.ToString("N2")) + Patrimonio (C$ @((Model.TotalPatrimonio + Model.UtilidadPeriodo).ToString("N2")))
@@ -50,7 +50,7 @@
                 </div>
             </div>
             <span class="badge @(Model.EstaCuadrado ? "bg-success" : "bg-danger") fs-6 px-3 py-2">
-                @(Model.EstaCuadrado ? "Ecuación Cuadrada" : "Descuadre Detectado")
+                @(Model.EstaCuadrado ? "Balance Cuadrado" : "Descuadre Detectado")
             </span>
         </div>
     </div>

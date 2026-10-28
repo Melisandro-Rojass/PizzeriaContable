@@ -41,7 +41,7 @@
                         <img src="~/images/say-cheese-chef.jpg" alt="Chef Say Cheese" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/pizza-slice.svg';" />
                     </div>
                     <h2 class="h5 fw-bold text-dark mb-2 font-brand">No hay turno de caja abierto</h2>
-                    <p class="text-muted small mb-4">Abre un nuevo turno de caja para comenzar a facturar órdenes en el Punto de Venta (POS).</p>
+                    <p class="text-muted small mb-4">Inicie un nuevo turno de caja para registrar cobros y facturar órdenes en el Punto de Venta (POS).</p>
 
                     <form asp-action="Abrir" method="post">
                         @Html.AntiForgeryToken()
@@ -236,7 +236,7 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-dark">Efectivo Físico Contado (C$)</label>
                                 <input type="number" step="0.01" min="0" name="efectivoContado" class="form-control form-control-lg font-numeric" placeholder="0.00" required autofocus style="border-color: var(--sc-orange);" />
-                                <span class="form-text small text-muted">Digita el total exacto del conteo físico de billetes y monedas.</span>
+                                <span class="form-text small text-muted">Ingrese el importe total resultante del conteo físico de billetes y monedas.</span>
                             </div>
 
                             <div class="mb-3">

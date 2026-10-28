@@ -26,14 +26,14 @@
                 <i class="bi bi-layout-split me-2 text-warning"></i>Esquemas de Mayor &bull; Cuentas T
             </h2>
             <p class="text-muted small mb-0">
-                Visualización gráfica y analítica de los movimientos contables en SQL Server bajo el principio de partida doble.
+                Visualización gráfica y analítica de los movimientos contables bajo el principio de partida doble.
             </p>
         </div>
         <div class="d-flex gap-2">
             <form asp-action="CargarEjemploDidactico" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-success fw-bold shadow-sm" title="Registra un asiento didáctico de venta por C$ 1,000 (Debe: Caja, Haber: Ingresos)">
-                    <i class="bi bi-lightning-charge me-1"></i> Asiento Didáctico (C$ 1,000)
+                <button type="submit" class="btn btn-outline-success fw-bold shadow-sm" title="Registra un asiento de prueba de venta por C$ 1,000 (Debe: Caja General, Haber: Ingresos)">
+                    <i class="bi bi-lightning-charge me-1"></i> Asiento de Prueba (C$ 1,000)
                 </button>
             </form>
             <a asp-action="CrearAsiento" class="btn btn-saycheese-primary fw-bold shadow-sm">
@@ -130,12 +130,12 @@
                 <div class="card p-5 text-center text-muted bg-white">
                     <i class="bi bi-folder-x fs-1 text-secondary mb-2"></i>
                     <h5 class="fw-bold font-brand text-dark">No hay movimientos contables registrados para este filtro.</h5>
-                    <p class="small text-muted mb-3">Puedes cargar un asiento didáctico de prueba o registrar un nuevo asiento manual.</p>
+                    <p class="small text-muted mb-3">Puede registrar operaciones desde ventas y compras o generar un asiento manual.</p>
                     <div class="d-flex justify-content-center gap-2">
                         <form asp-action="CargarEjemploDidactico" method="post">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-sm btn-success fw-bold">
-                                <i class="bi bi-lightning-charge me-1"></i> Cargar Asiento Didáctico (C$ 1,000)
+                                <i class="bi bi-lightning-charge me-1"></i> Asiento de Prueba (C$ 1,000)
                             </button>
                         </form>
                         <a asp-action="CrearAsiento" class="btn btn-sm btn-saycheese-primary fw-bold">

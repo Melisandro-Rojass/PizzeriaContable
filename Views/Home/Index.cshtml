@@ -39,8 +39,8 @@
         <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4 rounded-3 p-3" role="alert" style="background-color: var(--sc-cream); border-left: 5px solid var(--sc-orange) !important;">
             <i class="bi bi-fire fs-2 me-3 text-warning"></i>
             <div>
-                <h5 class="alert-heading mb-1 fw-bold text-dark font-brand">¡Hornos listos para operar!</h5>
-                <p class="mb-0 small text-dark">No se han registrado operaciones en este período. Comienza abriendo un turno en el <a asp-controller="Caja" asp-action="Index" class="fw-bold text-dark text-decoration-underline">Control de Caja</a> o registrando pedidos en el <a asp-controller="Ventas" asp-action="Pos" class="fw-bold text-dark text-decoration-underline">Punto de Venta (POS)</a>.</p>
+                <h5 class="alert-heading mb-1 fw-bold text-dark font-brand">Sin movimientos registrados</h5>
+                <p class="mb-0 small text-dark">No se han registrado operaciones en este período. Puede aperturar un turno en el <a asp-controller="Caja" asp-action="Index" class="fw-bold text-dark text-decoration-underline">Control de Caja</a> o registrar pedidos en el <a asp-controller="Ventas" asp-action="Pos" class="fw-bold text-dark text-decoration-underline">Punto de Venta (POS)</a>.</p>
             </div>
         </div>
     }
@@ -111,7 +111,7 @@
             <div class="card h-100">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h2 class="h6 mb-0 fw-bold text-dark">
-                        <i class="bi bi-graph-up-arrow text-warning me-2"></i> Rendimiento Económico del Horno
+                        <i class="bi bi-graph-up-arrow text-warning me-2"></i> Rendimiento Operativo y Económico
                     </h2>
                     <span class="badge rounded-pill bg-light text-dark border px-3 py-1 font-numeric" style="border-color: var(--sc-border-warm) !important;">
                         @Model.FechaInicio.ToString("dd/MM/yyyy") - @Model.FechaFin.ToString("dd/MM/yyyy")
@@ -213,7 +213,7 @@
                     {
                         <div class="text-center py-5 text-muted small">
                             <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
-                            <span class="fw-semibold">¡Despensa al 100%! Todos los ingredientes tienen existencia suficiente.</span>
+                            <span class="fw-semibold">Inventario suficiente. Todos los insumos cuentan con existencias superiores al mínimo.</span>
                         </div>
                     }
                     else
