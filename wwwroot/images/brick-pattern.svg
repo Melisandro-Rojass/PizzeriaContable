@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2d0b07" />
+      <stop offset="100%" stop-color="#1f0704" />
+    </linearGradient>
+    <linearGradient id="brick1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8c2f1b" />
+      <stop offset="50%" stop-color="#6e2313" />
+      <stop offset="100%" stop-color="#4e160a" />
+    </linearGradient>
+    <linearGradient id="brick2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9e361e" />
+      <stop offset="50%" stop-color="#7a2815" />
+      <stop offset="100%" stop-color="#55190b" />
+    </linearGradient>
+  </defs>
+  <!-- Mortar background -->
+  <rect width="120" height="60" fill="url(#bgGrad)" />
+  <!-- Row 1: Full brick + half brick -->
+  <rect x="2" y="2" width="56" height="26" rx="2" fill="url(#brick1)" stroke="#3e120a" stroke-width="0.8" opacity="0.95" />
+  <rect x="62" y="2" width="56" height="26" rx="2" fill="url(#brick2)" stroke="#3e120a" stroke-width="0.8" opacity="0.9" />
+  <!-- Row 2: Staggered brick -->
+  <rect x="-28" y="32" width="56" height="26" rx="2" fill="url(#brick2)" stroke="#3e120a" stroke-width="0.8" opacity="0.88" />
+  <rect x="32" y="32" width="56" height="26" rx="2" fill="url(#brick1)" stroke="#3e120a" stroke-width="0.8" opacity="0.92" />
+  <rect x="92" y="32" width="56" height="26" rx="2" fill="url(#brick2)" stroke="#3e120a" stroke-width="0.8" opacity="0.9" />
+</svg>

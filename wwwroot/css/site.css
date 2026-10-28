@@ -1,19 +1,78 @@
+/* ==========================================================================
+   SAY CHEESE PIZZERÍA CONTABLE - DESIGN SYSTEM & VISUAL IDENTITY
+   Inspirado en la identidad artística de Say Cheese Pizza
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
 :root {
-    --sidebar-width: 260px;
-    --sidebar-bg: #1e293b;
-    --sidebar-color: #94a3b8;
-    --sidebar-hover: #334155;
-    --sidebar-active: #0ea5e9;
-    --topbar-height: 64px;
-    --primary-color: #0284c7;
-    --secondary-bg: #f8fafc;
+    /* Paleta Principal Say Cheese */
+    --sc-brick-red: #A83B20;
+    --sc-brick-red-hover: #C04426;
+    --sc-brick-dark: #4A120B;
+    --sc-wine: #641E16;
+    --sc-orange: #F28C28;
+    --sc-orange-hover: #DB7614;
+    --sc-yellow: #FFC928;
+    --sc-yellow-hover: #F0B817;
+    --sc-cream: #FFF3DE;
+    --sc-cream-light: #FDFBF7;
+    --sc-cream-card: #FFFFFF;
+    --sc-carbon: #202020;
+    --sc-crust-dark: #190B09;
+    --sc-gray-warm: #F7F3EC;
+    --sc-gray-text: #6B5E59;
+    --sc-border-warm: #EADBC8;
+    --sc-border-subtle: #F0E6D8;
+    
+    /* Estados Semánticos */
+    --sc-green: #218653;
+    --sc-green-bg: #E8F5E9;
+    --sc-red: #C0392B;
+    --sc-red-bg: #FDEDEC;
+    --sc-info: #1B74E4;
+    --sc-info-bg: #EBF3FC;
+
+    /* Layout & Componentes */
+    --sidebar-width: 270px;
+    --sidebar-bg: #23110E;
+    --sidebar-color: #D6C2BC;
+    --sidebar-hover: #3D1914;
+    --sidebar-active: #F28C28;
+    --topbar-height: 68px;
+    --topbar-bg: #FFFFFF;
+    --primary-color: var(--sc-brick-red);
+    --secondary-bg: var(--sc-cream-light);
+
+    /* Tipografía */
+    --font-brand: 'Fredoka', system-ui, -apple-system, sans-serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* Base & Reset */
 body {
     background-color: var(--secondary-bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color: #1e293b;
+    background-image: radial-gradient(#E8D8C5 0.75px, transparent 0.75px);
+    background-size: 24px 24px;
+    font-family: var(--font-body);
+    color: var(--sc-carbon);
     overflow-x: hidden;
+    line-height: 1.5;
+}
+
+/* Números tabulares para precisión contable y financiera */
+.font-numeric, 
+.table td, 
+.stat-card h3,
+.price-tag,
+.cuenta-t-table td {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Headings con identidad gastronómica Say Cheese */
+h1, h2, h3, .brand-font {
+    font-family: var(--font-brand);
+    letter-spacing: -0.01em;
 }
 
 /* App Wrapper */
@@ -22,10 +81,12 @@ body {
     min-height: 100vh;
 }
 
-/* Sidebar */
+/* ==========================================================================
+   SIDEBAR - ESTILO HORNO DE LADRILLO & SAY CHEESE
+   ========================================================================== */
 .app-sidebar {
     width: var(--sidebar-width);
-    background-color: var(--sidebar-bg);
+    background: linear-gradient(180deg, #2A120F 0%, #1A0907 100%);
     color: var(--sidebar-color);
     flex-shrink: 0;
     display: flex;
@@ -36,74 +97,175 @@ body {
     left: 0;
     z-index: 1040;
     overflow-y: auto;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+    border-right: 1px solid rgba(255, 201, 40, 0.12);
+}
+
+/* Cabecera del Sidebar con Textura y Logo */
+.sidebar-brand-wrapper {
+    background: url('/images/brick-pattern.svg');
+    background-size: 80px 40px;
+    padding: 1rem 1.15rem;
+    border-bottom: 2px solid var(--sc-orange);
+    position: relative;
+    box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.6);
+}
+
+.sidebar-brand-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(35, 17, 14, 0.65) 0%, rgba(20, 8, 6, 0.85) 100%);
+    pointer-events: none;
 }
 
 .sidebar-brand {
-    height: var(--topbar-height);
+    position: relative;
+    z-index: 2;
     display: flex;
     align-items: center;
-    padding: 0 1.25rem;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #f8fafc;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 0.75rem;
     text-decoration: none;
+    color: #FFFFFF;
 }
 
-.sidebar-brand i {
-    color: #f59e0b;
-    margin-right: 0.6rem;
-    font-size: 1.35rem;
+.sidebar-logo-img {
+    height: 44px;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+    transition: transform 0.2s ease;
 }
 
+.sidebar-brand:hover .sidebar-logo-img {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-brand-title {
+    font-family: var(--font-brand);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #FFFFFF;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.sidebar-brand-title span {
+    color: var(--sc-yellow);
+}
+
+.sidebar-brand-sub {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sc-orange);
+}
+
+/* Navegación del Sidebar */
 .sidebar-nav {
-    padding: 1rem 0;
+    padding: 1rem 0.75rem;
     list-style: none;
     margin: 0;
     flex-grow: 1;
 }
 
 .nav-section-title {
+    font-family: var(--font-brand);
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #64748b;
-    padding: 0.75rem 1.25rem 0.35rem;
+    letter-spacing: 0.1em;
+    color: var(--sc-yellow);
+    padding: 0.85rem 0.85rem 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0.9;
+}
+
+.nav-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 201, 40, 0.2);
 }
 
 .sidebar-nav .nav-link {
     display: flex;
     align-items: center;
-    padding: 0.55rem 1.25rem;
+    padding: 0.65rem 0.85rem;
     color: var(--sidebar-color);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 500;
     text-decoration: none;
-    transition: all 0.2s;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
     border-left: 3px solid transparent;
 }
 
 .sidebar-nav .nav-link i {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     margin-right: 0.75rem;
-    width: 20px;
+    width: 22px;
     text-align: center;
+    color: var(--sc-orange);
+    transition: transform 0.2s ease;
 }
 
 .sidebar-nav .nav-link:hover {
-    color: #f8fafc;
+    color: #FFFFFF;
     background-color: var(--sidebar-hover);
+    transform: translateX(3px);
+}
+
+.sidebar-nav .nav-link:hover i {
+    color: var(--sc-yellow);
+    transform: scale(1.15);
 }
 
 .sidebar-nav .nav-link.active {
-    color: #ffffff;
-    background-color: rgba(14, 165, 233, 0.15);
-    border-left-color: var(--sidebar-active);
+    color: #FFFFFF;
+    background: linear-gradient(90deg, rgba(242, 140, 40, 0.25) 0%, rgba(168, 59, 32, 0.15) 100%);
+    border-left-color: var(--sc-yellow);
+    font-weight: 600;
+    box-shadow: inset 1px 0 0 var(--sc-yellow);
 }
 
-/* Main Content Area */
+.sidebar-nav .nav-link.active i {
+    color: var(--sc-yellow);
+}
+
+/* Badge especial para el Punto de Venta en Sidebar */
+.nav-badge-pos {
+    background: linear-gradient(135deg, var(--sc-orange) 0%, var(--sc-brick-red) 100%);
+    color: #FFFFFF !important;
+    border: 1px solid var(--sc-yellow);
+    box-shadow: 0 2px 8px rgba(242, 140, 40, 0.35);
+}
+
+.nav-badge-pos:hover {
+    background: linear-gradient(135deg, var(--sc-yellow) 0%, var(--sc-orange) 100%) !important;
+    color: var(--sc-crust-dark) !important;
+}
+
+.nav-badge-pos:hover i,
+.nav-badge-pos:hover span {
+    color: var(--sc-crust-dark) !important;
+}
+
+/* ==========================================================================
+   TOPBAR & CONTENIDO PRINCIPAL
+   ========================================================================== */
 .app-main {
     flex-grow: 1;
     margin-left: var(--sidebar-width);
@@ -112,57 +274,348 @@ body {
     min-height: 100vh;
 }
 
-/* Top Navbar */
 .app-topbar {
     height: var(--topbar-height);
-    background-color: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
+    background-color: #FFFFFF;
+    border-bottom: 2px solid var(--sc-border-warm);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.5rem;
+    padding: 0 1.75rem;
     position: sticky;
     top: 0;
     z-index: 1020;
+    box-shadow: 0 2px 8px rgba(74, 18, 11, 0.04);
 }
 
 .content-body {
-    padding: 1.5rem;
+    padding: 1.75rem;
     flex-grow: 1;
 }
 
-/* Dashboard Cards */
-.stat-card {
-    border-radius: 0.75rem;
-    border: none;
-    background: #ffffff;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-    transition: transform 0.2s, box-shadow 0.2s;
+/* ==========================================================================
+   CARDS, STATS & COMPONENTES ESTÉTICOS SAY CHEESE
+   ========================================================================== */
+.card {
+    border-radius: 14px;
+    border: 1px solid var(--sc-border-warm);
+    background: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(74, 18, 11, 0.04);
+    transition: box-shadow 0.2s ease;
 }
 
+.card-header {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--sc-border-subtle);
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+}
+
+/* Tarjetas de Indicadores (Dashboard) */
+.stat-card {
+    border-radius: 14px;
+    border: 1px solid var(--sc-border-warm);
+    background: #FFFFFF;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 3px 8px rgba(74, 18, 11, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: var(--sc-brick-red);
+}
+
+.stat-card.stat-primary::before { background: var(--sc-orange); }
+.stat-card.stat-success::before { background: var(--sc-green); }
+.stat-card.stat-warning::before { background: var(--sc-yellow); }
+.stat-card.stat-danger::before { background: var(--sc-red); }
+
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(74, 18, 11, 0.09);
+    border-color: var(--sc-orange);
 }
 
 .stat-card .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 0.5rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.35rem;
+    font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
-/* Badge and Table utilities */
-.table th {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
+/* Colores Cálidos de Iconos */
+.bg-sc-orange-subtle { background-color: #FEF3E8; color: var(--sc-orange); }
+.bg-sc-brick-subtle { background-color: #FAEDE9; color: var(--sc-brick-red); }
+.bg-sc-yellow-subtle { background-color: #FFF9E6; color: #D69704; }
+.bg-sc-green-subtle { background-color: #E8F5E9; color: var(--sc-green); }
+
+/* Banners Decorativos con Textura de Ladrillo */
+.brick-hero-banner {
+    background: url('/images/brick-pattern.svg');
+    background-size: 100px 50px;
+    border-radius: 16px;
+    padding: 1.5rem 1.75rem;
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(74, 18, 11, 0.22);
+    border: 2px solid rgba(255, 201, 40, 0.35);
+}
+
+.brick-hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(74, 18, 11, 0.88) 0%, rgba(32, 9, 6, 0.94) 100%);
+    z-index: 1;
+}
+
+.brick-hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Distintivo "Promo / Badge" con borde de costura como Referencia 1 */
+.sc-badge-circle {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--sc-yellow);
+    color: var(--sc-wine);
+    border: 3px dashed var(--sc-brick-red);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-family: var(--font-brand);
+    text-align: center;
+}
+
+/* Pills de Pizza inspirados en Referencia 2 */
+.pizza-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #FFFFFF;
+    border: 2px solid var(--sc-border-warm);
+    border-radius: 30px;
+    padding: 0.45rem 1rem;
+    font-weight: 700;
+    color: var(--sc-carbon);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.pizza-pill-badge:hover {
+    border-color: var(--sc-orange);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(242, 140, 40, 0.2);
+}
+
+/* ==========================================================================
+   BOTONES SAY CHEESE
+   ========================================================================== */
+.btn {
+    border-radius: 9px;
     font-weight: 600;
+    padding: 0.55rem 1.15rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary, 
+.btn-saycheese-primary {
+    background: linear-gradient(135deg, var(--sc-brick-red) 0%, #8C2F18 100%);
+    border: none;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(168, 59, 32, 0.25);
+}
+
+.btn-primary:hover, 
+.btn-saycheese-primary:hover {
+    background: linear-gradient(135deg, var(--sc-brick-red-hover) 0%, var(--sc-brick-red) 100%);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 59, 32, 0.35);
+}
+
+.btn-warning,
+.btn-saycheese-orange {
+    background: linear-gradient(135deg, var(--sc-orange) 0%, #D47116 100%);
+    border: none;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(242, 140, 40, 0.25);
+}
+
+.btn-warning:hover,
+.btn-saycheese-orange:hover {
+    background: linear-gradient(135deg, var(--sc-orange-hover) 0%, var(--sc-orange) 100%);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(242, 140, 40, 0.35);
+}
+
+.btn-saycheese-cheese {
+    background: linear-gradient(135deg, #FFE066 0%, var(--sc-yellow) 100%);
+    border: 2px solid #E5B21A;
+    color: var(--sc-crust-dark);
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgba(255, 201, 40, 0.35);
+}
+
+.btn-saycheese-cheese:hover {
+    background: linear-gradient(135deg, var(--sc-yellow) 0%, #F5B800 100%);
+    color: var(--sc-crust-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(255, 201, 40, 0.45);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--sc-green) 0%, #1A6C42 100%);
+    border: none;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(33, 134, 83, 0.25);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #279A60 0%, var(--sc-green) 100%);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   TABLAS Y FORMULARIOS (MÁXIMA LEGIBILIDAD CONTABLE)
+   ========================================================================== */
+.table {
+    border-color: var(--sc-border-subtle);
+    vertical-align: middle;
+}
+
+.table th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sc-gray-text);
+    font-weight: 700;
+    background-color: var(--sc-gray-warm);
+    border-bottom: 2px solid var(--sc-border-warm);
+    padding: 0.75rem 1rem;
+}
+
+.table td {
+    padding: 0.75rem 1rem;
+    color: var(--sc-carbon);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 243, 222, 0.5);
+}
+
+/* Inputs y Selects */
+.form-control, .form-select {
+    border-color: var(--sc-border-warm);
+    border-radius: 8px;
+    font-size: 0.92rem;
+    padding: 0.6rem 0.85rem;
+    background-color: #FFFFFF;
+    color: var(--sc-carbon);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--sc-orange);
+    box-shadow: 0 0 0 0.25rem rgba(242, 140, 40, 0.18);
+}
+
+/* ==========================================================================
+   PUNTO DE VENTA (POS) - PRODUCTOS & COMANDA
+   ========================================================================== */
+.product-pos-card {
+    border-radius: 12px;
+    border: 2px solid var(--sc-border-warm) !important;
+    background: #FFFFFF;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.product-pos-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--sc-orange) !important;
+    box-shadow: 0 8px 18px rgba(242, 140, 40, 0.18) !important;
+}
+
+.product-pos-card .price-badge {
+    background: linear-gradient(135deg, var(--sc-orange) 0%, var(--sc-brick-red) 100%);
+    color: #FFFFFF;
+    font-family: var(--font-brand);
+    font-size: 0.95rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(168, 59, 32, 0.2);
+}
+
+/* Categorías Tabs en POS */
+.cat-btn {
+    border-radius: 20px;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.82rem;
+    border: 1px solid var(--sc-border-warm);
+    background: #FFFFFF;
+    color: var(--sc-carbon);
+    transition: all 0.2s ease;
+}
+
+.cat-btn:hover {
+    background: var(--sc-cream);
+    color: var(--sc-brick-red);
+    border-color: var(--sc-orange);
+}
+
+.cat-btn.active {
+    background: linear-gradient(135deg, var(--sc-brick-red) 0%, #7A2411 100%) !important;
+    color: #FFFFFF !important;
+    border-color: var(--sc-brick-red) !important;
+    box-shadow: 0 2px 6px rgba(168, 59, 32, 0.3);
+}
+
+/* ==========================================================================
+   MÓDULO CONTABLE: CUENTAS T & ASIENTOS
+   ========================================================================== */
+.cuenta-t-header {
+    background: linear-gradient(135deg, var(--sc-brick-dark) 0%, #2A0B07 100%);
+    color: #FFFFFF;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 0.75rem 1rem;
+    border-bottom: 3px solid var(--sc-yellow);
+}
+
+.col-debe-header {
+    background-color: #EBF3FC !important;
+    color: #1A5276 !important;
+    font-weight: 700;
+    border-bottom: 2px solid #AED6F1 !important;
+}
+
+.col-haber-header {
+    background-color: #FDEDEC !important;
+    color: #78281F !important;
+    font-weight: 700;
+    border-bottom: 2px solid #F5B7B1 !important;
 }
 
 /* Responsive */

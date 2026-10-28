@@ -1,52 +1,54 @@
 @model IEnumerable<PizzeriaContable.Models.Producto>
 
 @{
-    ViewData["Title"] = "Gestión de Productos";
+    ViewData["Title"] = "Gestión de Productos - Say Cheese Pizza";
     var mostrarInactivos = (bool)(ViewData["MostrarInactivos"] ?? false);
     var searchString = (string?)ViewData["SearchString"];
     var categoriaId = (int?)ViewData["CategoriaId"];
 }
 
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
         <div>
-            <h1 class="h3 mb-1 text-gray-800 fw-bold">Catálogo de Productos</h1>
-            <p class="text-muted small mb-0">Administra los productos de la pizzería, tamaños, categorías y precios de venta.</p>
+            <h1 class="h3 mb-1 text-dark fw-bold font-brand">
+                <i class="bi bi-card-checklist text-warning me-2"></i>Catálogo del Menú &bull; Say Cheese
+            </h1>
+            <p class="text-muted small mb-0">Pizzas tradicionales, gourmet, bebidas, complementos y listas de precios de venta.</p>
         </div>
-        <div>
-            <a asp-controller="Categorias" asp-action="Index" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-tags"></i> Categorías
+        <div class="d-flex gap-2">
+            <a asp-controller="Categorias" asp-action="Index" class="btn btn-outline-secondary shadow-sm">
+                <i class="bi bi-tags text-warning me-1"></i> Categorías
             </a>
-            <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> + Nuevo Producto
+            <a asp-action="Create" class="btn btn-saycheese-primary shadow-sm fw-bold">
+                <i class="bi bi-plus-circle me-1"></i> + Nuevo Producto
             </a>
         </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm border-0 mb-3" role="alert" style="background-color: var(--sc-green-bg); color: #145A32; border-left: 5px solid var(--sc-green) !important;">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i> @TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
     @if (TempData["WarningMessage"] != null)
     {
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["WarningMessage"]
+        <div class="alert alert-warning alert-dismissible fade show rounded-3 shadow-sm border-0 mb-3" role="alert" style="background-color: var(--sc-cream); color: #7D4C00; border-left: 5px solid var(--sc-orange) !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> @TempData["WarningMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body p-3">
             <form method="get" asp-action="Index" class="row g-3 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" name="searchString" class="form-control border-start-0" placeholder="Buscar por nombre o código..." value="@searchString" />
-                        <button type="submit" class="btn btn-secondary">Buscar</button>
+                        <span class="input-group-text bg-light text-warning border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="searchString" class="form-control border-start-0" placeholder="Buscar por nombre o código de pizza..." value="@searchString" />
+                        <button type="submit" class="btn btn-saycheese-primary">Buscar</button>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -57,31 +59,33 @@
                 <div class="col-md-3">
                     <div class="form-check form-switch mt-1">
                         <input class="form-check-input" type="checkbox" name="mostrarInactivos" value="true" id="checkInactivos" @(mostrarInactivos ? "checked" : "") onchange="this.form.submit()" />
-                        <label class="form-check-label small" for="checkInactivos">Mostrar inactivos</label>
+                        <label class="form-check-label small fw-semibold text-dark" for="checkInactivos">Mostrar productos inactivos</label>
                     </div>
                 </div>
                 <div class="col-md-1 text-end">
                     @if (!string.IsNullOrEmpty(searchString) || categoriaId.HasValue || mostrarInactivos)
                     {
-                        <a asp-action="Index" class="btn btn-sm btn-link text-decoration-none">Limpiar</a>
+                        <a asp-action="Index" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
                     }
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm">
+    <div class="card shadow-sm">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead>
                     <tr>
                         <th scope="col" style="width: 120px;">Código</th>
-                        <th scope="col">Nombre</th>
+                        <th scope="col">Nombre del Producto</th>
                         <th scope="col">Categoría</th>
                         <th scope="col">Presentación</th>
-                        <th scope="col" class="text-end" style="width: 130px;">Precio</th>
+                        <th scope="col" class="text-end" style="width: 130px;">Precio Venta</th>
                         <th scope="col" style="width: 110px;" class="text-center">Estado</th>
-                        <th scope="col" class="text-end" style="width: 260px;">Acciones</th>
+                        <th scope="col" class="text-end" style="width: 270px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -89,7 +93,8 @@
                     {
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
-                                No se encontraron productos registrados con los criterios seleccionados.
+                                <img src="~/images/pizza-slice.svg" alt="Vacío" style="height: 48px; width: auto; opacity: 0.35; margin-bottom: 0.75rem;" />
+                                <span class="d-block fw-semibold text-secondary">No se encontraron productos registrados con los criterios seleccionados.</span>
                             </td>
                         </tr>
                     }
@@ -98,32 +103,37 @@
                         @foreach (var item in Model)
                         {
                             <tr class="@(!item.Activo ? "table-light text-muted" : "")">
-                                <td class="font-monospace small">@item.Codigo</td>
-                                <td class="fw-semibold">@item.Nombre</td>
+                                <td class="font-monospace fw-bold text-warning">@item.Codigo</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="~/images/pizza-slice.svg" alt="Pizza" style="height: 24px; width: auto;" />
+                                        <span class="fw-bold text-dark">@item.Nombre</span>
+                                    </div>
+                                </td>
                                 <td>
                                     <span class="badge bg-light text-dark border">
                                         @(item.Categoria?.Nombre ?? "Sin categoría")
                                     </span>
                                 </td>
                                 <td>@(string.IsNullOrEmpty(item.Tamano) ? "-" : item.Tamano)</td>
-                                <td class="text-end fw-bold text-dark">@item.Precio.ToString("C2")</td>
+                                <td class="text-end fw-bold text-dark font-numeric fs-6">@item.Precio.ToString("C2")</td>
                                 <td class="text-center">
                                     @if (item.Activo)
                                     {
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Activo</span>
+                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1">Activo</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary-subtle text-secondary border">Inactivo</span>
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border px-2 py-1">Inactivo</span>
                                     }
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Ver ficha">
-                                            Detalles
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Ver ficha técnica">
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Editar">
-                                            Editar
+                                            <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>
                                     <form asp-action="Desactivar" asp-route-id="@item.Id" method="post" class="d-inline ms-1">
@@ -131,18 +141,18 @@
                                         @if (item.Activo)
                                         {
                                             <button type="submit" class="btn btn-sm btn-outline-warning" title="Desactivar producto">
-                                                Desactivar
+                                                <i class="bi bi-toggle-on"></i>
                                             </button>
                                         }
                                         else
                                         {
                                             <button type="submit" class="btn btn-sm btn-outline-success" title="Reactivar producto">
-                                                Activar
+                                                <i class="bi bi-toggle-off"></i>
                                             </button>
                                         }
                                     </form>
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger ms-1" title="Eliminar">
-                                        Eliminar
+                                        <i class="bi bi-trash"></i>
                                     </a>
                                 </td>
                             </tr>
