@@ -29,20 +29,21 @@ Write-Host "[3/4] Verificando esquema de base de datos y migraciones EF Core..."
 try {
     dotnet ef database update --project "c:\Proyectos\PizzeriaContable\PizzeriaContable.csproj" --no-build
     Write-Host "      Base de datos 'PizzeriaContableDB' actualizada correctamente." -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "      (Aviso: Las migraciones ya estan aplicadas o se ejecutaran en arranque)." -ForegroundColor Gray
 }
 
 # 4. Lanzar la aplicación web ASP.NET Core MVC
 Write-Host "[4/4] Iniciando la aplicacion web en modo local..." -ForegroundColor White
 Write-Host "-----------------------------------------------------------------" -ForegroundColor Gray
-Write-Host "   URL Principal:          http://localhost:5000" -ForegroundColor Cyan
-Write-Host "   Punto de Venta (POS):   http://localhost:5000/Ventas/Pos" -ForegroundColor Yellow
+Write-Host "   URL Principal:          http://localhost:7298" -ForegroundColor Cyan
+Write-Host "   Punto de Venta (POS):   http://localhost:7298/Ventas/Pos" -ForegroundColor Yellow
 Write-Host "   Usuario Administrador:  admin@pizzeria.local" -ForegroundColor White
-Write-Host "   Contrasena Inicial:     AdminPizzeria2026!" -ForegroundColor White
+Write-Host "   Contrasena Inicial:     Pizzeria#Admin2026!" -ForegroundColor White
 Write-Host "   Moneda del Sistema:     Cordobas de Nicaragua (NIO C$)" -ForegroundColor White
 Write-Host "-----------------------------------------------------------------" -ForegroundColor Gray
 Write-Host "Presione CTRL+C en esta terminal para detener el servidor web." -ForegroundColor Magenta
 Write-Host ""
 
-dotnet run --project "c:\Proyectos\PizzeriaContable\PizzeriaContable.csproj" --urls "http://localhost:5000"
+dotnet run --project "c:\Proyectos\PizzeriaContable\PizzeriaContable.csproj" --urls "http://localhost:7298"

@@ -104,11 +104,17 @@ public class UsuariosController : Controller
 
     // POST: Usuarios/Logout
     [HttpPost]
-    [Authorize]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
+
+        // Evitar que el historial del navegador almacene en caché páginas protegidas
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+
         return RedirectToAction(nameof(Login));
     }
 
@@ -401,9 +407,14 @@ public class UsuariosController : Controller
 
     // GET: Usuarios/Perfil
     [HttpGet]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> Perfil()
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
@@ -415,10 +426,15 @@ public class UsuariosController : Controller
 
     // POST: Usuarios/CambiarPasswordPropio
     [HttpPost]
-    [Authorize]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CambiarPasswordPropio(string currentPassword, string newPassword, string confirmPassword)
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
         if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
         {
             TempData["ErrorMessage"] = "La nueva contraseña debe tener al menos 6 caracteres.";

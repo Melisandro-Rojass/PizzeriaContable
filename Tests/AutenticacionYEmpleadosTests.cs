@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using PizzeriaContable.Controllers;
 using PizzeriaContable.Models;
 using Xunit;
@@ -168,5 +169,38 @@ public class AutenticacionYEmpleadosTests
         Assert.Equal("Inventario", empleado.Rol);
         Assert.True(empleado.Activo);
         Assert.NotNull(empleado.UltimoAcceso);
+    }
+
+    [Fact]
+    public void UsuariosController_Logout_PermiteTodosLosRoles_RequierePostYAntiforgery()
+    {
+        // Assert: Logout debe tener AllowAnonymous para anular el [Authorize(Roles = "Administrador")]
+        // de la clase, permitiendo que cajeros y demás roles cierren sesión.
+        var logoutMethod = typeof(UsuariosController).GetMethod("Logout");
+        Assert.NotNull(logoutMethod);
+
+        var allowAnonymousAttr = logoutMethod.GetCustomAttribute<AllowAnonymousAttribute>();
+        Assert.NotNull(allowAnonymousAttr);
+
+        var httpPostAttr = logoutMethod.GetCustomAttribute<HttpPostAttribute>();
+        Assert.NotNull(httpPostAttr);
+
+        var antiForgeryAttr = logoutMethod.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>();
+        Assert.NotNull(antiForgeryAttr);
+    }
+
+    [Fact]
+    public void UsuariosController_Perfil_PermiteTodosLosRoles_SobrescribiendoRolAdminDeClase()
+    {
+        // Assert: Perfil y CambiarPasswordPropio deben permitir acceso a cualquier usuario autenticado
+        var perfilMethod = typeof(UsuariosController).GetMethod("Perfil");
+        Assert.NotNull(perfilMethod);
+        Assert.NotNull(perfilMethod.GetCustomAttribute<AllowAnonymousAttribute>());
+
+        var cambiarPassMethod = typeof(UsuariosController).GetMethod("CambiarPasswordPropio");
+        Assert.NotNull(cambiarPassMethod);
+        Assert.NotNull(cambiarPassMethod.GetCustomAttribute<AllowAnonymousAttribute>());
+        Assert.NotNull(cambiarPassMethod.GetCustomAttribute<HttpPostAttribute>());
+        Assert.NotNull(cambiarPassMethod.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
     }
 }

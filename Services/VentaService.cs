@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PizzeriaContable.Data;
 using PizzeriaContable.Models;
 
@@ -10,17 +11,20 @@ public class VentaService : IVentaService
     private readonly IInventarioService _inventarioService;
     private readonly IContabilidadService _contabilidadService;
     private readonly ICajaService _cajaService;
+    private readonly ILogger<VentaService>? _logger;
 
     public VentaService(
         ApplicationDbContext context,
         IInventarioService inventarioService,
         IContabilidadService contabilidadService,
-        ICajaService cajaService)
+        ICajaService cajaService,
+        ILogger<VentaService>? logger = null)
     {
         _context = context;
         _inventarioService = inventarioService;
         _contabilidadService = contabilidadService;
         _cajaService = cajaService;
+        _logger = logger;
     }
 
     public async Task<string> GenerarNumeroComprobanteAsync()
@@ -38,6 +42,8 @@ public class VentaService : IVentaService
         List<VentaPago> pagos, 
         string? usuario)
     {
+        string etapa = "Validación inicial";
+
         if (detalles == null || !detalles.Any())
         {
             throw new ArgumentException("La venta debe contener al menos un producto.");
@@ -48,33 +54,85 @@ public class VentaService : IVentaService
             throw new ArgumentException("Debe registrarse al menos un método de pago.");
         }
 
-        // Ejecutar en transacción atómica de base de datos
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        // 1. Validar productos, existencia, estado activo y precios oficiales desde la base de datos
+        etapa = "Validación de catálogo y precios";
+        foreach (var det in detalles)
+        {
+            if (det.Cantidad <= 0)
+            {
+                throw new ArgumentException("La cantidad vendida de cada producto debe ser mayor a cero.");
+            }
+
+            var producto = await _context.Productos.FindAsync(det.ProductoId)
+                ?? throw new ArgumentException($"El producto con ID {det.ProductoId} no existe en el catálogo.");
+
+            if (!producto.Activo)
+            {
+                throw new InvalidOperationException($"El producto '{producto.Nombre}' está inactivo y no puede venderse.");
+            }
+
+            // Asegurar precio oficial del servidor
+            det.PrecioUnitario = producto.Precio;
+
+            if (det.Descuento < 0 || det.Descuento > (det.Cantidad * det.PrecioUnitario))
+            {
+                throw new ArgumentException($"El descuento para el producto '{producto.Nombre}' no es válido.");
+            }
+
+            det.Subtotal = Math.Round((det.Cantidad * det.PrecioUnitario) - det.Descuento, 2);
+        }
+
+        // 2. Validar métodos de pago
+        etapa = "Validación de pagos";
+        var metodosPermitidos = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Efectivo", "Tarjeta", "Transferencia" };
+        foreach (var pago in pagos)
+        {
+            if (string.IsNullOrWhiteSpace(pago.MetodoPago) || !metodosPermitidos.Contains(pago.MetodoPago.Trim()))
+            {
+                throw new ArgumentException($"El método de pago '{pago.MetodoPago}' no es válido.");
+            }
+
+            if (pago.Monto <= 0)
+            {
+                throw new ArgumentException("El monto a pagar de cada método debe ser mayor a cero.");
+            }
+        }
+
+        // 3. Iniciar transacción atómica en la base de datos (siempre que sea relacional y no exista una ya abierta)
+        etapa = "Inicio de transacción";
+        bool hasRootTransaction = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = hasRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
-            // 1. Número de comprobante consecutivo
+            _logger?.LogInformation("Iniciando transacción de venta para usuario '{Usuario}' (RootTransaction: {IsRoot}).", usuario, hasRootTransaction);
+
+            // 4. Asignar datos de cabecera y calcular montos server-side
+            etapa = "Cálculo de montos y cabecera";
             venta.NumeroComprobante = await GenerarNumeroComprobanteAsync();
             venta.Fecha = DateTime.Now;
             venta.Estado = "Completada";
             venta.UsuarioId = usuario;
 
-            // 2. Calcular montos
-            decimal subtotal = detalles.Sum(d => d.Cantidad * d.PrecioUnitario - d.Descuento);
+            decimal subtotal = detalles.Sum(d => d.Subtotal);
             venta.Subtotal = subtotal;
 
             var config = await _context.Configuraciones.FirstOrDefaultAsync();
             decimal tasaIva = config?.TasaIvaPorcentaje ?? 15.00m;
             decimal impuesto = Math.Round(subtotal * (tasaIva / 100m), 2);
             venta.Impuesto = impuesto;
-            venta.Total = subtotal + impuesto - venta.Descuento;
 
-            decimal totalPagado = pagos.Sum(p => p.Monto);
+            decimal descuentoGeneral = venta.Descuento > 0 ? venta.Descuento : 0;
+            venta.Descuento = descuentoGeneral;
+            venta.Total = Math.Round(subtotal + impuesto - descuentoGeneral, 2);
+
+            decimal totalPagado = Math.Round(pagos.Sum(p => p.Monto), 2);
             if (Math.Abs(totalPagado - venta.Total) > 0.05m)
             {
                 throw new InvalidOperationException($"El total pagado ({totalPagado:C2}) no coincide con el total de la venta ({venta.Total:C2}).");
             }
 
-            // Asociar sesión de caja activa si no viene indicada
+            // 5. Vincular turno de caja activo
+            etapa = "Asociación de caja";
             if (!venta.CajaSesionId.HasValue)
             {
                 var sesionCaja = await _cajaService.ObtenerSesionActivaAsync(usuario);
@@ -84,24 +142,26 @@ public class VentaService : IVentaService
                 }
             }
 
+            // 6. Persistir venta
+            etapa = "Persistencia de venta";
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync();
 
-            // 3. Guardar detalles
+            // 7. Persistir detalles
+            etapa = "Persistencia de detalles";
             foreach (var det in detalles)
             {
                 det.VentaId = venta.Id;
-                det.Subtotal = (det.Cantidad * det.PrecioUnitario) - det.Descuento;
                 _context.VentaDetalles.Add(det);
             }
 
-            // 4. Guardar pagos
+            // 8. Persistir pagos y actualizar acumulados de caja
+            etapa = "Persistencia de pagos y actualización de caja";
             foreach (var pago in pagos)
             {
                 pago.VentaId = venta.Id;
                 _context.VentaPagos.Add(pago);
 
-                // Si hay caja abierta, actualizar totales de caja
                 if (venta.CajaSesionId.HasValue)
                 {
                     await _cajaService.ActualizarTotalesPorVentaAsync(venta.CajaSesionId.Value, pago.MetodoPago, pago.Monto);
@@ -110,13 +170,12 @@ public class VentaService : IVentaService
 
             await _context.SaveChangesAsync();
 
-            // 5. Descuento de ingredientes del inventario según receta
+            // 9. Descontar inventario según recetas
+            etapa = "Descuento de inventario";
             await _inventarioService.DescontarInventarioPorVentaAsync(venta.Id, usuario);
 
-            // 6. Contabilización automática de doble partida
-            // DEBE: Caja (1.1.01.01) o Bancos (1.1.02.01)
-            // HABER: Ingresos (4.1.01)
-            // HABER: IVA por pagar (2.1.03.01)
+            // 10. Contabilización automática de doble partida (participa en la transacción activa)
+            etapa = "Contabilización de partida doble";
             var apuntes = new List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)>();
 
             foreach (var p in pagos)
@@ -140,7 +199,8 @@ public class VentaService : IVentaService
                 apuntes,
                 usuario);
 
-            // 7. Registro de auditoría
+            // 11. Registro de auditoría
+            etapa = "Registro de auditoría";
             _context.Auditorias.Add(new AuditoriaRegistro
             {
                 Modulo = "Ventas",
@@ -154,12 +214,25 @@ public class VentaService : IVentaService
             });
             await _context.SaveChangesAsync();
 
-            await transaction.CommitAsync();
+            // 12. Confirmar transacción
+            etapa = "Commit de transacción";
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
+            }
+
+            _logger?.LogInformation("Venta {Comprobante} (ID: {VentaId}) confirmada exitosamente con total {Total:C2}.",
+                venta.NumeroComprobante, venta.Id, venta.Total);
+
             return venta;
         }
-        catch
+        catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            _logger?.LogError(ex, "Error en VentaService.CrearVentaTransaccionalAsync durante etapa '{Etapa}'. Ejecutando rollback.", etapa);
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
             throw;
         }
     }
@@ -177,9 +250,12 @@ public class VentaService : IVentaService
             throw new InvalidOperationException("La venta ya ha sido anulada anteriormente.");
         }
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        bool hasRootTransaction = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = hasRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
+            _logger?.LogInformation("Iniciando anulación de venta {VentaId} por usuario '{Usuario}'.", ventaId, usuario);
+
             venta.Estado = "Anulada";
             venta.Observaciones = $"[ANULADA el {DateTime.Now:dd/MM/yyyy HH:mm} por {usuario}]. Motivo: {motivo}. " + venta.Observaciones;
             _context.Ventas.Update(venta);
@@ -242,11 +318,20 @@ public class VentaService : IVentaService
             });
 
             await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
+            }
+
+            _logger?.LogInformation("Venta {VentaId} anulada y revertida exitosamente.", ventaId);
         }
-        catch
+        catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            _logger?.LogError(ex, "Error al anular venta {VentaId}. Ejecutando rollback.", ventaId);
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
             throw;
         }
     }

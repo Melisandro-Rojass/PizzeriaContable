@@ -14,15 +14,21 @@ public class VentasController : Controller
     private readonly ApplicationDbContext _context;
     private readonly IVentaService _ventaService;
     private readonly ICajaService _cajaService;
+    private readonly ILogger<VentasController> _logger;
+    private readonly IWebHostEnvironment _env;
 
     public VentasController(
         ApplicationDbContext context,
         IVentaService ventaService,
-        ICajaService cajaService)
+        ICajaService cajaService,
+        ILogger<VentasController> logger,
+        IWebHostEnvironment env)
     {
         _context = context;
         _ventaService = ventaService;
         _cajaService = cajaService;
+        _logger = logger;
+        _env = env;
     }
 
     // GET: Ventas
@@ -106,6 +112,10 @@ public class VentasController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto dto)
     {
+        string traceId = HttpContext.TraceIdentifier;
+        string? usuario = User.Identity?.Name ?? "Admin";
+        _logger.LogInformation("[Venta:{TraceId}] Iniciando procesamiento de orden POS. Usuario: {Usuario}", traceId, usuario);
+
         try
         {
             if (dto == null || dto.Items == null || !dto.Items.Any())
@@ -118,13 +128,11 @@ public class VentasController : Controller
                 return Json(new { success = false, message = "Debe registrarse el pago de la orden." });
             }
 
-            string? usuario = User.Identity?.Name ?? "Admin";
-
             var venta = new Venta
             {
-                ClienteNombre = string.IsNullOrWhiteSpace(dto.ClienteNombre) ? "Cliente General" : dto.ClienteNombre,
-                Observaciones = dto.Observaciones,
-                Descuento = dto.DescuentoGeneral,
+                ClienteNombre = string.IsNullOrWhiteSpace(dto.ClienteNombre) ? "Cliente General" : dto.ClienteNombre.Trim(),
+                Observaciones = dto.Observaciones?.Trim(),
+                Descuento = dto.DescuentoGeneral > 0 ? dto.DescuentoGeneral : 0,
                 MetodoPago = dto.Pagos.Count > 1 ? "Mixto" : dto.Pagos.First().MetodoPago
             };
 
@@ -138,12 +146,15 @@ public class VentasController : Controller
 
             var pagos = dto.Pagos.Select(p => new VentaPago
             {
-                MetodoPago = p.MetodoPago,
+                MetodoPago = p.MetodoPago?.Trim() ?? "Efectivo",
                 Monto = p.Monto,
-                Referencia = p.Referencia
+                Referencia = p.Referencia?.Trim()
             }).ToList();
 
             var ventaCreada = await _ventaService.CrearVentaTransaccionalAsync(venta, detalles, pagos, usuario);
+
+            _logger.LogInformation("[Venta:{TraceId}] Venta {Comprobante} (ID: {VentaId}) registrada y confirmada exitosamente. Total: {Total:C2}",
+                traceId, ventaCreada.NumeroComprobante, ventaCreada.Id, ventaCreada.Total);
 
             return Json(new
             {
@@ -156,7 +167,14 @@ public class VentasController : Controller
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, message = ex.Message });
+            _logger.LogError(ex, "[Venta:{TraceId}] Excepción durante registro de venta en VentasController.Checkout. Tipo: {ExceptionType}. Mensaje: {Message}. InnerException: {InnerMessage}",
+                traceId, ex.GetType().Name, ex.Message, ex.InnerException?.Message);
+
+            string userMessage = _env.IsDevelopment()
+                ? $"Error al registrar la venta: {ex.Message} (Ref: {traceId})"
+                : $"No se pudo completar la venta. No se ha confirmado la operación. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador indicando el código de referencia: {traceId}.";
+
+            return Json(new { success = false, message = userMessage });
         }
     }
 

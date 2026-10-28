@@ -67,7 +67,7 @@ public class SeedDataService : ISeedDataService
             // Obtener clave inicial desde configuración o variable de entorno segura
             string initialPassword = _configuration["AdminInitialPassword"]
                 ?? Environment.GetEnvironmentVariable("PIZZERIA_ADMIN_PASSWORD")
-                ?? "Pizzeria#Admin2026!";
+                ?? "AdminPizzeria2026!";
 
             var adminUser = new ApplicationUser
             {

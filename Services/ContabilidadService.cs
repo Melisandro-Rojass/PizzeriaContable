@@ -101,7 +101,10 @@ public class ContabilidadService : IContabilidadService
             throw new InvalidOperationException($"El asiento no cumple el principio de partida doble. Total Debe: {totalD:C2}, Total Haber: {totalH:C2}. Diferencia: {Math.Abs(totalD - totalH):C2}");
         }
 
-        var transaction = _context.Database.IsRelational() ? await _context.Database.BeginTransactionAsync() : null;
+        // Si ya existe una transacción activa en el contexto (ej. venta, compra o gasto),
+        // participamos en la transacción existente sin abrir ni confirmar una anidada.
+        bool isRootTransaction = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
+        var transaction = isRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             // 4. Generar consecutivo de asiento
@@ -189,7 +192,8 @@ public class ContabilidadService : IContabilidadService
             throw new InvalidOperationException($"El asiento no cumple el equilibrio de partida doble. Suma Debe: {totalD:C2} | Suma Haber: {totalH:C2}.");
         }
 
-        var transaction = _context.Database.IsRelational() ? await _context.Database.BeginTransactionAsync() : null;
+        bool isRootTransaction = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
+        var transaction = isRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             int totalAsientos = await _context.AsientosContables.CountAsync() + 1;
@@ -237,7 +241,8 @@ public class ContabilidadService : IContabilidadService
             throw new InvalidOperationException($"El asiento {asiento.NumeroAsiento} ya se encuentra anulado.");
         }
 
-        var transaction = _context.Database.IsRelational() ? await _context.Database.BeginTransactionAsync() : null;
+        bool isRootTransaction = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
+        var transaction = isRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             asiento.Anulado = true;
