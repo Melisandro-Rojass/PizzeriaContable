@@ -1,4 +1,4 @@
-@model PizzeriaContable.ViewModels.AperturaContableViewModel
+﻿@model PizzeriaContable.ViewModels.AperturaContableViewModel
 @{
     ViewData["Title"] = "Asiento de Apertura Contable";
     var asientoExistente = ViewBag.AsientoExistente as PizzeriaContable.Models.AsientoContable;
@@ -81,7 +81,7 @@
                                 <label asp-for="EfectivoCaja" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="EfectivoCaja" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                    <input asp-for="EfectivoCaja" type="number" step="0.01" min="0" class="form-control campo-activo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Efectivo físico disponible en caja registradora</small>
                             </div>
@@ -90,7 +90,7 @@
                                 <label asp-for="SaldoBancos" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="SaldoBancos" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                    <input asp-for="SaldoBancos" type="number" step="0.01" min="0" class="form-control campo-activo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Dinero en cuentas de cheques o ahorro de la pizzería</small>
                             </div>
@@ -99,7 +99,7 @@
                                 <label asp-for="InventarioInicial" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="InventarioInicial" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                    <input asp-for="InventarioInicial" type="number" step="0.01" min="0" class="form-control campo-activo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Valor de queso, harinas, carnes y cajas en almacén</small>
                             </div>
@@ -108,7 +108,7 @@
                                 <label asp-for="MobiliarioEquipo" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="MobiliarioEquipo" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                    <input asp-for="MobiliarioEquipo" type="number" step="0.01" min="0" class="form-control campo-activo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Mesas, sillas, barras de atención y aire acondicionado</small>
                             </div>
@@ -117,7 +117,7 @@
                                 <label asp-for="HornosYEquipos" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="HornosYEquipos" type="number" step="0.01" min="0" class="form-control inp-activo" oninput="calcularEcuacion()" />
+                                    <input asp-for="HornosYEquipos" type="number" step="0.01" min="0" class="form-control campo-activo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Hornos para pizza, amasadoras, rebanadoras y refrigeradores</small>
                             </div>
@@ -143,7 +143,7 @@
                                 <label asp-for="CuentasPorPagarProveedores" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="CuentasPorPagarProveedores" type="number" step="0.01" min="0" class="form-control inp-pasivo" oninput="calcularEcuacion()" />
+                                    <input asp-for="CuentasPorPagarProveedores" type="number" step="0.01" min="0" class="form-control campo-pasivo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Facturas de materia prima pendientes de pago al día de apertura</small>
                             </div>
@@ -152,7 +152,7 @@
                                 <label asp-for="OtrasObligaciones" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="OtrasObligaciones" type="number" step="0.01" min="0" class="form-control inp-pasivo" oninput="calcularEcuacion()" />
+                                    <input asp-for="OtrasObligaciones" type="number" step="0.01" min="0" class="form-control campo-pasivo" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Préstamos bancarios o deudas con terceros</small>
                             </div>
@@ -170,7 +170,7 @@
                                 <label asp-for="CapitalSocial" class="form-label fw-bold"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">C$</span>
-                                    <input asp-for="CapitalSocial" type="number" step="0.01" min="0" class="form-control inp-capital" oninput="calcularEcuacion()" />
+                                    <input asp-for="CapitalSocial" type="number" step="0.01" min="0" class="form-control campo-capital" oninput="calcularEcuacion()" />
                                 </div>
                                 <small class="text-muted">Aportación neta acumulada de los propietarios o socios</small>
                             </div>
@@ -217,9 +217,9 @@
         let totalPasivos = 0;
         let capital = 0;
 
-        document.querySelectorAll('.inp-activo').forEach(i => totalActivos += parseFloat(i.value) || 0);
-        document.querySelectorAll('.inp-pasivo').forEach(i => totalPasivos += parseFloat(i.value) || 0);
-        document.querySelectorAll('.inp-capital').forEach(i => capital += parseFloat(i.value) || 0);
+        document.querySelectorAll('.campo-activo').forEach(i => totalActivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.campo-pasivo').forEach(i => totalPasivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.campo-capital').forEach(i => capital += parseFloat(i.value) || 0);
 
         const totalPasivoCapital = totalPasivos + capital;
         const diff = Math.abs(totalActivos - totalPasivoCapital);
@@ -247,16 +247,16 @@
     function autocalcularCapital() {
         let totalActivos = 0;
         let totalPasivos = 0;
-        document.querySelectorAll('.inp-activo').forEach(i => totalActivos += parseFloat(i.value) || 0);
-        document.querySelectorAll('.inp-pasivo').forEach(i => totalPasivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.campo-activo').forEach(i => totalActivos += parseFloat(i.value) || 0);
+        document.querySelectorAll('.campo-pasivo').forEach(i => totalPasivos += parseFloat(i.value) || 0);
 
         const capitalSugerido = Math.max(0, totalActivos - totalPasivos);
-        document.querySelector('.inp-capital').value = capitalSugerido.toFixed(2);
+        document.querySelector('.campo-capital').value = capitalSugerido.toFixed(2);
         calcularEcuacion();
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        if (document.querySelector('.inp-activo')) {
+        if (document.querySelector('.campo-activo')) {
             calcularEcuacion();
         }
     });

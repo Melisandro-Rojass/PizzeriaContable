@@ -110,7 +110,7 @@ public class VentasController : Controller
     // POST: Ventas/Checkout (AJAX desde el POS)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto dto)
+    public async Task<IActionResult> Checkout([FromBody] PedidoCobroDto dto)
     {
         string traceId = HttpContext.TraceIdentifier;
         string? usuario = User.Identity?.Name ?? "Admin";

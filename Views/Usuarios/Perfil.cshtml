@@ -1,4 +1,4 @@
-@model PizzeriaContable.Models.ApplicationUser
+﻿@model PizzeriaContable.Models.ApplicationUser
 @{
     ViewData["Title"] = "Mi Perfil de Empleado";
 }
@@ -25,7 +25,7 @@
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4 text-center">
-                    <div class="avatar-circle mx-auto mb-3 bg-warning text-white fw-bold display-4 d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 90px; height: 90px;">
+                    <div class="circulo-avatar mx-auto mb-3 bg-warning text-white fw-bold display-4 d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 90px; height: 90px;">
                         @(Model.NombreCompleto.Length > 0 ? Model.NombreCompleto.Substring(0, 1).ToUpper() : "U")
                     </div>
                     <h4 class="fw-bold text-dark mb-1">@Model.NombreCompleto</h4>

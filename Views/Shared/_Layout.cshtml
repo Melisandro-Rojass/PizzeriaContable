@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -17,22 +17,23 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="app-wrapper">
+    <div class="envoltura-app">
         <!-- Sidebar Navigation -->
-        <aside class="app-sidebar" id="sidebarMenu">
-            <div class="sidebar-brand-wrapper">
-                <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
-                    <img src="~/images/say-cheese-logo.svg" alt="Say Cheese Pizza" class="sidebar-logo-img" />
-                    <div class="sidebar-brand-text">
-                        <span class="sidebar-brand-title">SAY <span>CHEESE</span></span>
-                        <span class="sidebar-brand-sub">Control &amp; POS</span>
+        <aside class="barra-lateral" id="sidebarMenu">
+            <div class="marca-lateral-contenedor">
+                <a asp-controller="Home" asp-action="Index" class="marca-lateral">
+                    <img src="~/images/say-cheese-logo.svg" alt="Say Cheese Pizza" class="marca-lateral-logo" />
+                    <div class="marca-lateral-texto">
+                        <span class="marca-lateral-titulo">SAY <span>CHEESE</span></span>
+                        <span class="marca-lateral-subtitulo">Pizzería &amp; POS</span>
                     </div>
                 </a>
+                <button class="btn-close btn-close-white d-lg-none ms-auto" type="button" id="sidebarCloseBtn" aria-label="Cerrar menú"></button>
             </div>
 
-            <ul class="sidebar-nav">
+            <ul class="nav-lateral">
                 <!-- Principal: Accesible por todos los usuarios autenticados -->
-                <li class="nav-section-title">Principal</li>
+                <li class="titulo-seccion-nav">Principal</li>
                 <li>
                     <a asp-controller="Home" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
                         <i class="bi bi-speedometer2"></i>
@@ -43,8 +44,8 @@
                 @if (User.IsInRole("Administrador") || User.IsInRole("Cajero"))
                 {
                     <li class="my-1">
-                        <a asp-controller="Ventas" asp-action="Pos" class="nav-link nav-badge-pos @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ventas" && ViewContext.RouteData.Values["action"]?.ToString() == "Pos" ? "active" : "")">
-                            <i class="bi bi-cart-plus-fill text-warning"></i>
+                        <a asp-controller="Ventas" asp-action="Pos" class="nav-link insignia-nav-pos @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ventas" && ViewContext.RouteData.Values["action"]?.ToString() == "Pos" ? "active" : "")">
+                            <i class="bi bi-cart-plus-fill"></i>
                             <span class="fw-bold">Punto de Venta (POS)</span>
                         </a>
                     </li>
@@ -63,7 +64,7 @@
                 <!-- Catálogo y Menú -->
                 @if (User.IsInRole("Administrador") || User.IsInRole("Inventario") || User.IsInRole("EncargadoInventario") || User.IsInRole("Contador") || User.IsInRole("Contabilidad") || User.IsInRole("Cajero") || User.IsInRole("Consulta"))
                 {
-                    <li class="nav-section-title">Catálogo y Menú</li>
+                    <li class="titulo-seccion-nav">Catálogo y Menú</li>
                     <li>
                         <a asp-controller="Productos" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Productos" ? "active" : "")">
                             <i class="bi bi-card-checklist"></i>
@@ -97,7 +98,7 @@
                 <!-- Operaciones -->
                 @if (User.IsInRole("Administrador") || User.IsInRole("Cajero") || User.IsInRole("Contador") || User.IsInRole("Contabilidad") || User.IsInRole("Inventario") || User.IsInRole("EncargadoInventario"))
                 {
-                    <li class="nav-section-title">Operaciones</li>
+                    <li class="titulo-seccion-nav">Operaciones</li>
                     @if (User.IsInRole("Administrador") || User.IsInRole("Cajero") || User.IsInRole("Contador") || User.IsInRole("Contabilidad"))
                     {
                         <li>
@@ -136,27 +137,27 @@
                 <!-- Contabilidad: Administrador y Contabilidad -->
                 @if (User.IsInRole("Administrador") || User.IsInRole("Contador") || User.IsInRole("Contabilidad"))
                 {
-                    <li class="nav-section-title">Contabilidad</li>
+                    <li class="titulo-seccion-nav">Contabilidad</li>
                     <li>
-                        <a asp-controller="Contabilidad" asp-action="CuentasT" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "CuentasT" || ViewContext.RouteData.Values["action"]?.ToString() == "CuentaT" ? "active" : "")">
+                        <a asp-controller="Contabilidad" asp-action="CuentasT" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Contabilidad" && (ViewContext.RouteData.Values["action"]?.ToString() == "CuentasT" || ViewContext.RouteData.Values["action"]?.ToString() == "CuentaT") ? "active" : "")">
                             <i class="bi bi-layout-split text-warning"></i>
                             <span class="fw-bold">Cuentas T (Mayor)</span>
                         </a>
                     </li>
                     <li>
-                        <a asp-controller="Contabilidad" asp-action="Cuentas" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Cuentas" ? "active" : "")">
+                        <a asp-controller="Contabilidad" asp-action="Cuentas" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Contabilidad" && (ViewContext.RouteData.Values["action"]?.ToString() == "Cuentas" || ViewContext.RouteData.Values["action"]?.ToString() == "CrearCuenta" || ViewContext.RouteData.Values["action"]?.ToString() == "EditarCuenta") ? "active" : "")">
                             <i class="bi bi-diagram-3"></i>
                             <span>Catálogo de Cuentas</span>
                         </a>
                     </li>
                     <li>
-                        <a asp-controller="Contabilidad" asp-action="Asientos" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Asientos" ? "active" : "")">
+                        <a asp-controller="Contabilidad" asp-action="Asientos" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Contabilidad" && (ViewContext.RouteData.Values["action"]?.ToString() == "Asientos" || ViewContext.RouteData.Values["action"]?.ToString() == "CrearAsiento" || ViewContext.RouteData.Values["action"]?.ToString() == "DetalleAsiento") ? "active" : "")">
                             <i class="bi bi-journal-text"></i>
                             <span>Libro Diario / Asientos</span>
                         </a>
                     </li>
                     <li>
-                        <a asp-controller="Contabilidad" asp-action="Apertura" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Apertura" ? "active" : "")">
+                        <a asp-controller="Contabilidad" asp-action="Apertura" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Contabilidad" && ViewContext.RouteData.Values["action"]?.ToString() == "Apertura" ? "active" : "")">
                             <i class="bi bi-door-open"></i>
                             <span>Apertura Contable</span>
                         </a>
@@ -166,21 +167,21 @@
                 <!-- Informes -->
                 @if (User.IsInRole("Administrador") || User.IsInRole("Contador") || User.IsInRole("Contabilidad") || User.IsInRole("Consulta"))
                 {
-                    <li class="nav-section-title">Informes</li>
+                    <li class="titulo-seccion-nav">Informes</li>
                     <li>
-                        <a asp-controller="Reportes" asp-action="EstadoResultados" class="nav-link">
+                        <a asp-controller="Reportes" asp-action="EstadoResultados" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reportes" && ViewContext.RouteData.Values["action"]?.ToString() == "EstadoResultados" ? "active" : "")">
                             <i class="bi bi-graph-up-arrow"></i>
                             <span>Estado de Resultados</span>
                         </a>
                     </li>
                     <li>
-                        <a asp-controller="Reportes" asp-action="BalanceGeneral" class="nav-link">
+                        <a asp-controller="Reportes" asp-action="BalanceGeneral" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reportes" && ViewContext.RouteData.Values["action"]?.ToString() == "BalanceGeneral" ? "active" : "")">
                             <i class="bi bi-bank"></i>
                             <span>Balance General</span>
                         </a>
                     </li>
                     <li>
-                        <a asp-controller="Reportes" asp-action="BalanceComprobacion" class="nav-link">
+                        <a asp-controller="Reportes" asp-action="BalanceComprobacion" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reportes" && ViewContext.RouteData.Values["action"]?.ToString() == "BalanceComprobacion" ? "active" : "")">
                             <i class="bi bi-clipboard-data"></i>
                             <span>Balance Comprobación</span>
                         </a>
@@ -190,7 +191,7 @@
                 <!-- Sistema: Exclusivo Administrador -->
                 @if (User.IsInRole("Administrador"))
                 {
-                    <li class="nav-section-title">Sistema</li>
+                    <li class="titulo-seccion-nav">Sistema</li>
                     <li>
                         <a asp-controller="Usuarios" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Usuarios" ? "active" : "")">
                             <i class="bi bi-people-fill text-warning"></i>
@@ -207,10 +208,13 @@
             </ul>
         </aside>
 
+        <!-- Backdrop para dispositivos móviles -->
+        <div class="fondo-lateral d-lg-none" id="sidebarBackdrop"></div>
+
         <!-- Main Content Wrapper -->
-        <div class="app-main">
+        <div class="contenido-principal">
             <!-- Topbar Header -->
-            <header class="app-topbar shadow-sm">
+            <header class="barra-superior shadow-sm">
                 <div class="d-flex align-items-center">
                     <button class="btn btn-outline-secondary d-lg-none me-2" type="button" onclick="document.getElementById('sidebarMenu').classList.toggle('show')">
                         <i class="bi bi-list"></i>
@@ -220,12 +224,17 @@
                     </span>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 gap-sm-3">
                     @if (User.IsInRole("Administrador") || User.IsInRole("Cajero"))
                     {
-                        <a asp-controller="Caja" asp-action="Index" class="text-decoration-none">
-                            <span class="badge bg-light text-dark border p-2 shadow-sm rounded-pill d-flex align-items-center gap-1" style="border-color: var(--sc-border-warm) !important;">
-                                <i class="bi bi-wallet2 text-success me-1"></i> <span>Turno de Caja</span>
+                        <a asp-controller="Ventas" asp-action="Pos" class="text-decoration-none d-none d-sm-inline-flex" title="Ir al Punto de Venta">
+                            <span class="badge text-white p-2 shadow-sm rounded-pill d-flex align-items-center gap-1 fuente-marca" style="background: linear-gradient(135deg, var(--sc-orange) 0%, var(--sc-brick-red) 100%); border: 1px solid var(--sc-yellow); font-size: 0.8rem;">
+                                <i class="bi bi-cart-plus-fill text-warning"></i> <span>POS</span>
+                            </span>
+                        </a>
+                        <a asp-controller="Caja" asp-action="Index" class="text-decoration-none" title="Ver estado del turno de caja">
+                            <span class="badge bg-light text-dark border p-2 shadow-sm rounded-pill d-flex align-items-center gap-1" style="border-color: var(--sc-border-warm) !important; font-size: 0.8rem;">
+                                <i class="bi bi-wallet2 text-success me-1"></i> <span class="d-none d-md-inline">Turno de Caja</span><span class="d-md-none">Caja</span>
                             </span>
                         </a>
                     }
@@ -288,7 +297,7 @@
             </header>
 
             <!-- Page Body -->
-            <main class="content-body">
+            <main class="cuerpo-contenido">
                 @RenderBody()
             </main>
 
@@ -299,7 +308,7 @@
                         <img src="~/images/say-cheese-logo.svg" alt="Say Cheese" style="height: 22px; width: auto;" />
                         <span>&copy; @DateTime.Now.Year - <strong>Say Cheese Pizza</strong> &bull; Sistema Contable y POS</span>
                     </div>
-                    <span class="text-secondary">Moneda: Córdobas (NIO C$) &bull; Managua, Nicaragua</span>
+                    <span class="text-secondary">Moneda: Córdobas (NIO C$) &bull; Masaya, Nicaragua</span>
                 </div>
             </footer>
         </div>

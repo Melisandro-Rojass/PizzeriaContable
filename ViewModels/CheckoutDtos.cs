@@ -1,17 +1,25 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace PizzeriaContable.ViewModels;
 
-public class CheckoutRequestDto
+/// <summary>
+/// Datos recibidos desde el POS para registrar una venta completa con sus detalles y pagos.
+/// </summary>
+public class PedidoCobroDto
 {
     public string? ClienteNombre { get; set; } = "Cliente General";
     public string? Observaciones { get; set; }
     public decimal DescuentoGeneral { get; set; } = 0;
-    public List<CheckoutItemDto> Items { get; set; } = new();
-    public List<CheckoutPagoDto> Pagos { get; set; } = new();
+
+    /// <summary>Líneas de producto incluidas en la orden.</summary>
+    public List<DetallePedidoDto> Items { get; set; } = new();
+
+    /// <summary>Métodos de pago aplicados a la orden (puede ser pago mixto).</summary>
+    public List<PagoPedidoDto> Pagos { get; set; } = new();
 }
 
-public class CheckoutItemDto
+/// <summary>
+/// Línea de producto dentro de una orden del POS.
+/// </summary>
+public class DetallePedidoDto
 {
     public int ProductoId { get; set; }
     public int Cantidad { get; set; }
@@ -19,9 +27,13 @@ public class CheckoutItemDto
     public decimal Descuento { get; set; } = 0;
 }
 
-public class CheckoutPagoDto
+/// <summary>
+/// Pago parcial o total registrado en la orden del POS.
+/// </summary>
+public class PagoPedidoDto
 {
-    public string MetodoPago { get; set; } = "Efectivo"; // Efectivo, Tarjeta, Transferencia
+    /// <summary>Método de pago: Efectivo, Tarjeta o Transferencia.</summary>
+    public string MetodoPago { get; set; } = "Efectivo";
     public decimal Monto { get; set; }
     public string? Referencia { get; set; }
 }

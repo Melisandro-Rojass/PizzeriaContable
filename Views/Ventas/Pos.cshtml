@@ -1,4 +1,4 @@
-@model IEnumerable<PizzeriaContable.Models.Producto>
+﻿@model IEnumerable<PizzeriaContable.Models.Producto>
 @{
     ViewData["Title"] = "Punto de Venta (POS) - Say Cheese Pizza";
     var categorias = ViewBag.Categorias as List<PizzeriaContable.Models.Categoria> ?? new List<PizzeriaContable.Models.Categoria>();
@@ -7,17 +7,56 @@
 }
 
 <div class="container-fluid px-0">
+    <!-- Barra de Encabezado y Acciones Rápidas del POS -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 pb-2 border-bottom" style="border-color: var(--sc-border-warm) !important;">
+        <div class="d-flex align-items-center gap-2">
+            <div class="icono-estadistica bg-sc-orange-subtle rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-cart-plus-fill text-warning fs-5"></i>
+            </div>
+            <div>
+                <h1 class="h4 fw-bold text-dark fuente-marca mb-0">Punto de Venta (POS)</h1>
+                <div class="d-flex align-items-center gap-2 small">
+                    @if (sesionCaja != null)
+                    {
+                        <span class="badge bg-success-subtle text-success fw-bold px-2 py-0.5 rounded-pill fuente-numerica">
+                            <i class="bi bi-check-circle-fill me-1"></i>Turno Activo #@sesionCaja.Id
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning-subtle text-dark fw-bold px-2 py-0.5 rounded-pill">
+                            <i class="bi bi-exclamation-circle me-1"></i>Sin Turno Abierto
+                        </span>
+                    }
+                    <span class="text-muted d-none d-md-inline">&bull; Emisión rápida de pedidos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción Rápida -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a asp-controller="Ventas" asp-action="Index" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-receipt"></i>
+                <span>Historial de Ventas</span>
+            </a>
+            <a asp-controller="Caja" asp-action="Index" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-wallet2 text-success"></i>
+                <span>Turno de Caja</span>
+            </a>
+        </div>
+    </div>
+
     @if (sesionCaja == null)
     {
-        <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3 shadow-sm rounded-3 p-3 border-0" role="alert" style="background-color: var(--sc-cream); border-left: 5px solid var(--sc-orange) !important;">
+        <div class="alert alert-warning d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-3 shadow-sm rounded-3 p-3 border-0" role="alert" style="background-color: var(--sc-cream); border-left: 5px solid var(--sc-orange) !important;">
             <div class="d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill fs-2 me-3 text-warning"></i>
+                <i class="bi bi-exclamation-triangle-fill fs-2 me-3 text-warning flex-shrink-0"></i>
                 <div>
-                    <h5 class="alert-heading mb-0 fw-bold text-dark font-brand">No hay turno de caja abierto</h5>
+                    <h5 class="alert-heading mb-0 fw-bold text-dark fuente-marca">No hay turno de caja abierto</h5>
                     <p class="mb-0 small text-dark">Para asociar los pagos en efectivo al arqueo físico, se recomienda abrir un turno de caja.</p>
                 </div>
             </div>
-            <a asp-controller="Caja" asp-action="Index" class="btn btn-warning fw-bold text-dark shadow-sm">
+            <a asp-controller="Caja" asp-action="Index" class="btn btn-warning fw-bold text-dark shadow-sm flex-shrink-0">
                 <i class="bi bi-box-arrow-in-right me-1"></i> Abrir Turno de Caja
             </a>
         </div>
@@ -38,12 +77,12 @@
                         <div class="col-md-7">
                             <!-- Filtro de Categorías con Estilo Say Cheese -->
                             <div class="d-flex gap-1 overflow-auto pb-1" id="categoriaTabs">
-                                <button type="button" class="btn btn-sm btn-dark active flex-shrink-0 cat-btn" data-cat="all">
+                                <button type="button" class="btn btn-sm btn-dark active flex-shrink-0 btn-categoria" data-cat="all">
                                     <i class="bi bi-grid-fill me-1"></i>Todas
                                 </button>
                                 @foreach (var cat in categorias)
                                 {
-                                    <button type="button" class="btn btn-sm flex-shrink-0 cat-btn" data-cat="@cat.Id">
+                                    <button type="button" class="btn btn-sm flex-shrink-0 btn-categoria" data-cat="@cat.Id">
                                         @cat.Nombre
                                     </button>
                                 }
@@ -56,8 +95,8 @@
                     <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3" id="catalogoGrid">
                         @foreach (var prod in Model)
                         {
-                            <div class="col item-producto" data-id="@prod.Id" data-cat="@prod.CategoriaId" data-nombre="@prod.Nombre.ToLower()" data-precio="@prod.Precio">
-                                <div class="card h-100 product-pos-card shadow-sm text-center p-2 cursor-pointer position-relative bg-white" onclick="agregarAlCarrito(@prod.Id, '@prod.Nombre', @prod.Precio)">
+                            <div class="col elemento-producto" data-id="@prod.Id" data-cat="@prod.CategoriaId" data-nombre="@prod.Nombre.ToLower()" data-precio="@prod.Precio">
+                                <div class="card h-100 tarjeta-producto-pos shadow-sm text-center p-2 puntero-cursor position-relative bg-white" onclick="agregarAlCarrito(@prod.Id, '@prod.Nombre', @prod.Precio)">
                                     @if (prod.Receta != null)
                                     {
                                         <span class="badge bg-success-subtle text-success position-absolute top-0 end-0 m-2 small fw-bold" title="Con Receta / Descuenta stock">
@@ -73,7 +112,7 @@
                                     <span class="text-muted small d-block text-truncate mb-2">@(prod.Categoria?.Nombre ?? "Menú")</span>
                                     
                                     <div class="mt-auto pt-2 border-top" style="border-color: var(--sc-border-warm) !important;">
-                                        <span class="price-badge d-block font-numeric">
+                                        <span class="etiqueta-precio d-block fuente-numerica">
                                             C$ @prod.Precio.ToString("N2")
                                         </span>
                                     </div>
@@ -92,7 +131,7 @@
                 <div class="card-header text-white py-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #3A130D 0%, #1A0704 100%); border-bottom: 2px solid var(--sc-yellow);">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-receipt text-warning fs-5"></i>
-                        <span class="fw-bold font-brand fs-6 text-white">Comanda en Curso</span>
+                        <span class="fw-bold fuente-marca fs-6 text-white">Comanda en Curso</span>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger text-white border-0 py-1 px-2" onclick="limpiarCarrito()" title="Vaciar la comanda">
                         <i class="bi bi-trash"></i> Vaciar
@@ -120,26 +159,26 @@
                 <div class="card-footer bg-white border-top p-3" style="border-color: var(--sc-border-warm) !important;">
                     <div class="d-flex justify-content-between text-muted mb-1 small">
                         <span>Subtotal:</span>
-                        <span id="txtSubtotal" class="font-numeric fw-semibold">C$ 0.00</span>
+                        <span id="txtSubtotal" class="fuente-numerica fw-semibold">C$ 0.00</span>
                     </div>
                     <div class="d-flex justify-content-between text-muted mb-1 small">
                         <span>IVA (@tasaIva%):</span>
-                        <span id="txtImpuesto" class="font-numeric fw-semibold">C$ 0.00</span>
+                        <span id="txtImpuesto" class="fuente-numerica fw-semibold">C$ 0.00</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2 small">
                         <span class="text-muted">Descuento Global (C$):</span>
-                        <input type="number" id="inpDescuento" class="form-control form-control-sm text-end font-numeric" style="width: 105px; border-color: var(--sc-border-warm);" value="0" min="0" step="1" onchange="recalcularTotales()" />
+                        <input type="number" id="inpDescuento" class="form-control form-control-sm text-end fuente-numerica" style="width: 105px; border-color: var(--sc-border-warm);" value="0" min="0" step="1" onchange="recalcularTotales()" />
                     </div>
                     
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2" style="border-color: var(--sc-border-warm) !important;">
                         <div>
                             <span class="d-block small text-muted text-uppercase fw-bold">Total a Cobrar</span>
-                            <span class="fs-3 fw-bold font-brand text-success font-numeric" id="txtTotal">C$ 0.00</span>
+                            <span class="fs-3 fw-bold fuente-marca text-success fuente-numerica" id="txtTotal">C$ 0.00</span>
                         </div>
-                        <span class="badge bg-warning text-dark font-numeric px-2 py-1 fw-bold">NIO C$</span>
+                        <span class="badge bg-warning text-dark fuente-numerica px-2 py-1 fw-bold">NIO C$</span>
                     </div>
 
-                    <button type="button" class="btn btn-success btn-lg w-100 mt-3 fw-bold py-2 shadow font-brand fs-5 d-flex align-items-center justify-content-center gap-2" id="btnCobrar" onclick="abrirModalCobro()" disabled>
+                    <button type="button" class="btn btn-success btn-lg w-100 mt-3 fw-bold py-2 shadow fuente-marca fs-5 d-flex align-items-center justify-content-center gap-2" id="btnCobrar" onclick="abrirModalCobro()" disabled>
                         <i class="bi bi-cash-coin fs-4"></i> COBRAR ORDEN
                     </button>
                 </div>
@@ -155,14 +194,14 @@
             <div class="modal-header text-white" style="background: linear-gradient(135deg, #4A120B 0%, #1A0704 100%); border-bottom: 3px solid var(--sc-yellow);">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-wallet2 text-warning fs-5"></i>
-                    <h5 class="modal-title fw-bold font-brand text-white" id="modalCobroLabel">Registrar Pago del Pedido</h5>
+                    <h5 class="modal-title fw-bold fuente-marca text-white" id="modalCobroLabel">Registrar Pago del Pedido</h5>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="text-center mb-4 p-3 rounded-3" style="background: linear-gradient(135deg, var(--sc-cream-light) 0%, var(--sc-cream) 100%); border: 2px dashed var(--sc-orange);">
                     <span class="text-muted d-block small fw-bold text-uppercase">Monto Total a Cobrar</span>
-                    <span class="fs-1 fw-bold text-success font-numeric font-brand" id="modalTotalCobrar">C$ 0.00</span>
+                    <span class="fs-1 fw-bold text-success fuente-numerica fuente-marca" id="modalTotalCobrar">C$ 0.00</span>
                 </div>
 
                 <div class="mb-3">
@@ -182,10 +221,10 @@
                 <!-- Sección Efectivo (Monto entregado y cambio) -->
                 <div id="seccionEfectivo" class="mb-3">
                     <label class="form-label fw-bold small text-dark">Efectivo Recibido (C$)</label>
-                    <input type="number" id="montoRecibido" class="form-control form-control-lg text-end fw-bold font-numeric" step="1" oninput="calcularCambio()" style="border-color: var(--sc-orange); font-size: 1.4rem;" />
+                    <input type="number" id="montoRecibido" class="form-control form-control-lg text-end fw-bold fuente-numerica" step="1" oninput="calcularCambio()" style="border-color: var(--sc-orange); font-size: 1.4rem;" />
                     <div class="d-flex justify-content-between align-items-center mt-2 p-3 rounded-3" style="background-color: var(--sc-cream); border: 1px solid var(--sc-border-warm);">
                         <span class="fw-bold text-dark"><i class="bi bi-arrow-return-right text-warning me-1"></i> Cambio a entregar:</span>
-                        <span class="fs-4 fw-bold text-primary font-numeric font-brand" id="txtCambio">C$ 0.00</span>
+                        <span class="fs-4 fw-bold text-primary fuente-numerica fuente-marca" id="txtCambio">C$ 0.00</span>
                     </div>
                 </div>
 
@@ -204,7 +243,7 @@
             </div>
             <div class="modal-footer bg-light" style="border-top: 1px solid var(--sc-border-warm);">
                 <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success fw-bold px-4 py-2 shadow-sm font-brand" id="btnConfirmarVenta" onclick="procesarVenta()">
+                <button type="button" class="btn btn-success fw-bold px-4 py-2 shadow-sm fuente-marca" id="btnConfirmarVenta" onclick="procesarVenta()">
                     <span id="spinnerCobro" class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
                     <i class="bi bi-check-circle me-1"></i> CONFIRMAR VENTA
                 </button>
@@ -220,18 +259,18 @@
             <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center overflow-hidden border border-3 border-warning shadow" style="width: 84px; height: 84px; background: #FFF3DE;">
                 <img src="~/images/say-cheese-chef.jpg" alt="Chef Say Cheese" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/pizza-slice.svg';" />
             </div>
-            <h4 class="fw-bold text-dark font-brand mb-1">Venta Registrada Correctamente</h4>
+            <h4 class="fw-bold text-dark fuente-marca mb-1">Venta Registrada Correctamente</h4>
             <p class="text-muted small" id="txtNumeroTicket">Comprobante #TCK-0000</p>
             <div class="p-3 rounded-3 mb-4 mx-auto w-75" style="background-color: var(--sc-cream); border: 1px solid var(--sc-border-warm);">
                 <span class="small text-muted d-block fw-bold text-uppercase">Total Pagado</span>
-                <span class="fs-2 fw-bold text-success font-numeric font-brand" id="txtTotalExito">C$ 0.00</span>
+                <span class="fs-2 fw-bold text-success fuente-numerica fuente-marca" id="txtTotalExito">C$ 0.00</span>
             </div>
 
             <div class="d-grid gap-2">
                 <a id="btnImprimirTicket" href="#" target="_blank" class="btn btn-outline-dark btn-lg fw-bold py-2">
                     <i class="bi bi-printer me-2"></i> Imprimir Ticket Térmico
                 </a>
-                <button type="button" class="btn btn-saycheese-primary btn-lg fw-bold py-2 font-brand" onclick="iniciarNuevaVenta()">
+                <button type="button" class="btn btn-saycheese-primary btn-lg fw-bold py-2 fuente-marca" onclick="iniciarNuevaVenta()">
                     <i class="bi bi-plus-circle me-2"></i> Siguiente Pedido
                 </button>
             </div>
@@ -244,7 +283,7 @@
 </form>
 
 <style>
-    .cursor-pointer { cursor: pointer; }
+    .puntero-cursor { cursor: pointer; }
 </style>
 
 @section Scripts {
@@ -262,22 +301,22 @@
         // Filtro buscador
         document.getElementById('buscarProducto').addEventListener('input', function(e) {
             const query = e.target.value.toLowerCase();
-            document.querySelectorAll('.item-producto').forEach(item => {
+            document.querySelectorAll('.elemento-producto').forEach(item => {
                 const nombre = item.getAttribute('data-nombre');
                 item.style.display = nombre.includes(query) ? '' : 'none';
             });
         });
 
         // Filtro categorías
-        document.querySelectorAll('.cat-btn').forEach(btn => {
+        document.querySelectorAll('.btn-categoria').forEach(btn => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.cat-btn').forEach(b => {
+                document.querySelectorAll('.btn-categoria').forEach(b => {
                     b.classList.remove('btn-dark', 'active');
                 });
                 this.classList.add('btn-dark', 'active');
 
                 const cat = this.getAttribute('data-cat');
-                document.querySelectorAll('.item-producto').forEach(item => {
+                document.querySelectorAll('.elemento-producto').forEach(item => {
                     if (cat === 'all' || item.getAttribute('data-cat') === cat) {
                         item.style.display = '';
                     } else {
@@ -361,13 +400,13 @@
             li.innerHTML = `
                 <div class="me-auto">
                     <div class="fw-bold text-dark text-truncate" style="max-width: 160px;">${item.nombre}</div>
-                    <small class="text-muted font-numeric">C$ ${item.precioUnitario.toFixed(2)} c/u</small>
+                    <small class="text-muted fuente-numerica">C$ ${item.precioUnitario.toFixed(2)} c/u</small>
                 </div>
                 <div class="d-flex align-items-center gap-1">
                     <button class="btn btn-sm btn-outline-secondary px-2 py-0 fw-bold" onclick="cambiarCantidad(${item.productoId}, -1)">-</button>
-                    <span class="fw-bold px-1 font-numeric">${item.cantidad}</span>
+                    <span class="fw-bold px-1 fuente-numerica">${item.cantidad}</span>
                     <button class="btn btn-sm btn-outline-secondary px-2 py-0 fw-bold" onclick="cambiarCantidad(${item.productoId}, 1)">+</button>
-                    <span class="fw-bold text-dark ms-2 font-numeric" style="min-width: 65px; text-align: right;">C$ ${itemSubtotal.toFixed(2)}</span>
+                    <span class="fw-bold text-dark ms-2 fuente-numerica" style="min-width: 65px; text-align: right;">C$ ${itemSubtotal.toFixed(2)}</span>
                     <button class="btn btn-sm text-danger ms-1 p-0" onclick="eliminarItem(${item.productoId})"><i class="bi bi-x-circle-fill"></i></button>
                 </div>
             `;

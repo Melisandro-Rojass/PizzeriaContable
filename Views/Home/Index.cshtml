@@ -1,4 +1,4 @@
-@model PizzeriaContable.ViewModels.DashboardViewModel
+﻿@model PizzeriaContable.ViewModels.DashboardViewModel
 
 @{
     ViewData["Title"] = "Panel de Control - Say Cheese Pizza";
@@ -6,15 +6,15 @@
 
 <div class="container-fluid px-0">
     <!-- Say Cheese Hero Welcome & Filter Banner -->
-    <div class="brick-hero-banner mb-4">
-        <div class="brick-hero-content d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+    <div class="banner-principal mb-4">
+        <div class="banner-contenido d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded-circle overflow-hidden border border-2 border-warning shadow d-none d-sm-block flex-shrink-0" style="width: 64px; height: 64px; background: #FFF3DE;">
                     <img src="~/images/say-cheese-chef.jpg" alt="Chef Say Cheese" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/pizza-slice.svg';" />
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <h1 class="h3 mb-0 fw-bold text-white font-brand">Panel de Control &bull; Say Cheese</h1>
+                        <h1 class="h3 mb-0 fw-bold text-white fuente-marca">Panel de Control &bull; Say Cheese</h1>
                         <span class="badge bg-warning text-dark fw-bold rounded-pill px-2 py-1 small">En Vivo</span>
                     </div>
                     <p class="text-white-50 small mb-0">Métricas contables, facturación del horno y control de insumos en tiempo real.</p>
@@ -39,7 +39,7 @@
         <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4 rounded-3 p-3" role="alert" style="background-color: var(--sc-cream); border-left: 5px solid var(--sc-orange) !important;">
             <i class="bi bi-fire fs-2 me-3 text-warning"></i>
             <div>
-                <h5 class="alert-heading mb-1 fw-bold text-dark font-brand">Sin movimientos registrados</h5>
+                <h5 class="alert-heading mb-1 fw-bold text-dark fuente-marca">Sin movimientos registrados</h5>
                 <p class="mb-0 small text-dark">No se han registrado operaciones en este período. Puede aperturar un turno en el <a asp-controller="Caja" asp-action="Index" class="fw-bold text-dark text-decoration-underline">Control de Caja</a> o registrar pedidos en el <a asp-controller="Ventas" asp-action="Pos" class="fw-bold text-dark text-decoration-underline">Punto de Venta (POS)</a>.</p>
             </div>
         </div>
@@ -49,22 +49,22 @@
     <div class="row g-3 mb-4">
         <!-- Ventas Hoy -->
         <div class="col-sm-6 col-xl-3">
-            <div class="stat-card stat-success h-100 d-flex align-items-center">
-                <div class="stat-icon bg-sc-green-subtle me-3">
+            <div class="tarjeta-estadistica est-exito h-100 d-flex align-items-center">
+                <div class="icono-estadistica bg-sc-green-subtle me-3">
                     <i class="bi bi-cash-coin"></i>
                 </div>
                 <div>
                     <span class="text-muted small fw-bold text-uppercase">Ventas de Hoy</span>
                     <h3 class="h4 mb-0 fw-bold text-dark">@Model.VentasHoy.ToString("C2")</h3>
-                    <small class="text-muted font-numeric">@Model.CantidadVentasHoy tickets cobrados</small>
+                    <small class="text-muted fuente-numerica">@Model.CantidadVentasHoy tickets cobrados</small>
                 </div>
             </div>
         </div>
 
         <!-- Ventas Período -->
         <div class="col-sm-6 col-xl-3">
-            <div class="stat-card stat-primary h-100 d-flex align-items-center">
-                <div class="stat-icon bg-sc-orange-subtle me-3">
+            <div class="tarjeta-estadistica est-primario h-100 d-flex align-items-center">
+                <div class="icono-estadistica bg-sc-orange-subtle me-3">
                     <i class="bi bi-receipt-cutoff"></i>
                 </div>
                 <div>
@@ -77,8 +77,8 @@
 
         <!-- Compras Período -->
         <div class="col-sm-6 col-xl-3">
-            <div class="stat-card stat-warning h-100 d-flex align-items-center">
-                <div class="stat-icon bg-sc-yellow-subtle me-3">
+            <div class="tarjeta-estadistica est-advertencia h-100 d-flex align-items-center">
+                <div class="icono-estadistica bg-sc-yellow-subtle me-3">
                     <i class="bi bi-boxes"></i>
                 </div>
                 <div>
@@ -91,8 +91,8 @@
 
         <!-- Gastos Operativos -->
         <div class="col-sm-6 col-xl-3">
-            <div class="stat-card stat-danger h-100 d-flex align-items-center">
-                <div class="stat-icon bg-sc-brick-subtle me-3">
+            <div class="tarjeta-estadistica est-peligro h-100 d-flex align-items-center">
+                <div class="icono-estadistica bg-sc-brick-subtle me-3">
                     <i class="bi bi-lightning-charge"></i>
                 </div>
                 <div>
@@ -113,7 +113,7 @@
                     <h2 class="h6 mb-0 fw-bold text-dark">
                         <i class="bi bi-graph-up-arrow text-warning me-2"></i> Rendimiento Operativo y Económico
                     </h2>
-                    <span class="badge rounded-pill bg-light text-dark border px-3 py-1 font-numeric" style="border-color: var(--sc-border-warm) !important;">
+                    <span class="badge rounded-pill bg-light text-dark border px-3 py-1 fuente-numerica" style="border-color: var(--sc-border-warm) !important;">
                         @Model.FechaInicio.ToString("dd/MM/yyyy") - @Model.FechaFin.ToString("dd/MM/yyyy")
                     </span>
                 </div>
@@ -122,25 +122,25 @@
                         <div class="col-6 col-md-3">
                             <div class="p-3 rounded-3" style="background-color: var(--sc-cream-light); border: 1px solid var(--sc-border-warm);">
                                 <span class="text-muted small fw-bold d-block mb-1">Ingresos Totales</span>
-                                <div class="h5 fw-bold text-dark mb-0 font-numeric">@Model.VentasMes.ToString("C2")</div>
+                                <div class="h5 fw-bold text-dark mb-0 fuente-numerica">@Model.VentasMes.ToString("C2")</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="p-3 rounded-3" style="background-color: var(--sc-cream-light); border: 1px solid var(--sc-border-warm);">
                                 <span class="text-muted small fw-bold d-block mb-1">Costo de Ventas</span>
-                                <div class="h5 fw-bold text-secondary mb-0 font-numeric">@Model.CostoVentasPeriodo.ToString("C2")</div>
+                                <div class="h5 fw-bold text-secondary mb-0 fuente-numerica">@Model.CostoVentasPeriodo.ToString("C2")</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="p-3 rounded-3" style="background-color: #FEF3E8; border: 1px solid #F5CBA7;">
                                 <span class="small fw-bold d-block mb-1" style="color: var(--sc-orange);">Margen Bruto</span>
-                                <div class="h5 fw-bold text-dark mb-0 font-numeric">@Model.MargenBruto.ToString("C2")</div>
+                                <div class="h5 fw-bold text-dark mb-0 fuente-numerica">@Model.MargenBruto.ToString("C2")</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="p-3 rounded-3" style="background-color: @(Model.ResultadoEstimado >= 0 ? "#E8F5E9" : "#FDEDEC"); border: 1px solid @(Model.ResultadoEstimado >= 0 ? "#A9DFBF" : "#F5B7B1");">
                                 <span class="small fw-bold d-block mb-1" style="color: @(Model.ResultadoEstimado >= 0 ? "var(--sc-green)" : "var(--sc-red)");">Resultado Neto</span>
-                                <div class="h5 fw-bold @(Model.ResultadoEstimado >= 0 ? "text-success" : "text-danger") mb-0 font-numeric">
+                                <div class="h5 fw-bold @(Model.ResultadoEstimado >= 0 ? "text-success" : "text-danger") mb-0 fuente-numerica">
                                     @Model.ResultadoEstimado.ToString("C2")
                                 </div>
                             </div>
@@ -175,12 +175,12 @@
                     <div>
                         <div class="p-3 rounded-3 mb-3" style="background: linear-gradient(135deg, var(--sc-cream-light) 0%, var(--sc-cream) 100%); border: 1px solid var(--sc-border-warm);">
                             <span class="text-muted small fw-bold d-block mb-1">Efectivo Físico Disponible</span>
-                            <span class="h3 fw-bold mb-0 text-success font-numeric d-block">@Model.EfectivoEnCajaActual.ToString("C2")</span>
+                            <span class="h3 fw-bold mb-0 text-success fuente-numerica d-block">@Model.EfectivoEnCajaActual.ToString("C2")</span>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light mb-3">
                             <span class="text-muted small fw-semibold">Cuentas por Pagar (Proveedores):</span>
-                            <span class="fw-bold text-danger font-numeric">@Model.CuentasPorPagarPendientes.ToString("C2")</span>
+                            <span class="fw-bold text-danger fuente-numerica">@Model.CuentasPorPagarPendientes.ToString("C2")</span>
                         </div>
                     </div>
 
@@ -229,7 +229,7 @@
                                             <span class="text-muted small">Mínimo requerido: @ing.StockMinimo.ToString("0.##") @ing.UnidadMedida</span>
                                         </div>
                                     </div>
-                                    <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle fs-6 font-numeric px-3 py-1">
+                                    <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle fs-6 fuente-numerica px-3 py-1">
                                         @ing.StockActual.ToString("0.##") @ing.UnidadMedida
                                     </span>
                                 </li>
@@ -281,10 +281,10 @@
                                                 <i class="bi bi-receipt text-warning"></i> @v.NumeroComprobante
                                             </a>
                                         </td>
-                                        <td class="text-muted font-numeric">@v.Fecha.ToString("dd/MM/yy HH:mm")</td>
+                                        <td class="text-muted fuente-numerica">@v.Fecha.ToString("dd/MM/yy HH:mm")</td>
                                         <td>@(v.ClienteNombre ?? "Cliente General")</td>
-                                        <td><span class="badge bg-light text-dark border font-numeric">@v.MetodoPago</span></td>
-                                        <td class="text-end fw-bold text-dark font-numeric">@v.Total.ToString("C2")</td>
+                                        <td><span class="badge bg-light text-dark border fuente-numerica">@v.MetodoPago</span></td>
+                                        <td class="text-end fw-bold text-dark fuente-numerica">@v.Total.ToString("C2")</td>
                                         <td class="text-center">
                                             <span class="badge rounded-pill @(v.Estado == "Completada" ? "bg-success" : "bg-danger") px-2 py-1">
                                                 @v.Estado

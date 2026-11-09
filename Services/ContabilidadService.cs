@@ -96,15 +96,15 @@ public class ContabilidadService : IContabilidadService
         // 3. Regla obligatoria de partida doble: SUMA(DEBE) == SUMA(HABER)
         if (!ValidarAsientoEquilibrado(detalles))
         {
-            var totalD = detalles.Sum(d => d.Debe);
-            var totalH = detalles.Sum(d => d.Haber);
-            throw new InvalidOperationException($"El asiento no cumple el principio de partida doble. Total Debe: {totalD:C2}, Total Haber: {totalH:C2}. Diferencia: {Math.Abs(totalD - totalH):C2}");
+            var totalDebe = detalles.Sum(d => d.Debe);
+            var totalHaber = detalles.Sum(d => d.Haber);
+            throw new InvalidOperationException($"El asiento no cumple el principio de partida doble. Total Debe: {totalDebe:C2}, Total Haber: {totalHaber:C2}. Diferencia: {Math.Abs(totalDebe - totalHaber):C2}");
         }
 
         // Si ya existe una transacción activa en el contexto (ej. venta, compra o gasto),
         // participamos en la transacción existente sin abrir ni confirmar una anidada.
-        bool isRootTransaction = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
-        var transaction = isRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        bool esTransaccionPrincipal = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
+        var transaction = esTransaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             // 4. Generar consecutivo de asiento
@@ -187,13 +187,13 @@ public class ContabilidadService : IContabilidadService
 
         if (!ValidarAsientoEquilibrado(detalles))
         {
-            decimal totalD = detalles.Sum(d => d.Debe);
-            decimal totalH = detalles.Sum(d => d.Haber);
-            throw new InvalidOperationException($"El asiento no cumple el equilibrio de partida doble. Suma Debe: {totalD:C2} | Suma Haber: {totalH:C2}.");
+            decimal totalDebe = detalles.Sum(d => d.Debe);
+            decimal totalHaber = detalles.Sum(d => d.Haber);
+            throw new InvalidOperationException($"El asiento no cumple el equilibrio de partida doble. Suma Debe: {totalDebe:C2} | Suma Haber: {totalHaber:C2}.");
         }
 
-        bool isRootTransaction = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
-        var transaction = isRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        bool esTransaccionPrincipal = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
+        var transaction = esTransaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             int totalAsientos = await _context.AsientosContables.CountAsync() + 1;
@@ -241,8 +241,8 @@ public class ContabilidadService : IContabilidadService
             throw new InvalidOperationException($"El asiento {asiento.NumeroAsiento} ya se encuentra anulado.");
         }
 
-        bool isRootTransaction = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
-        var transaction = isRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        bool esTransaccionPrincipal = _context.Database.CurrentTransaction == null && _context.Database.IsRelational();
+        var transaction = esTransaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             asiento.Anulado = true;
@@ -556,20 +556,22 @@ public class ContabilidadService : IContabilidadService
             var debe = movsCuenta.Sum(m => m.Debe);
             var haber = movsCuenta.Sum(m => m.Haber);
 
-            decimal sDeudor = 0;
-            decimal sAcreedor = 0;
+            decimal saldoDeudor = 0;
+            decimal saldoAcreedor = 0;
 
             if (c.Naturaleza == "Deudora")
             {
-                var dif = debe - haber;
-                if (dif >= 0) sDeudor = dif;
-                else sAcreedor = Math.Abs(dif);
+                // En cuentas de naturaleza deudora: saldo = Debe - Haber
+                var diferencia = debe - haber;
+                if (diferencia >= 0) saldoDeudor = diferencia;
+                else saldoAcreedor = Math.Abs(diferencia);
             }
             else
             {
-                var dif = haber - debe;
-                if (dif >= 0) sAcreedor = dif;
-                else sDeudor = Math.Abs(dif);
+                // En cuentas de naturaleza acreedora: saldo = Haber - Debe
+                var diferencia = haber - debe;
+                if (diferencia >= 0) saldoAcreedor = diferencia;
+                else saldoDeudor = Math.Abs(diferencia);
             }
 
             if (debe > 0 || haber > 0)
@@ -582,8 +584,8 @@ public class ContabilidadService : IContabilidadService
                     Naturaleza = c.Naturaleza,
                     TotalDebe = debe,
                     TotalHaber = haber,
-                    SaldoDeudor = sDeudor,
-                    SaldoAcreedor = sAcreedor
+                    SaldoDeudor = saldoDeudor,
+                    SaldoAcreedor = saldoAcreedor
                 });
             }
         }
@@ -635,10 +637,10 @@ public class ContabilidadService : IContabilidadService
             .ToList();
 
         // Utilidad del período = Ingresos - Costos - Gastos
-        decimal totalIng = balance.Where(b => b.TipoCuenta == "Ingreso").Sum(i => i.SaldoAcreedor - i.SaldoDeudor);
-        decimal totalCos = balance.Where(b => b.TipoCuenta == "Costo").Sum(c => c.SaldoDeudor - c.SaldoAcreedor);
-        decimal totalGas = balance.Where(b => b.TipoCuenta == "Gasto").Sum(g => g.SaldoDeudor - g.SaldoAcreedor);
-        decimal utilidad = totalIng - totalCos - totalGas;
+        decimal totalIngresos = balance.Where(b => b.TipoCuenta == "Ingreso").Sum(i => i.SaldoAcreedor - i.SaldoDeudor);
+        decimal totalCostos = balance.Where(b => b.TipoCuenta == "Costo").Sum(c => c.SaldoDeudor - c.SaldoAcreedor);
+        decimal totalGastos = balance.Where(b => b.TipoCuenta == "Gasto").Sum(g => g.SaldoDeudor - g.SaldoAcreedor);
+        decimal utilidad = totalIngresos - totalCostos - totalGastos;
 
         return new BalanceGeneralViewModel
         {
