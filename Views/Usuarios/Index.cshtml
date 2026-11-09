@@ -1,4 +1,4 @@
-@model IEnumerable<PizzeriaContable.Models.ApplicationUser>
+﻿@model IEnumerable<PizzeriaContable.Models.ApplicationUser>
 @{
     ViewData["Title"] = "Gestión de Personal - Say Cheese Pizza";
     var rolesDisponibles = ViewBag.RolesDisponibles as List<string> ?? new List<string>();
@@ -26,7 +26,7 @@
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
-            <h2 class="h3 fw-bold text-dark mb-0 font-brand">
+            <h2 class="h3 fw-bold text-dark mb-0 fuente-marca">
                 <i class="bi bi-people-fill text-warning me-2"></i>Equipo y Cuentas de Empleados
             </h2>
             <p class="text-muted small mb-0">Administración de credenciales, puestos de trabajo, roles y control de acceso del personal de Say Cheese.</p>
@@ -154,10 +154,10 @@
                                     </span>
                                 }
                             </td>
-                            <td class="font-numeric text-muted">
+                            <td class="fuente-numerica text-muted">
                                 @(u.UltimoAcceso.HasValue ? u.UltimoAcceso.Value.ToString("dd/MM/yyyy HH:mm") : "Sin registro")
                             </td>
-                            <td class="font-numeric text-muted">@u.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                            <td class="fuente-numerica text-muted">@u.FechaRegistro.ToString("dd/MM/yyyy")</td>
                             <td class="text-end pe-3">
                                 <div class="btn-group btn-group-sm">
                                     <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-outline-primary" title="Editar empleado">
@@ -204,7 +204,7 @@
             <form asp-action="ResetPassword" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header text-white" style="background: linear-gradient(135deg, #4A120B 0%, #1A0704 100%); border-bottom: 3px solid var(--sc-yellow);">
-                    <h5 class="modal-title fw-bold font-brand text-white" id="modalResetPasswordLabel">
+                    <h5 class="modal-title fw-bold fuente-marca text-white" id="modalResetPasswordLabel">
                         <i class="bi bi-key-fill text-warning me-2"></i>Restablecer Contraseña
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>

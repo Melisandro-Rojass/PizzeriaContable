@@ -1,4 +1,4 @@
-@model PizzeriaContable.Models.Receta
+﻿@model PizzeriaContable.Models.Receta
 
 @{
     ViewData["Title"] = $"Editar Receta: {Model.Producto?.Nombre}";
@@ -106,7 +106,7 @@
                     <input type="number" step="0.001" min="0.001" name="cantidades" class="form-control form-control-sm" value="${cantidad}" required placeholder="0.000" />
                 </td>
                 <td>
-                    <input type="text" name="unidades" class="form-control form-control-sm unidad-input" value="${unidad}" required />
+                    <input type="text" name="unidades" class="form-control form-control-sm entrada-unidad" value="${unidad}" required />
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">
@@ -122,7 +122,7 @@
             const unidad = selectedOpt.getAttribute('data-unidad');
             if (unidad) {
                 const row = selectElem.closest('tr');
-                row.querySelector('.unidad-input').value = unidad;
+                row.querySelector('.entrada-unidad').value = unidad;
             }
         }
 

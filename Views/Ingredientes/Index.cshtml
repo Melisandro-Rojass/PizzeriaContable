@@ -1,4 +1,4 @@
-@model IEnumerable<PizzeriaContable.Models.Ingrediente>
+﻿@model IEnumerable<PizzeriaContable.Models.Ingrediente>
 
 @{
     ViewData["Title"] = "Inventario de Ingredientes";
@@ -15,7 +15,7 @@
         </div>
         <div>
             <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> + Nuevo Ingrediente
+                <i class="bi bi-plus-circle"></i> Nuevo Ingrediente
             </a>
         </div>
     </div>
@@ -31,21 +31,21 @@
     <!-- Top Summary Card -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="stat-card">
+            <div class="tarjeta-estadistica">
                 <span class="text-muted small fw-semibold text-uppercase">Valor Total del Inventario</span>
                 <h3 class="h4 mb-0 fw-bold text-primary">@valorTotal.ToString("C2")</h3>
                 <small class="text-muted">Costo valorizado actual</small>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
+            <div class="tarjeta-estadistica">
                 <span class="text-muted small fw-semibold text-uppercase">Total de Ingredientes</span>
                 <h3 class="h4 mb-0 fw-bold text-dark">@Model.Count()</h3>
                 <small class="text-muted">Insumos registrados en catálogo</small>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
+            <div class="tarjeta-estadistica">
                 <span class="text-muted small fw-semibold text-uppercase">Alertas de Stock Bajo</span>
                 <h3 class="h4 mb-0 fw-bold @(Model.Any(i => i.StockActual <= i.StockMinimo) ? "text-danger" : "text-success")">
                     @Model.Count(i => i.StockActual <= i.StockMinimo)

@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    SAY CHEESE PIZZERÍA CONTABLE - DESIGN SYSTEM & VISUAL IDENTITY
    Inspirado en la identidad artística de Say Cheese Pizza
    ========================================================================== */
@@ -45,7 +45,7 @@
     --secondary-bg: var(--sc-cream-light);
 
     /* Tipografía */
-    --font-brand: 'Fredoka', system-ui, -apple-system, sans-serif;
+    --fuente-marca: 'Fredoka', system-ui, -apple-system, sans-serif;
     --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
@@ -61,22 +61,22 @@ body {
 }
 
 /* Números tabulares para precisión contable y financiera */
-.font-numeric, 
+.fuente-numerica, 
 .table td, 
-.stat-card h3,
-.price-tag,
-.cuenta-t-table td {
+.tarjeta-estadistica h3,
+.etiqueta-precio-tag,
+.tabla-cuenta-t td {
     font-variant-numeric: tabular-nums;
 }
 
 /* Headings con identidad gastronómica Say Cheese */
 h1, h2, h3, .brand-font {
-    font-family: var(--font-brand);
+    font-family: var(--fuente-marca);
     letter-spacing: -0.01em;
 }
 
 /* App Wrapper */
-.app-wrapper {
+.envoltura-app {
     display: flex;
     min-height: 100vh;
 }
@@ -84,7 +84,7 @@ h1, h2, h3, .brand-font {
 /* ==========================================================================
    SIDEBAR - ESTILO HORNO DE LADRILLO & SAY CHEESE
    ========================================================================== */
-.app-sidebar {
+.barra-lateral {
     width: var(--sidebar-width);
     background: linear-gradient(180deg, #2A120F 0%, #1A0907 100%);
     color: var(--sidebar-color);
@@ -103,16 +103,19 @@ h1, h2, h3, .brand-font {
 }
 
 /* Cabecera del Sidebar con Textura y Logo */
-.sidebar-brand-wrapper {
+.marca-lateral-contenedor {
     background: url('/images/brick-pattern.svg');
     background-size: 80px 40px;
     padding: 1rem 1.15rem;
     border-bottom: 2px solid var(--sc-orange);
     position: relative;
     box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.sidebar-brand-wrapper::after {
+.marca-lateral-contenedor::after {
     content: '';
     position: absolute;
     top: 0;
@@ -123,7 +126,7 @@ h1, h2, h3, .brand-font {
     pointer-events: none;
 }
 
-.sidebar-brand {
+.marca-lateral {
     position: relative;
     z-index: 2;
     display: flex;
@@ -133,24 +136,24 @@ h1, h2, h3, .brand-font {
     color: #FFFFFF;
 }
 
-.sidebar-logo-img {
+.marca-lateral-logo {
     height: 44px;
     width: auto;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     transition: transform 0.2s ease;
 }
 
-.sidebar-brand:hover .sidebar-logo-img {
+.marca-lateral:hover .marca-lateral-logo {
     transform: scale(1.05) rotate(-2deg);
 }
 
-.sidebar-brand-text {
+.marca-lateral-texto {
     display: flex;
     flex-direction: column;
 }
 
-.sidebar-brand-title {
-    font-family: var(--font-brand);
+.marca-lateral-titulo {
+    font-family: var(--fuente-marca);
     font-size: 1.15rem;
     font-weight: 800;
     line-height: 1.1;
@@ -158,11 +161,11 @@ h1, h2, h3, .brand-font {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-.sidebar-brand-title span {
+.marca-lateral-titulo span {
     color: var(--sc-yellow);
 }
 
-.sidebar-brand-sub {
+.marca-lateral-subtitulo {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -171,15 +174,15 @@ h1, h2, h3, .brand-font {
 }
 
 /* Navegación del Sidebar */
-.sidebar-nav {
+.nav-lateral {
     padding: 1rem 0.75rem;
     list-style: none;
     margin: 0;
     flex-grow: 1;
 }
 
-.nav-section-title {
-    font-family: var(--font-brand);
+.titulo-seccion-nav {
+    font-family: var(--fuente-marca);
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -192,14 +195,14 @@ h1, h2, h3, .brand-font {
     opacity: 0.9;
 }
 
-.nav-section-title::after {
+.titulo-seccion-nav::after {
     content: '';
     flex: 1;
     height: 1px;
     background: rgba(255, 201, 40, 0.2);
 }
 
-.sidebar-nav .nav-link {
+.nav-lateral .nav-link {
     display: flex;
     align-items: center;
     padding: 0.65rem 0.85rem;
@@ -213,7 +216,7 @@ h1, h2, h3, .brand-font {
     border-left: 3px solid transparent;
 }
 
-.sidebar-nav .nav-link i {
+.nav-lateral .nav-link i {
     font-size: 1.15rem;
     margin-right: 0.75rem;
     width: 22px;
@@ -222,51 +225,63 @@ h1, h2, h3, .brand-font {
     transition: transform 0.2s ease;
 }
 
-.sidebar-nav .nav-link:hover {
+.nav-lateral .nav-link:hover {
     color: #FFFFFF;
     background-color: var(--sidebar-hover);
     transform: translateX(3px);
 }
 
-.sidebar-nav .nav-link:hover i {
+.nav-lateral .nav-link:hover i {
     color: var(--sc-yellow);
     transform: scale(1.15);
 }
 
-.sidebar-nav .nav-link.active {
-    color: #FFFFFF;
-    background: linear-gradient(90deg, rgba(242, 140, 40, 0.25) 0%, rgba(168, 59, 32, 0.15) 100%);
-    border-left-color: var(--sc-yellow);
-    font-weight: 600;
-    box-shadow: inset 1px 0 0 var(--sc-yellow);
+.nav-lateral .nav-link.active {
+    color: #FFFFFF !important;
+    background: linear-gradient(90deg, rgba(242, 140, 40, 0.32) 0%, rgba(168, 59, 32, 0.22) 100%) !important;
+    border-left: 4px solid var(--sc-yellow) !important;
+    font-weight: 700;
+    box-shadow: inset 2px 0 10px rgba(255, 201, 40, 0.2);
+    position: relative;
 }
 
-.sidebar-nav .nav-link.active i {
-    color: var(--sc-yellow);
+.nav-lateral .nav-link.active i {
+    color: var(--sc-yellow) !important;
+    transform: scale(1.15);
+}
+
+.nav-lateral .nav-link.active::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--sc-yellow);
+    box-shadow: 0 0 8px var(--sc-yellow);
+    margin-left: auto;
 }
 
 /* Badge especial para el Punto de Venta en Sidebar */
-.nav-badge-pos {
+.insignia-nav-pos {
     background: linear-gradient(135deg, var(--sc-orange) 0%, var(--sc-brick-red) 100%);
     color: #FFFFFF !important;
     border: 1px solid var(--sc-yellow);
     box-shadow: 0 2px 8px rgba(242, 140, 40, 0.35);
 }
 
-.nav-badge-pos:hover {
+.insignia-nav-pos:hover {
     background: linear-gradient(135deg, var(--sc-yellow) 0%, var(--sc-orange) 100%) !important;
     color: var(--sc-crust-dark) !important;
 }
 
-.nav-badge-pos:hover i,
-.nav-badge-pos:hover span {
+.insignia-nav-pos:hover i,
+.insignia-nav-pos:hover span {
     color: var(--sc-crust-dark) !important;
 }
 
 /* ==========================================================================
    TOPBAR & CONTENIDO PRINCIPAL
    ========================================================================== */
-.app-main {
+.contenido-principal {
     flex-grow: 1;
     margin-left: var(--sidebar-width);
     display: flex;
@@ -274,7 +289,7 @@ h1, h2, h3, .brand-font {
     min-height: 100vh;
 }
 
-.app-topbar {
+.barra-superior {
     height: var(--topbar-height);
     background-color: #FFFFFF;
     border-bottom: 2px solid var(--sc-border-warm);
@@ -288,7 +303,7 @@ h1, h2, h3, .brand-font {
     box-shadow: 0 2px 8px rgba(74, 18, 11, 0.04);
 }
 
-.content-body {
+.cuerpo-contenido {
     padding: 1.75rem;
     flex-grow: 1;
 }
@@ -312,7 +327,7 @@ h1, h2, h3, .brand-font {
 }
 
 /* Tarjetas de Indicadores (Dashboard) */
-.stat-card {
+.tarjeta-estadistica {
     border-radius: 14px;
     border: 1px solid var(--sc-border-warm);
     background: #FFFFFF;
@@ -323,7 +338,7 @@ h1, h2, h3, .brand-font {
     overflow: hidden;
 }
 
-.stat-card::before {
+.tarjeta-estadistica::before {
     content: '';
     position: absolute;
     top: 0;
@@ -333,18 +348,18 @@ h1, h2, h3, .brand-font {
     background: var(--sc-brick-red);
 }
 
-.stat-card.stat-primary::before { background: var(--sc-orange); }
-.stat-card.stat-success::before { background: var(--sc-green); }
-.stat-card.stat-warning::before { background: var(--sc-yellow); }
-.stat-card.stat-danger::before { background: var(--sc-red); }
+.tarjeta-estadistica.est-primario::before { background: var(--sc-orange); }
+.tarjeta-estadistica.est-exito::before { background: var(--sc-green); }
+.tarjeta-estadistica.est-advertencia::before { background: var(--sc-yellow); }
+.tarjeta-estadistica.est-peligro::before { background: var(--sc-red); }
 
-.stat-card:hover {
+.tarjeta-estadistica:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 18px rgba(74, 18, 11, 0.09);
     border-color: var(--sc-orange);
 }
 
-.stat-card .stat-icon {
+.tarjeta-estadistica .icono-estadistica {
     width: 52px;
     height: 52px;
     border-radius: 12px;
@@ -362,7 +377,7 @@ h1, h2, h3, .brand-font {
 .bg-sc-green-subtle { background-color: #E8F5E9; color: var(--sc-green); }
 
 /* Banners Decorativos con Textura de Ladrillo */
-.brick-hero-banner {
+.banner-principal {
     background: url('/images/brick-pattern.svg');
     background-size: 100px 50px;
     border-radius: 16px;
@@ -374,7 +389,7 @@ h1, h2, h3, .brand-font {
     border: 2px solid rgba(255, 201, 40, 0.35);
 }
 
-.brick-hero-banner::before {
+.banner-principal::before {
     content: '';
     position: absolute;
     top: 0;
@@ -385,13 +400,13 @@ h1, h2, h3, .brand-font {
     z-index: 1;
 }
 
-.brick-hero-content {
+.banner-contenido {
     position: relative;
     z-index: 2;
 }
 
 /* Distintivo "Promo / Badge" con borde de costura como Referencia 1 */
-.sc-badge-circle {
+.circulo-insignia {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
@@ -401,12 +416,12 @@ h1, h2, h3, .brand-font {
     border: 3px dashed var(--sc-brick-red);
     border-radius: 50%;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    font-family: var(--font-brand);
+    font-family: var(--fuente-marca);
     text-align: center;
 }
 
 /* Pills de Pizza inspirados en Referencia 2 */
-.pizza-pill-badge {
+.insignia-pizza {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -420,7 +435,7 @@ h1, h2, h3, .brand-font {
     transition: all 0.2s ease;
 }
 
-.pizza-pill-badge:hover {
+.insignia-pizza:hover {
     border-color: var(--sc-orange);
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(242, 140, 40, 0.2);
@@ -542,7 +557,7 @@ h1, h2, h3, .brand-font {
 /* ==========================================================================
    PUNTO DE VENTA (POS) - PRODUCTOS & COMANDA
    ========================================================================== */
-.product-pos-card {
+.tarjeta-producto-pos {
     border-radius: 12px;
     border: 2px solid var(--sc-border-warm) !important;
     background: #FFFFFF;
@@ -551,16 +566,16 @@ h1, h2, h3, .brand-font {
     overflow: hidden;
 }
 
-.product-pos-card:hover {
+.tarjeta-producto-pos:hover {
     transform: translateY(-4px);
     border-color: var(--sc-orange) !important;
     box-shadow: 0 8px 18px rgba(242, 140, 40, 0.18) !important;
 }
 
-.product-pos-card .price-badge {
+.tarjeta-producto-pos .etiqueta-precio {
     background: linear-gradient(135deg, var(--sc-orange) 0%, var(--sc-brick-red) 100%);
     color: #FFFFFF;
-    font-family: var(--font-brand);
+    font-family: var(--fuente-marca);
     font-size: 0.95rem;
     padding: 0.35rem 0.75rem;
     border-radius: 20px;
@@ -568,7 +583,7 @@ h1, h2, h3, .brand-font {
 }
 
 /* Categorías Tabs en POS */
-.cat-btn {
+.btn-categoria {
     border-radius: 20px;
     font-weight: 600;
     padding: 0.35rem 0.85rem;
@@ -579,13 +594,13 @@ h1, h2, h3, .brand-font {
     transition: all 0.2s ease;
 }
 
-.cat-btn:hover {
+.btn-categoria:hover {
     background: var(--sc-cream);
     color: var(--sc-brick-red);
     border-color: var(--sc-orange);
 }
 
-.cat-btn.active {
+.btn-categoria.active {
     background: linear-gradient(135deg, var(--sc-brick-red) 0%, #7A2411 100%) !important;
     color: #FFFFFF !important;
     border-color: var(--sc-brick-red) !important;
@@ -595,7 +610,7 @@ h1, h2, h3, .brand-font {
 /* ==========================================================================
    MÓDULO CONTABLE: CUENTAS T & ASIENTOS
    ========================================================================== */
-.cuenta-t-header {
+.encabezado-cuenta-t {
     background: linear-gradient(135deg, var(--sc-brick-dark) 0%, #2A0B07 100%);
     color: #FFFFFF;
     border-top-left-radius: 12px;
@@ -604,29 +619,106 @@ h1, h2, h3, .brand-font {
     border-bottom: 3px solid var(--sc-yellow);
 }
 
-.col-debe-header {
+.col-encabezado-debe {
     background-color: #EBF3FC !important;
     color: #1A5276 !important;
     font-weight: 700;
     border-bottom: 2px solid #AED6F1 !important;
 }
 
-.col-haber-header {
+.col-encabezado-haber {
     background-color: #FDEDEC !important;
     color: #78281F !important;
     font-weight: 700;
     border-bottom: 2px solid #F5B7B1 !important;
 }
 
-/* Responsive */
+/* ==========================================================================
+   BACKDROP MÓVIL, SCROLLBARS Y RESPONSIVE DESIGN AVANZADO
+   ========================================================================== */
+.fondo-lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(18, 6, 4, 0.7);
+    backdrop-filter: blur(2px);
+    z-index: 1035;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s ease;
+}
+
+.fondo-lateral.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+body.lateral-abierto-movil {
+    overflow: hidden;
+}
+
+/* Scrollbar personalizado para el menú lateral */
+.barra-lateral::-webkit-scrollbar {
+    width: 6px;
+}
+.barra-lateral::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+.barra-lateral::-webkit-scrollbar-thumb {
+    background: rgba(255, 201, 40, 0.25);
+    border-radius: 4px;
+}
+.barra-lateral::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 201, 40, 0.5);
+}
+
+/* Scrollbar estilizado para tablas responsivas */
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--sc-cream-light);
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--sc-border-warm);
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--sc-orange);
+}
+
+/* Responsive Media Queries */
 @media (max-width: 991.98px) {
-    .app-sidebar {
+    .barra-lateral {
         transform: translateX(-100%);
     }
-    .app-sidebar.show {
+    .barra-lateral.show {
         transform: translateX(0);
+        box-shadow: 10px 0 35px rgba(0, 0, 0, 0.65);
     }
-    .app-main {
+    .contenido-principal {
         margin-left: 0;
+    }
+    .cuerpo-contenido {
+        padding: 1rem 0.85rem;
+    }
+    .barra-superior {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .cuerpo-contenido {
+        padding: 0.75rem 0.5rem;
+    }
+    .tarjeta-estadistica {
+        padding: 1rem;
+    }
+    .tarjeta-estadistica .icono-estadistica {
+        width: 44px;
+        height: 44px;
+        font-size: 1.25rem;
     }
 }

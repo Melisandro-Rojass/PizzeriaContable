@@ -1,4 +1,4 @@
-@model PizzeriaContable.ViewModels.ResumenCuentasTViewModel
+﻿@model PizzeriaContable.ViewModels.ResumenCuentasTViewModel
 @{
     ViewData["Title"] = "Módulo de Cuentas T - Esquema de Mayor";
 }
@@ -22,7 +22,7 @@
     <!-- Encabezado de Página -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h2 class="h3 fw-bold text-dark mb-1 font-brand">
+            <h2 class="h3 fw-bold text-dark mb-1 fuente-marca">
                 <i class="bi bi-layout-split me-2 text-warning"></i>Esquemas de Mayor &bull; Cuentas T
             </h2>
             <p class="text-muted small mb-0">
@@ -50,14 +50,14 @@
         <div class="col-md-4">
             <div class="card h-100 p-3 bg-white" style="border-left: 5px solid var(--sc-info) !important;">
                 <span class="text-muted small fw-bold text-uppercase">Sumas del Debe (Débitos)</span>
-                <h3 class="fw-bold mb-0 text-primary font-numeric">C$ @Model.TotalDebeGeneral.ToString("N2")</h3>
+                <h3 class="fw-bold mb-0 text-primary fuente-numerica">C$ @Model.TotalDebeGeneral.ToString("N2")</h3>
                 <small class="text-muted">Total acumulado en el lado izquierdo</small>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card h-100 p-3 bg-white" style="border-left: 5px solid var(--sc-green) !important;">
                 <span class="text-muted small fw-bold text-uppercase">Sumas del Haber (Créditos)</span>
-                <h3 class="fw-bold mb-0 text-success font-numeric">C$ @Model.TotalHaberGeneral.ToString("N2")</h3>
+                <h3 class="fw-bold mb-0 text-success fuente-numerica">C$ @Model.TotalHaberGeneral.ToString("N2")</h3>
                 <small class="text-muted">Total acumulado en el lado derecho</small>
             </div>
         </div>
@@ -74,7 +74,7 @@
                         <span class="badge bg-danger rounded-pill px-3 py-2 fs-6"><i class="bi bi-exclamation-octagon me-1"></i> Descuadre Detectado</span>
                     }
                 </div>
-                <small class="text-muted mt-1 font-numeric">Diferencia: C$ @Math.Abs(Model.TotalDebeGeneral - Model.TotalHaberGeneral).ToString("N2")</small>
+                <small class="text-muted mt-1 fuente-numerica">Diferencia: C$ @Math.Abs(Model.TotalDebeGeneral - Model.TotalHaberGeneral).ToString("N2")</small>
             </div>
         </div>
     </div>
@@ -129,7 +129,7 @@
             <div class="col-12">
                 <div class="card p-5 text-center text-muted bg-white">
                     <i class="bi bi-folder-x fs-1 text-secondary mb-2"></i>
-                    <h5 class="fw-bold font-brand text-dark">No hay movimientos contables registrados para este filtro.</h5>
+                    <h5 class="fw-bold fuente-marca text-dark">No hay movimientos contables registrados para este filtro.</h5>
                     <p class="small text-muted mb-3">Puede registrar operaciones desde ventas y compras o generar un asiento manual.</p>
                     <div class="d-flex justify-content-center gap-2">
                         <form asp-action="CargarEjemploDidactico" method="post">
@@ -162,13 +162,13 @@
             int maxFilas = Math.Max(cta.MovimientosDebe.Count, cta.MovimientosHaber.Count);
 
             <div class="col-xl-6 col-lg-12">
-                <div class="card h-100 cuenta-t-card shadow-sm">
+                <div class="card h-100 tarjeta-cuenta-t shadow-sm">
                     <!-- Cabecera de la Cuenta T con Identidad Say Cheese -->
                     <div class="card-header py-3 text-white" style="background: linear-gradient(135deg, #3A130D 0%, #1A0704 100%); border-bottom: 3px solid var(--sc-yellow); border-top-left-radius: 12px; border-top-right-radius: 12px;">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <span class="font-monospace fw-bold fs-5 text-warning">@cta.Codigo</span>
-                                <span class="fw-bold fs-5 ms-2 text-white font-brand">@cta.Nombre</span>
+                                <span class="fw-bold fs-5 ms-2 text-white fuente-marca">@cta.Nombre</span>
                             </div>
                             <div class="d-flex align-items-center gap-1">
                                 <span class="badge @badgeTipoColor rounded-pill">@cta.TipoCuenta</span>
@@ -193,7 +193,7 @@
                         </div>
 
                         <!-- Filas de Movimientos Separadas por la Línea Vertical de la T -->
-                        <div class="cuenta-t-filas">
+                        <div class="filas-cuenta-t">
                             <div class="row g-0">
                                 <!-- Columna Izquierda: DEBE -->
                                 <div class="col-6 border-end border-dark p-3" style="min-height: 140px; background-color: #FDFEFE;">
@@ -206,7 +206,7 @@
                                                 </a>
                                                 <div class="small text-muted text-truncate" title="@mov.Concepto">@mov.Concepto</div>
                                             </div>
-                                            <div class="text-end fw-bold text-primary font-numeric">
+                                            <div class="text-end fw-bold text-primary fuente-numerica">
                                                 C$ @mov.Importe.ToString("N2")
                                             </div>
                                         </div>
@@ -224,7 +224,7 @@
                                                 </a>
                                                 <div class="small text-muted text-truncate" title="@mov.Concepto">@mov.Concepto</div>
                                             </div>
-                                            <div class="text-end fw-bold text-success font-numeric">
+                                            <div class="text-end fw-bold text-success fuente-numerica">
                                                 C$ @mov.Importe.ToString("N2")
                                             </div>
                                         </div>
@@ -237,11 +237,11 @@
                         <div class="border-top border-dark bg-light">
                             <!-- Sumas de Movimientos -->
                             <div class="row g-0 text-center py-2 border-bottom border-secondary border-dashed">
-                                <div class="col-6 border-end border-dark text-end pe-3 font-numeric fw-bold text-primary">
+                                <div class="col-6 border-end border-dark text-end pe-3 fuente-numerica fw-bold text-primary">
                                     <span class="small text-muted me-2">Total Debe:</span>
                                     C$ @cta.TotalDebe.ToString("N2")
                                 </div>
-                                <div class="col-6 text-end pe-3 font-numeric fw-bold text-success">
+                                <div class="col-6 text-end pe-3 fuente-numerica fw-bold text-success">
                                     <span class="small text-muted me-2">Total Haber:</span>
                                     C$ @cta.TotalHaber.ToString("N2")
                                 </div>
@@ -253,7 +253,7 @@
                                 {
                                     <div class="col-6 border-end border-dark text-end pe-3">
                                         <span class="badge bg-primary rounded-pill text-uppercase me-2">Saldo Deudor</span>
-                                        <span class="fs-6 fw-bold font-numeric text-primary">C$ @cta.SaldoFinal.ToString("N2")</span>
+                                        <span class="fs-6 fw-bold fuente-numerica text-primary">C$ @cta.SaldoFinal.ToString("N2")</span>
                                     </div>
                                     <div class="col-6 text-center text-muted small">
                                         <i class="bi bi-check2-all text-muted"></i> Saldado con Haber
@@ -266,7 +266,7 @@
                                     </div>
                                     <div class="col-6 text-end pe-3">
                                         <span class="badge bg-success rounded-pill text-uppercase me-2">Saldo Acreedor</span>
-                                        <span class="fs-6 fw-bold font-numeric text-success">C$ @cta.SaldoFinal.ToString("N2")</span>
+                                        <span class="fs-6 fw-bold fuente-numerica text-success">C$ @cta.SaldoFinal.ToString("N2")</span>
                                     </div>
                                 }
                             </div>
@@ -285,7 +285,7 @@
 </div>
 
 <style>
-    .cuenta-t-card {
+    .tarjeta-cuenta-t {
         border-radius: 12px;
         overflow: hidden;
     }

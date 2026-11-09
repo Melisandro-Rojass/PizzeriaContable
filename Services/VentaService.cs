@@ -29,11 +29,12 @@ public class VentaService : IVentaService
 
     public async Task<string> GenerarNumeroComprobanteAsync()
     {
-        int countHoy = await _context.Ventas
+        // Calcula el número correlativo de ventas del día para el comprobante
+        int conteoVentasHoy = await _context.Ventas
             .Where(v => v.Fecha.Date == DateTime.Today)
             .CountAsync() + 1;
 
-        return $"TCK-{DateTime.Today:yyyyMMdd}-{countHoy:D4}";
+        return $"TCK-{DateTime.Today:yyyyMMdd}-{conteoVentasHoy:D4}";
     }
 
     public async Task<Venta> CrearVentaTransaccionalAsync(
@@ -100,11 +101,13 @@ public class VentaService : IVentaService
 
         // 3. Iniciar transacción atómica en la base de datos (siempre que sea relacional y no exista una ya abierta)
         etapa = "Inicio de transacción";
-        bool hasRootTransaction = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
-        await using var transaction = hasRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        // Indica si esta llamada es la responsable de abrir y confirmar la transacción principal.
+        // Cuando ya existe una transacción activa (ej. pruebas de integración), se participa en ella sin crear una anidada.
+        bool esTransaccionPrincipal = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = esTransaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
-            _logger?.LogInformation("Iniciando transacción de venta para usuario '{Usuario}' (RootTransaction: {IsRoot}).", usuario, hasRootTransaction);
+            _logger?.LogInformation("Iniciando transacción de venta para usuario '{Usuario}' (TransaccionPrincipal: {EsPrincipal}).", usuario, esTransaccionPrincipal);
 
             // 4. Asignar datos de cabecera y calcular montos server-side
             etapa = "Cálculo de montos y cabecera";
@@ -220,7 +223,6 @@ public class VentaService : IVentaService
             {
                 await transaction.CommitAsync();
             }
-
             _logger?.LogInformation("Venta {Comprobante} (ID: {VentaId}) confirmada exitosamente con total {Total:C2}.",
                 venta.NumeroComprobante, venta.Id, venta.Total);
 
@@ -250,8 +252,9 @@ public class VentaService : IVentaService
             throw new InvalidOperationException("La venta ya ha sido anulada anteriormente.");
         }
 
-        bool hasRootTransaction = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
-        await using var transaction = hasRootTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        // Indica si esta llamada abre la transacción principal o participa en una existente
+        bool esTransaccionPrincipal = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = esTransaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
             _logger?.LogInformation("Iniciando anulación de venta {VentaId} por usuario '{Usuario}'.", ventaId, usuario);
@@ -273,11 +276,11 @@ public class VentaService : IVentaService
                 asientoOriginal.Anulado = true;
                 _context.AsientosContables.Update(asientoOriginal);
 
-                // Crear contra-asiento para trazabilidad
+                // Crear contra-asiento para trazabilidad (Debe y Haber invertidos)
                 var contraApuntes = asientoOriginal.Detalles.Select(d => (
                     d.CuentaContableId,
-                    d.Haber, // Invertir Debe y Haber
-                    d.Debe,
+                    d.Haber, // El Haber original pasa a ser el Debe del contra-asiento
+                    d.Debe,  // El Debe original pasa a ser el Haber del contra-asiento
                     $"Contra-asiento por anulación de Venta #{venta.NumeroComprobante}"
                 )).ToList();
 
@@ -293,12 +296,12 @@ public class VentaService : IVentaService
                     Anulado = false,
                     FechaCreacion = DateTime.Now,
                     CreadoPor = usuario ?? "Sistema",
-                    Detalles = contraApuntes.Select(ca => new AsientoDetalle
+                    Detalles = contraApuntes.Select(apunte => new AsientoDetalle
                     {
-                        CuentaContableId = ca.CuentaContableId,
-                        Debe = ca.Item2,
-                        Haber = ca.Item3,
-                        Descripcion = ca.Item4
+                        CuentaContableId = apunte.CuentaContableId,
+                        Debe = apunte.Haber,
+                        Haber = apunte.Debe,
+                        Descripcion = apunte.Item4
                     }).ToList()
                 };
                 _context.AsientosContables.Add(contraAsiento);

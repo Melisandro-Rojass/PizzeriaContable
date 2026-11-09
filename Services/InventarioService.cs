@@ -134,25 +134,25 @@ public class InventarioService : IInventarioService
                 decimal cantTotalReceta = cantPorUnidad * detalle.Cantidad;
 
                 // Conversión de unidades si la unidad de la receta difiere de la del inventario
-                decimal cantA_Descontar = ConvertirUnidades(cantTotalReceta, recetaDetalle.UnidadMedida, ingrediente.UnidadMedida);
+                decimal cantidadADescontar = ConvertirUnidades(cantTotalReceta, recetaDetalle.UnidadMedida, ingrediente.UnidadMedida);
 
                 // Descontar inventario (cantidad negativa)
-                ingrediente.StockActual -= cantA_Descontar;
+                ingrediente.StockActual -= cantidadADescontar;
 
-                var mov = new MovimientoInventario
+                var movimiento = new MovimientoInventario
                 {
                     IngredienteId = ingrediente.Id,
                     TipoMovimiento = "SalidaVenta",
-                    Cantidad = -cantA_Descontar,
+                    Cantidad = -cantidadADescontar,
                     CostoUnitario = ingrediente.CostoUnitario,
-                    Total = Math.Round(cantA_Descontar * ingrediente.CostoUnitario, 2),
+                    Total = Math.Round(cantidadADescontar * ingrediente.CostoUnitario, 2),
                     Fecha = DateTime.Now,
                     Referencia = $"VENTA-{ventaId}",
                     Observaciones = $"Consumo por venta de {detalle.Cantidad}x Producto ID {detalle.ProductoId}",
                     UsuarioId = usuario ?? "Sistema"
                 };
 
-                _context.MovimientosInventario.Add(mov);
+                _context.MovimientosInventario.Add(movimiento);
                 _context.Ingredientes.Update(ingrediente);
             }
         }
@@ -166,28 +166,29 @@ public class InventarioService : IInventarioService
             .Where(m => m.Referencia == $"VENTA-{ventaId}" && m.TipoMovimiento == "SalidaVenta")
             .ToListAsync();
 
-        foreach (var mov in movimientosPrevios)
+        foreach (var movimientoPrevio in movimientosPrevios)
         {
-            var ingrediente = await _context.Ingredientes.FindAsync(mov.IngredienteId);
+            var ingrediente = await _context.Ingredientes.FindAsync(movimientoPrevio.IngredienteId);
             if (ingrediente != null)
             {
-                decimal cantRevertir = Math.Abs(mov.Cantidad);
-                ingrediente.StockActual += cantRevertir;
+                decimal cantidadARevertir = Math.Abs(movimientoPrevio.Cantidad);
+                ingrediente.StockActual += cantidadARevertir;
 
-                var revMov = new MovimientoInventario
+                // Registra la entrada de reversión para mantener la trazabilidad del inventario
+                var movimientoReversion = new MovimientoInventario
                 {
                     IngredienteId = ingrediente.Id,
                     TipoMovimiento = "ReversionAnulacion",
-                    Cantidad = cantRevertir,
-                    CostoUnitario = mov.CostoUnitario,
-                    Total = mov.Total,
+                    Cantidad = cantidadARevertir,
+                    CostoUnitario = movimientoPrevio.CostoUnitario,
+                    Total = movimientoPrevio.Total,
                     Fecha = DateTime.Now,
                     Referencia = $"ANULACION-VENTA-{ventaId}",
                     Observaciones = $"Reversión de salida por anulación de Venta #{ventaId}",
                     UsuarioId = usuario ?? "Sistema"
                 };
 
-                _context.MovimientosInventario.Add(revMov);
+                _context.MovimientosInventario.Add(movimientoReversion);
                 _context.Ingredientes.Update(ingrediente);
             }
         }
@@ -228,7 +229,7 @@ public class InventarioService : IInventarioService
 
                 ingrediente.StockActual += detalle.Cantidad;
 
-                var mov = new MovimientoInventario
+                var movimiento = new MovimientoInventario
                 {
                     IngredienteId = ingrediente.Id,
                     TipoMovimiento = "EntradaCompra",
@@ -241,7 +242,7 @@ public class InventarioService : IInventarioService
                     UsuarioId = usuario ?? "Sistema"
                 };
 
-                _context.MovimientosInventario.Add(mov);
+                _context.MovimientosInventario.Add(movimiento);
                 _context.Ingredientes.Update(ingrediente);
             }
         }

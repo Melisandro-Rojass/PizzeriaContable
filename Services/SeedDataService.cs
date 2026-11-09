@@ -34,11 +34,11 @@ public class SeedDataService : ISeedDataService
         {
             _context.Configuraciones.Add(new ConfiguracionEmpresa
             {
-                NombreComercial = "Pizzería La Tradicional",
-                RazonSocial = "Pizzería La Tradicional S.A.",
+                NombreComercial = "Say Cheese Pizza",
+                RazonSocial = "Say Cheese Pizza S.A.",
                 Direccion = "Plaza Central, Managua, Nicaragua",
                 Telefono = "+505 2222-3344",
-                CorreoElectronico = "administracion@pizzerialatradicional.ni",
+                CorreoElectronico = "administracion@saycheesepizza.ni",
                 IdentificacionTributaria = "J0310000012345",
                 MonedaPrincipal = "NIO",
                 SimboloMoneda = "C$",
