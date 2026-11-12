@@ -1,4 +1,4 @@
-@model PizzeriaContable.Models.Venta
+﻿@model PizzeriaContable.Models.Venta
 @{
     ViewData["Title"] = $"Detalle de Venta #{Model.NumeroComprobante}";
     var asiento = ViewBag.Asiento as PizzeriaContable.Models.AsientoContable;
@@ -10,14 +10,14 @@
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
@@ -225,7 +225,7 @@
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title fw-bold" id="modalAnularLabel"><i class="bi bi-shield-exclamation me-2"></i>Anular Venta #@Model.NumeroComprobante</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="alert alert-warning small">

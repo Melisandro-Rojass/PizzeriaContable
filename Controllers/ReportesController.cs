@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,22 +45,22 @@ public class ReportesController : Controller
         var r = await _contabilidadService.ObtenerEstadoResultadosAsync(desde.Value, hasta.Value);
 
         var sb = new StringBuilder();
-        sb.AppendLine("ESTADO DE RESULTADOS INTEGRAL");
-        sb.AppendLine($"Período: {desde.Value:dd/MM/yyyy} al {hasta.Value:dd/MM/yyyy}");
-        sb.AppendLine("Rubro,Concepto,Monto (C$)");
-        sb.AppendLine($"INGRESOS,Total Ventas,{r.TotalIngresos:F2}");
+        sb.AppendLine(CsvRow("ESTADO DE RESULTADOS INTEGRAL"));
+        sb.AppendLine(CsvRow($"Período: {desde.Value:dd/MM/yyyy} al {hasta.Value:dd/MM/yyyy}"));
+        sb.AppendLine(CsvRow("Rubro", "Concepto", "Monto (C$)"));
+        sb.AppendLine(CsvRow("INGRESOS", "Total Ventas", r.TotalIngresos));
         foreach (var det in r.DetalleIngresos)
         {
-            sb.AppendLine($"Ingreso Detalle,{det.Concepto},{det.Monto:F2}");
+            sb.AppendLine(CsvRow("Ingreso Detalle", det.Concepto, det.Monto));
         }
-        sb.AppendLine($"COSTOS,Costo de Ventas (Materia Prima),{r.TotalCostosVentas:F2}");
-        sb.AppendLine($"MARGEN BRUTO,Utilidad Bruta,{r.MargenBruto:F2}");
-        sb.AppendLine($"GASTOS,Total Gastos Operativos,{r.TotalGastosOperativos:F2}");
+        sb.AppendLine(CsvRow("COSTOS", "Costo de Ventas (Materia Prima)", r.TotalCostosVentas));
+        sb.AppendLine(CsvRow("MARGEN BRUTO", "Utilidad Bruta", r.MargenBruto));
+        sb.AppendLine(CsvRow("GASTOS", "Total Gastos Operativos", r.TotalGastosOperativos));
         foreach (var det in r.DetalleGastos)
         {
-            sb.AppendLine($"Gasto Detalle,{det.Concepto},{det.Monto:F2}");
+            sb.AppendLine(CsvRow("Gasto Detalle", det.Concepto, det.Monto));
         }
-        sb.AppendLine($"RESULTADO NETO,Utilidad Neta del Ejercicio,{r.UtilidadOperativa:F2}");
+        sb.AppendLine(CsvRow("RESULTADO NETO", "Utilidad Neta del Ejercicio", r.UtilidadOperativa));
 
         byte[] bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
         return File(bytes, "text/csv", $"EstadoResultados_{desde.Value:yyyyMMdd}_{hasta.Value:yyyyMMdd}.csv");
@@ -84,29 +85,29 @@ public class ReportesController : Controller
         var b = await _contabilidadService.ObtenerBalanceGeneralAsync(fechaCorte.Value);
 
         var sb = new StringBuilder();
-        sb.AppendLine("BALANCE GENERAL");
-        sb.AppendLine($"Fecha de Corte: {fechaCorte.Value:dd/MM/yyyy}");
-        sb.AppendLine("Grupo,Código,Nombre de la Cuenta,Saldo (C$)");
+        sb.AppendLine(CsvRow("BALANCE GENERAL"));
+        sb.AppendLine(CsvRow($"Fecha de Corte: {fechaCorte.Value:dd/MM/yyyy}"));
+        sb.AppendLine(CsvRow("Grupo", "Código", "Nombre de la Cuenta", "Saldo (C$)"));
 
         foreach (var item in b.Activos)
         {
-            sb.AppendLine($"ACTIVO,{item.Codigo},{item.Nombre},{item.Saldo:F2}");
+            sb.AppendLine(CsvRow("ACTIVO", item.Codigo, item.Nombre, item.Saldo));
         }
-        sb.AppendLine($"TOTAL ACTIVOS,,,{b.TotalActivos:F2}");
+        sb.AppendLine(CsvRow("TOTAL ACTIVOS", "", "", b.TotalActivos));
 
         foreach (var item in b.Pasivos)
         {
-            sb.AppendLine($"PASIVO,{item.Codigo},{item.Nombre},{item.Saldo:F2}");
+            sb.AppendLine(CsvRow("PASIVO", item.Codigo, item.Nombre, item.Saldo));
         }
-        sb.AppendLine($"TOTAL PASIVOS,,,{b.TotalPasivos:F2}");
+        sb.AppendLine(CsvRow("TOTAL PASIVOS", "", "", b.TotalPasivos));
 
         foreach (var item in b.Patrimonio)
         {
-            sb.AppendLine($"PATRIMONIO,{item.Codigo},{item.Nombre},{item.Saldo:F2}");
+            sb.AppendLine(CsvRow("PATRIMONIO", item.Codigo, item.Nombre, item.Saldo));
         }
-        sb.AppendLine($"PATRIMONIO,,Utilidad del Ejercicio,{b.UtilidadPeriodo:F2}");
-        sb.AppendLine($"TOTAL PATRIMONIO,,,{b.TotalPatrimonio + b.UtilidadPeriodo:F2}");
-        sb.AppendLine($"TOTAL PASIVO + PATRIMONIO,,,{b.TotalPasivos + b.TotalPatrimonio + b.UtilidadPeriodo:F2}");
+        sb.AppendLine(CsvRow("PATRIMONIO", "", "Utilidad del Ejercicio", b.UtilidadPeriodo));
+        sb.AppendLine(CsvRow("TOTAL PATRIMONIO", "", "", b.TotalPatrimonio + b.UtilidadPeriodo));
+        sb.AppendLine(CsvRow("TOTAL PASIVO + PATRIMONIO", "", "", b.TotalPasivos + b.TotalPatrimonio + b.UtilidadPeriodo));
 
         byte[] bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
         return File(bytes, "text/csv", $"BalanceGeneral_{fechaCorte.Value:yyyyMMdd}.csv");
@@ -140,13 +141,14 @@ public class ReportesController : Controller
         var lista = await _contabilidadService.ObtenerBalanceComprobacionAsync(desde.Value, hasta.Value);
 
         var sb = new StringBuilder();
-        sb.AppendLine("BALANCE DE COMPROBACIÓN");
-        sb.AppendLine($"Período: {desde.Value:dd/MM/yyyy} al {hasta.Value:dd/MM/yyyy}");
-        sb.AppendLine("Código,Cuenta,Tipo,Naturaleza,Total Debe (C$),Total Haber (C$),Saldo Deudor (C$),Saldo Acreedor (C$)");
+        sb.AppendLine(CsvRow("BALANCE DE COMPROBACIÓN"));
+        sb.AppendLine(CsvRow($"Período: {desde.Value:dd/MM/yyyy} al {hasta.Value:dd/MM/yyyy}"));
+        sb.AppendLine(CsvRow("Código", "Cuenta", "Tipo", "Naturaleza", "Total Debe (C$)", "Total Haber (C$)", "Saldo Deudor (C$)", "Saldo Acreedor (C$)"));
 
         foreach (var item in lista)
         {
-            sb.AppendLine($"{item.Codigo},{item.Nombre},{item.TipoCuenta},{item.Naturaleza},{item.TotalDebe:F2},{item.TotalHaber:F2},{item.SaldoDeudor:F2},{item.SaldoAcreedor:F2}");
+            sb.AppendLine(CsvRow(item.Codigo, item.Nombre, item.TipoCuenta, item.Naturaleza,
+                item.TotalDebe, item.TotalHaber, item.SaldoDeudor, item.SaldoAcreedor));
         }
 
         byte[] bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
@@ -169,5 +171,34 @@ public class ReportesController : Controller
         ViewBag.Hasta = hasta.Value.ToString("yyyy-MM-dd");
 
         return View(movimientos);
+    }
+
+    private static string CsvRow(params object?[] values)
+    {
+        return string.Join(",", values.Select(CsvField));
+    }
+
+    private static string CsvField(object? value)
+    {
+        if (value is null)
+        {
+            return string.Empty;
+        }
+
+        bool isNumber = value is decimal or double or float or int or long;
+        string text = value switch
+        {
+            decimal number => number.ToString("0.00", CultureInfo.InvariantCulture),
+            double number => number.ToString("0.00", CultureInfo.InvariantCulture),
+            float number => number.ToString("0.00", CultureInfo.InvariantCulture),
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
+        };
+
+        if (!isNumber && text.Length > 0 && "=+-@".Contains(text[0]))
+        {
+            text = "'" + text;
+        }
+
+        return isNumber ? text : $"\"{text.Replace("\"", "\"\"")}\"";
     }
 }

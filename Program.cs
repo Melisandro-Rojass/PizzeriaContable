@@ -118,7 +118,8 @@ app.MapControllerRoute(
     }
     catch (Exception ex)
     {
-        return Results.Problem($"Error al conectar: {ex.Message}");
+        app.Logger.LogError(ex, "Error al comprobar la conexión con SQL Server.");
+        return Results.Problem("No se pudo comprobar la conexión con SQL Server.");
     }
 });
 

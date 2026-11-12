@@ -27,14 +27,15 @@ public class VentaService : IVentaService
         _logger = logger;
     }
 
-    public async Task<string> GenerarNumeroComprobanteAsync()
+    public async Task<string> GenerarNumeroComprobanteAsync(DateTime? fecha = null)
     {
+        DateTime dia = fecha?.Date ?? DateTime.Today;
         // Calcula el número correlativo de ventas del día para el comprobante
         int conteoVentasHoy = await _context.Ventas
-            .Where(v => v.Fecha.Date == DateTime.Today)
+            .Where(v => v.Fecha.Date == dia)
             .CountAsync() + 1;
 
-        return $"TCK-{DateTime.Today:yyyyMMdd}-{conteoVentasHoy:D4}";
+        return $"TCK-{dia:yyyyMMdd}-{conteoVentasHoy:D4}";
     }
 
     public async Task<Venta> CrearVentaTransaccionalAsync(
@@ -111,8 +112,14 @@ public class VentaService : IVentaService
 
             // 4. Asignar datos de cabecera y calcular montos server-side
             etapa = "Cálculo de montos y cabecera";
-            venta.NumeroComprobante = await GenerarNumeroComprobanteAsync();
-            venta.Fecha = DateTime.Now;
+            if (string.IsNullOrWhiteSpace(venta.NumeroComprobante))
+            {
+                venta.NumeroComprobante = await GenerarNumeroComprobanteAsync(venta.Fecha != default ? venta.Fecha : null);
+            }
+            if (venta.Fecha == default)
+            {
+                venta.Fecha = DateTime.Now;
+            }
             venta.Estado = "Completada";
             venta.UsuarioId = usuario;
 
@@ -125,6 +132,10 @@ public class VentaService : IVentaService
             venta.Impuesto = impuesto;
 
             decimal descuentoGeneral = venta.Descuento > 0 ? venta.Descuento : 0;
+            if (descuentoGeneral > subtotal)
+            {
+                throw new ArgumentException("El descuento general no puede superar el subtotal de la venta.");
+            }
             venta.Descuento = descuentoGeneral;
             venta.Total = Math.Round(subtotal + impuesto - descuentoGeneral, 2);
 
@@ -189,7 +200,7 @@ public class VentaService : IVentaService
                 apuntes.Add((ctaCobro, p.Monto, 0, $"Cobro venta {venta.NumeroComprobante} ({p.MetodoPago})"));
             }
 
-            apuntes.Add(("4.1.01", 0, venta.Subtotal, $"Ingreso por ventas Ticket {venta.NumeroComprobante}"));
+            apuntes.Add(("4.1.01", 0, venta.Subtotal - venta.Descuento, $"Ingreso neto por ventas Ticket {venta.NumeroComprobante}"));
             if (venta.Impuesto > 0)
             {
                 apuntes.Add(("2.1.03.01", 0, venta.Impuesto, $"IVA Débito Fiscal Ticket {venta.NumeroComprobante}"));
@@ -200,7 +211,8 @@ public class VentaService : IVentaService
                 "Venta",
                 venta.Id,
                 apuntes,
-                usuario);
+                usuario,
+                venta.Fecha);
 
             // 11. Registro de auditoría
             etapa = "Registro de auditoría";

@@ -10,7 +10,8 @@ public interface IContabilidadService
         string tipoOrigen,
         int? documentoId,
         List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)> apuntes,
-        string? usuario);
+        string? usuario,
+        DateTime? fecha = null);
 
     Task<AsientoContable> CrearAsientoManualAsync(AsientoManualViewModel model, string? usuario);
 

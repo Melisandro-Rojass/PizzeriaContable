@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PizzeriaContable.Models.Producto>
+@model IEnumerable<PizzeriaContable.Models.Producto>
 @{
     ViewData["Title"] = "Punto de Venta (POS) - Say Cheese Pizza";
     var categorias = ViewBag.Categorias as List<PizzeriaContable.Models.Categoria> ?? new List<PizzeriaContable.Models.Categoria>();
@@ -96,7 +96,7 @@
                         @foreach (var prod in Model)
                         {
                             <div class="col elemento-producto" data-id="@prod.Id" data-cat="@prod.CategoriaId" data-nombre="@prod.Nombre.ToLower()" data-precio="@prod.Precio">
-                                <div class="card h-100 tarjeta-producto-pos shadow-sm text-center p-2 puntero-cursor position-relative bg-white" onclick="agregarAlCarrito(@prod.Id, '@prod.Nombre', @prod.Precio)">
+                                    <div class="card h-100 tarjeta-producto-pos shadow-sm text-center p-2 puntero-cursor position-relative bg-white" data-producto-id="@prod.Id" data-producto-nombre="@prod.Nombre" data-producto-precio="@prod.Precio" onclick="agregarProductoDesdeCatalogo(this)">
                                     @if (prod.Receta != null)
                                     {
                                         <span class="badge bg-success-subtle text-success position-absolute top-0 end-0 m-2 small fw-bold" title="Con Receta / Descuenta stock">
@@ -127,7 +127,7 @@
         <!-- Panel Derecho: Comanda / Orden Actual -->
         <div class="col-lg-5 col-xl-4">
             <div class="card h-100 d-flex flex-column shadow-sm">
-                <!-- Header de la comanda con estilo Horno -->
+                <!-- Encabezado de la comanda con estilo Horno -->
                 <div class="card-header text-white py-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #3A130D 0%, #1A0704 100%); border-bottom: 2px solid var(--sc-yellow);">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-receipt text-warning fs-5"></i>
@@ -196,7 +196,7 @@
                     <i class="bi bi-wallet2 text-warning fs-5"></i>
                     <h5 class="modal-title fw-bold fuente-marca text-white" id="modalCobroLabel">Registrar Pago del Pedido</h5>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="text-center mb-4 p-3 rounded-3" style="background: linear-gradient(135deg, var(--sc-cream-light) 0%, var(--sc-cream) 100%); border: 2px dashed var(--sc-orange);">
@@ -308,7 +308,16 @@
         });
 
         // Filtro categorías
-        document.querySelectorAll('.btn-categoria').forEach(btn => {
+         document.querySelectorAll('.elemento-producto').forEach(item => {
+             item.querySelector('.tarjeta-producto-pos').addEventListener('keydown', function(e) {
+                 if (e.key === 'Enter' || e.key === ' ') {
+                     e.preventDefault();
+                     agregarProductoDesdeCatalogo(this);
+                 }
+             });
+         });
+
+         document.querySelectorAll('.btn-categoria').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.btn-categoria').forEach(b => {
                     b.classList.remove('btn-dark', 'active');
@@ -326,6 +335,13 @@
             });
         });
     });
+
+    function agregarProductoDesdeCatalogo(elemento) {
+        agregarAlCarrito(
+            Number(elemento.dataset.productoId),
+            elemento.dataset.productoNombre,
+            Number(elemento.dataset.productoPrecio));
+    }
 
     function agregarAlCarrito(id, nombre, precio) {
         const existente = carrito.find(x => x.productoId === id);
@@ -397,19 +413,29 @@
             li.className = 'list-group-item d-flex justify-content-between align-items-center px-2 py-2 mb-1 rounded-2 border';
             li.style.borderColor = 'var(--sc-border-warm)';
             li.style.backgroundColor = '#FFFFFF';
-            li.innerHTML = `
-                <div class="me-auto">
-                    <div class="fw-bold text-dark text-truncate" style="max-width: 160px;">${item.nombre}</div>
-                    <small class="text-muted fuente-numerica">C$ ${item.precioUnitario.toFixed(2)} c/u</small>
-                </div>
-                <div class="d-flex align-items-center gap-1">
-                    <button class="btn btn-sm btn-outline-secondary px-2 py-0 fw-bold" onclick="cambiarCantidad(${item.productoId}, -1)">-</button>
-                    <span class="fw-bold px-1 fuente-numerica">${item.cantidad}</span>
-                    <button class="btn btn-sm btn-outline-secondary px-2 py-0 fw-bold" onclick="cambiarCantidad(${item.productoId}, 1)">+</button>
-                    <span class="fw-bold text-dark ms-2 fuente-numerica" style="min-width: 65px; text-align: right;">C$ ${itemSubtotal.toFixed(2)}</span>
-                    <button class="btn btn-sm text-danger ms-1 p-0" onclick="eliminarItem(${item.productoId})"><i class="bi bi-x-circle-fill"></i></button>
-                </div>
-            `;
+            const info = document.createElement('div');
+            info.className = 'me-auto';
+            const nombre = document.createElement('div');
+            nombre.className = 'fw-bold text-dark text-truncate';
+            nombre.style.maxWidth = '160px';
+            nombre.textContent = item.nombre;
+            const precio = document.createElement('small');
+            precio.className = 'text-muted fuente-numerica';
+            precio.textContent = `C$ ${item.precioUnitario.toFixed(2)} c/u`;
+            info.append(nombre, precio);
+
+            const acciones = document.createElement('div');
+            acciones.className = 'd-flex align-items-center gap-1';
+            acciones.append(
+                crearBotonCarrito('-', () => cambiarCantidad(item.productoId, -1)),
+                crearTextoCarrito(item.cantidad),
+                crearBotonCarrito('+', () => cambiarCantidad(item.productoId, 1)));
+            const subtotal = crearTextoCarrito(`C$ ${itemSubtotal.toFixed(2)}`);
+            subtotal.classList.add('ms-2', 'text-dark');
+            subtotal.style.minWidth = '65px';
+            subtotal.style.textAlign = 'right';
+            acciones.append(subtotal, crearBotonCarrito('×', () => eliminarItem(item.productoId), 'text-danger'));
+            li.append(info, acciones);
             lista.appendChild(li);
         });
 
@@ -421,6 +447,22 @@
         document.getElementById('txtSubtotal').innerText = `C$ ${subtotal.toFixed(2)}`;
         document.getElementById('txtImpuesto').innerText = `C$ ${impuesto.toFixed(2)}`;
         document.getElementById('txtTotal').innerText = `C$ ${total.toFixed(2)}`;
+    }
+
+    function crearTextoCarrito(texto) {
+        const span = document.createElement('span');
+        span.className = 'fw-bold px-1 fuente-numerica';
+        span.textContent = texto;
+        return span;
+    }
+
+    function crearBotonCarrito(texto, accion, clase = 'btn-outline-secondary') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `btn btn-sm ${clase} px-2 py-0 fw-bold`;
+        button.textContent = texto;
+        button.addEventListener('click', accion);
+        return button;
     }
 
     function abrirModalCobro() {

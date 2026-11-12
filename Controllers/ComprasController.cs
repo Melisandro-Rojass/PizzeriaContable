@@ -84,17 +84,46 @@ public class ComprasController : Controller
             ModelState.AddModelError("", "La compra debe incluir al menos un ingrediente.");
         }
 
+        if (ingredienteIds != null && (cantidades == null || costosUnitarios == null ||
+            ingredienteIds.Length != cantidades.Length || ingredienteIds.Length != costosUnitarios.Length))
+        {
+            ModelState.AddModelError("", "El detalle de la compra está incompleto o es inválido.");
+        }
+
+        var metodosPagoPermitidos = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Efectivo", "Transferencia", "Cheque"
+        };
+        if (!compra.EsCredito && !metodosPagoPermitidos.Contains(compra.MetodoPago?.Trim() ?? string.Empty))
+        {
+            ModelState.AddModelError("MetodoPago", "El método de pago no es válido.");
+        }
+
         if (ModelState.IsValid)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                var proveedor = await _context.Proveedores
+                    .FirstOrDefaultAsync(p => p.Id == compra.ProveedorId && p.Activo);
+                if (proveedor == null)
+                {
+                    ModelState.AddModelError("ProveedorId", "El proveedor seleccionado no existe o está inactivo.");
+                    await transaction.RollbackAsync();
+                    await LoadDropdownsAsync(compra.ProveedorId);
+                    return View(compra);
+                }
+
+                var ingredientesValidos = await _context.Ingredientes
+                    .Where(i => i.Activo && ingredienteIds!.Contains(i.Id))
+                    .ToDictionaryAsync(i => i.Id);
                 compra.Detalles = new List<CompraDetalle>();
                 decimal subtotal = 0;
 
                 for (int i = 0; i < ingredienteIds!.Length; i++)
                 {
-                    if (ingredienteIds[i] > 0 && cantidades[i] > 0)
+                    if (ingredienteIds[i] > 0 && ingredientesValidos.ContainsKey(ingredienteIds[i]) &&
+                        cantidades[i] > 0 && costosUnitarios[i] > 0)
                     {
                         decimal itemSub = Math.Round(cantidades[i] * costosUnitarios[i], 2);
                         subtotal += itemSub;
@@ -108,6 +137,14 @@ public class ComprasController : Controller
                     }
                 }
 
+                if (compra.Detalles.Count == 0)
+                {
+                    ModelState.AddModelError("", "La compra debe incluir al menos un detalle válido.");
+                    await transaction.RollbackAsync();
+                    await LoadDropdownsAsync(compra.ProveedorId);
+                    return View(compra);
+                }
+
                 compra.Subtotal = subtotal;
                 compra.Total = subtotal + compra.Impuesto;
                 compra.Estado = "Completada";
@@ -117,8 +154,7 @@ public class ComprasController : Controller
                     compra.SaldoPendiente = compra.Total;
                     if (compra.FechaVencimiento == null)
                     {
-                        var prov = await _context.Proveedores.FindAsync(compra.ProveedorId);
-                        int dias = prov?.DiasCredito ?? 15;
+                        int dias = proveedor.DiasCredito;
                         compra.FechaVencimiento = compra.FechaCompra.AddDays(dias);
                     }
                 }
@@ -164,7 +200,8 @@ public class ComprasController : Controller
                     "Compra",
                     compra.Id,
                     apuntes,
-                    User.Identity?.Name);
+                    User.Identity?.Name,
+                    compra.FechaCompra);
 
                 await transaction.CommitAsync();
                 TempData["SuccessMessage"] = $"Compra #{compra.NumeroFactura} registrada e ingresada al inventario.";
@@ -205,6 +242,16 @@ public class ComprasController : Controller
     {
         var compra = await _context.Compras.FindAsync(compraId);
         if (compra == null) return NotFound();
+
+        var metodosPagoPermitidos = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Efectivo", "Transferencia", "Cheque"
+        };
+        if (!metodosPagoPermitidos.Contains(metodoPago?.Trim() ?? string.Empty))
+        {
+            TempData["ErrorMessage"] = "El método de pago no es válido.";
+            return RedirectToAction(nameof(Details), new { id = compraId });
+        }
 
         if (monto <= 0 || monto > compra.SaldoPendiente)
         {
@@ -249,7 +296,8 @@ public class ComprasController : Controller
                 "PagoCompra",
                 pago.Id,
                 apuntes,
-                User.Identity?.Name);
+                User.Identity?.Name,
+                pago.Fecha);
 
             await transaction.CommitAsync();
             TempData["SuccessMessage"] = $"Abono de {monto:C2} aplicado exitosamente a la factura #{compra.NumeroFactura}.";

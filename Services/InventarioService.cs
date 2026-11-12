@@ -69,6 +69,25 @@ public class InventarioService : IInventarioService
         var ingrediente = await _context.Ingredientes.FindAsync(ingredienteId)
             ?? throw new ArgumentException($"Ingrediente ID {ingredienteId} no encontrado.");
 
+        var tiposMovimiento = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "InventarioInicial", "EntradaCompra", "SalidaVenta", "Merma", "Devolucion",
+            "AjustePositivo", "AjusteNegativo", "ReversionAnulacion"
+        };
+        if (!tiposMovimiento.Contains(tipoMovimiento))
+        {
+            throw new ArgumentException($"El tipo de movimiento '{tipoMovimiento}' no es válido.");
+        }
+
+        if (cantidad == 0)
+        {
+            throw new ArgumentException("La cantidad del movimiento no puede ser cero.");
+        }
+        if (costoUnitario < 0)
+        {
+            throw new ArgumentException("El costo unitario no puede ser negativo.");
+        }
+
         // Actualizar stock de acuerdo al movimiento
         ingrediente.StockActual += cantidad;
 
@@ -146,7 +165,7 @@ public class InventarioService : IInventarioService
                     Cantidad = -cantidadADescontar,
                     CostoUnitario = ingrediente.CostoUnitario,
                     Total = Math.Round(cantidadADescontar * ingrediente.CostoUnitario, 2),
-                    Fecha = DateTime.Now,
+                    Fecha = venta.Fecha != default ? venta.Fecha : DateTime.Now,
                     Referencia = $"VENTA-{ventaId}",
                     Observaciones = $"Consumo por venta de {detalle.Cantidad}x Producto ID {detalle.ProductoId}",
                     UsuarioId = usuario ?? "Sistema"
@@ -236,7 +255,7 @@ public class InventarioService : IInventarioService
                     Cantidad = detalle.Cantidad,
                     CostoUnitario = detalle.CostoUnitario,
                     Total = detalle.Subtotal,
-                    Fecha = DateTime.Now,
+                    Fecha = compra.FechaCompra != default ? compra.FechaCompra : DateTime.Now,
                     Referencia = $"COMPRA-{compraId}",
                     Observaciones = $"Entrada por Compra Factura #{compra.NumeroFactura}",
                     UsuarioId = usuario ?? "Sistema"

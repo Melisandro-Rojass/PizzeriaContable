@@ -1,4 +1,4 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
     ViewData["Title"] = "Error en la Solicitud";
 }
@@ -22,7 +22,7 @@
         @if (Model.ShowRequestId)
         {
             <div class="p-3 bg-light rounded border mb-3 small font-monospace">
-                <strong>Identificador de Solicitud (Request ID):</strong> <code>@Model.RequestId</code>
+                <strong>Identificador de Solicitud:</strong> <code>@Model.RequestId</code>
             </div>
         }
 

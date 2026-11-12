@@ -69,18 +69,25 @@ public class IngredientesController : Controller
             ModelState.AddModelError("CostoUnitario", "El costo unitario no puede ser negativo.");
         }
 
+        if (ingrediente.StockActual < 0)
+        {
+            ModelState.AddModelError("StockActual", "La existencia inicial no puede ser negativa.");
+        }
+
         if (ModelState.IsValid)
         {
+            decimal stockInicial = ingrediente.StockActual;
+            ingrediente.StockActual = 0;
             _context.Add(ingrediente);
             await _context.SaveChangesAsync();
 
             // Si se ingresó existencia inicial mayor a 0, registrar movimiento de inventario inicial
-            if (ingrediente.StockActual > 0)
+            if (stockInicial > 0)
             {
                 await _inventarioService.RegistrarMovimientoAsync(
                     ingrediente.Id,
                     "InventarioInicial",
-                    ingrediente.StockActual,
+                    stockInicial,
                     ingrediente.CostoUnitario,
                     "INVENTARIO-INICIAL",
                     "Registro de existencia inicial",
@@ -110,7 +117,7 @@ public class IngredientesController : Controller
     // POST: Ingredientes/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Codigo,Nombre,UnidadMedida,CostoUnitario,StockActual,StockMinimo,Activo,ProveedorHabitualId")] Ingrediente ingrediente)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,Codigo,Nombre,UnidadMedida,CostoUnitario,StockMinimo,Activo,ProveedorHabitualId")] Ingrediente ingrediente)
     {
         if (id != ingrediente.Id) return NotFound();
 
@@ -123,7 +130,16 @@ public class IngredientesController : Controller
         {
             try
             {
-                _context.Update(ingrediente);
+                var ingredienteDb = await _context.Ingredientes.FindAsync(id);
+                if (ingredienteDb == null) return NotFound();
+
+                ingredienteDb.Codigo = ingrediente.Codigo;
+                ingredienteDb.Nombre = ingrediente.Nombre;
+                ingredienteDb.UnidadMedida = ingrediente.UnidadMedida;
+                ingredienteDb.CostoUnitario = ingrediente.CostoUnitario;
+                ingredienteDb.StockMinimo = ingrediente.StockMinimo;
+                ingredienteDb.Activo = ingrediente.Activo;
+                ingredienteDb.ProveedorHabitualId = ingrediente.ProveedorHabitualId;
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Ingrediente \"{ingrediente.Nombre}\" actualizado correctamente.";
             }
@@ -159,14 +175,33 @@ public class IngredientesController : Controller
         var ingrediente = await _context.Ingredientes.FindAsync(id);
         if (ingrediente == null) return NotFound();
 
+        var tiposAjuste = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "SalidaMerma", "AjusteNegativo", "AjustePositivo", "Devolucion"
+        };
+
+        if (!tiposAjuste.Contains(tipoAjuste))
+        {
+            ModelState.AddModelError("tipoAjuste", "El tipo de ajuste no es válido.");
+        }
+
         if (cantidad <= 0)
         {
             ModelState.AddModelError("", "La cantidad a ajustar debe ser mayor a 0.");
+        }
+
+        if (string.IsNullOrWhiteSpace(observaciones))
+        {
+            ModelState.AddModelError("observaciones", "Debe indicar el motivo del ajuste.");
+        }
+
+        if (!ModelState.IsValid)
+        {
             ViewBag.Ingrediente = ingrediente;
             return View();
         }
 
-        decimal cantMov = tipoAjuste == "SalidaMerma" || tipoAjuste == "AjusteNegativo" ? -cantidad : cantidad;
+        decimal cantMov = tipoAjuste is "SalidaMerma" or "AjusteNegativo" ? -cantidad : cantidad;
 
         await _inventarioService.RegistrarMovimientoAsync(
             id,

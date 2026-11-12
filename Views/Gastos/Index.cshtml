@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PizzeriaContable.Models.Gasto>
+@model IEnumerable<PizzeriaContable.Models.Gasto>
 
 @{
     ViewData["Title"] = "Gastos Operativos";
@@ -25,7 +25,7 @@
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle me-1"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Filtros de búsqueda -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="get" asp-action="Index" class="row g-3 align-items-center">
@@ -72,7 +72,7 @@
         </div>
     </div>
 
-    <!-- Table -->
+    <!-- Tabla de gastos -->
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

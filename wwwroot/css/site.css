@@ -1,5 +1,5 @@
-﻿/* ==========================================================================
-   SAY CHEESE PIZZERÍA CONTABLE - DESIGN SYSTEM & VISUAL IDENTITY
+/* ==========================================================================
+   SAY CHEESE PIZZERÍA CONTABLE - SISTEMA DE DISEÑO E IDENTIDAD VISUAL
    Inspirado en la identidad artística de Say Cheese Pizza
    ========================================================================== */
 
@@ -49,7 +49,7 @@
     --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* Base & Reset */
+/* Estilos Base y Reinicio */
 body {
     background-color: var(--secondary-bg);
     background-image: radial-gradient(#E8D8C5 0.75px, transparent 0.75px);
@@ -75,14 +75,14 @@ h1, h2, h3, .brand-font {
     letter-spacing: -0.01em;
 }
 
-/* App Wrapper */
+/* Contenedor Principal de la Aplicación */
 .envoltura-app {
     display: flex;
     min-height: 100vh;
 }
 
 /* ==========================================================================
-   SIDEBAR - ESTILO HORNO DE LADRILLO & SAY CHEESE
+   MENÚ LATERAL - ESTILO HORNO DE LADRILLO Y SAY CHEESE
    ========================================================================== */
 .barra-lateral {
     width: var(--sidebar-width);
@@ -102,7 +102,7 @@ h1, h2, h3, .brand-font {
     border-right: 1px solid rgba(255, 201, 40, 0.12);
 }
 
-/* Cabecera del Sidebar con Textura y Logo */
+/* Encabezado del Menú Lateral con Textura y Logo */
 .marca-lateral-contenedor {
     background: url('/images/brick-pattern.svg');
     background-size: 80px 40px;
@@ -173,7 +173,7 @@ h1, h2, h3, .brand-font {
     color: var(--sc-orange);
 }
 
-/* Navegación del Sidebar */
+/* Navegación del Menú Lateral */
 .nav-lateral {
     padding: 1rem 0.75rem;
     list-style: none;
@@ -539,7 +539,7 @@ h1, h2, h3, .brand-font {
     background-color: rgba(255, 243, 222, 0.5);
 }
 
-/* Inputs y Selects */
+/* Campos de Entrada y Selectores */
 .form-control, .form-select {
     border-color: var(--sc-border-warm);
     border-radius: 8px;
@@ -582,7 +582,7 @@ h1, h2, h3, .brand-font {
     box-shadow: 0 2px 6px rgba(168, 59, 32, 0.2);
 }
 
-/* Categorías Tabs en POS */
+/* Pestañas de Categorías en el POS */
 .btn-categoria {
     border-radius: 20px;
     font-weight: 600;
@@ -689,7 +689,7 @@ body.lateral-abierto-movil {
     background: var(--sc-orange);
 }
 
-/* Responsive Media Queries */
+/* Consultas de Medios Responsivos (Media Queries) */
 @media (max-width: 991.98px) {
     .barra-lateral {
         transform: translateX(-100%);
