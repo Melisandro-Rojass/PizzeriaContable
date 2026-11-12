@@ -63,13 +63,24 @@ public class RecetasController : Controller
             ModelState.AddModelError("", "La receta debe incluir al menos un ingrediente.");
         }
 
+        if (ingredienteIds != null && (cantidades == null || unidades == null ||
+            ingredienteIds.Length != cantidades.Length || ingredienteIds.Length != unidades.Length))
+        {
+            ModelState.AddModelError("", "El detalle de ingredientes está incompleto o es inválido.");
+        }
+
         if (ModelState.IsValid)
         {
+            var ingredientesValidos = await _context.Ingredientes
+                .Where(i => i.Activo && ingredienteIds!.Contains(i.Id))
+                .ToDictionaryAsync(i => i.Id);
+
             receta.Detalles = new List<RecetaDetalle>();
 
             for (int i = 0; i < ingredienteIds!.Length; i++)
             {
-                if (ingredienteIds[i] > 0 && cantidades[i] > 0)
+                if (ingredienteIds[i] > 0 && ingredientesValidos.ContainsKey(ingredienteIds[i]) &&
+                    cantidades[i] > 0 && !string.IsNullOrWhiteSpace(unidades[i]))
                 {
                     receta.Detalles.Add(new RecetaDetalle
                     {
@@ -80,10 +91,17 @@ public class RecetasController : Controller
                 }
             }
 
-            _context.Recetas.Add(receta);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Receta registrada y costeada exitosamente.";
-            return RedirectToAction(nameof(Index));
+            if (receta.Detalles.Count == 0)
+            {
+                ModelState.AddModelError("", "La receta debe incluir al menos un ingrediente válido.");
+            }
+            else
+            {
+                _context.Recetas.Add(receta);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Receta registrada y costeada exitosamente.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         var productosSinReceta = await _context.Productos
@@ -119,6 +137,12 @@ public class RecetasController : Controller
     {
         if (id != receta.Id) return NotFound();
 
+        if (ingredienteIds == null || cantidades == null || unidades == null ||
+            ingredienteIds.Length != cantidades.Length || ingredienteIds.Length != unidades.Length)
+        {
+            ModelState.AddModelError("", "El detalle de ingredientes está incompleto o es inválido.");
+        }
+
         if (ModelState.IsValid)
         {
             var recetaDb = await _context.Recetas
@@ -132,6 +156,10 @@ public class RecetasController : Controller
             recetaDb.Instrucciones = receta.Instrucciones;
             recetaDb.Activo = receta.Activo;
 
+            var ingredientesValidos = await _context.Ingredientes
+                .Where(i => i.Activo && ingredienteIds!.Contains(i.Id))
+                .ToDictionaryAsync(i => i.Id);
+
             // Actualizar detalles
             _context.RecetaDetalles.RemoveRange(recetaDb.Detalles);
             recetaDb.Detalles = new List<RecetaDetalle>();
@@ -140,7 +168,8 @@ public class RecetasController : Controller
             {
                 for (int i = 0; i < ingredienteIds.Length; i++)
                 {
-                    if (ingredienteIds[i] > 0 && cantidades[i] > 0)
+                    if (ingredienteIds[i] > 0 && ingredientesValidos.ContainsKey(ingredienteIds[i]) &&
+                        cantidades[i] > 0 && !string.IsNullOrWhiteSpace(unidades[i]))
                     {
                         recetaDb.Detalles.Add(new RecetaDetalle
                         {
@@ -151,6 +180,13 @@ public class RecetasController : Controller
                         });
                     }
                 }
+            }
+
+            if (recetaDb.Detalles.Count == 0)
+            {
+                ModelState.AddModelError("", "La receta debe incluir al menos un ingrediente válido.");
+                ViewBag.Ingredientes = await _context.Ingredientes.Where(i => i.Activo).OrderBy(i => i.Nombre).ToListAsync();
+                return View(receta);
             }
 
             await _context.SaveChangesAsync();

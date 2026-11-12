@@ -1,4 +1,4 @@
-﻿@model PizzeriaContable.ViewModels.ResumenCuentasTViewModel
+@model PizzeriaContable.ViewModels.ResumenCuentasTViewModel
 @{
     ViewData["Title"] = "Módulo de Cuentas T - Esquema de Mayor";
 }
@@ -8,14 +8,14 @@
     {
         <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3 border-0 mb-3" role="alert" style="background-color: var(--sc-green-bg); color: #145A32; border-left: 5px solid var(--sc-green) !important;">
             <i class="bi bi-check-circle-fill me-2 fs-5"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3 border-0 mb-3" role="alert" style="background-color: var(--sc-red-bg); color: #78281F; border-left: 5px solid var(--sc-red) !important;">
             <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>@TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
@@ -122,7 +122,7 @@
         </div>
     </div>
 
-    <!-- Grid de Cuentas T -->
+    <!-- Cuadrícula de Cuentas T -->
     <div class="row g-4">
         @if (!Model.Cuentas.Any(c => c.TieneMovimientos))
         {

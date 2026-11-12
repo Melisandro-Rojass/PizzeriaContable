@@ -1,4 +1,4 @@
-﻿@model PizzeriaContable.Models.Venta
+@model PizzeriaContable.Models.Venta
 @{
     Layout = null;
     var config = ViewBag.Configuracion as PizzeriaContable.Models.ConfiguracionEmpresa;
@@ -29,7 +29,7 @@
         .text-center { text-align: center; }
         .text-end { text-align: right; }
         .fw-bold { font-weight: bold; }
-        .divider {
+        .divisor {
             border-top: 1px dashed #000;
             margin: 8px 0;
         }
@@ -48,7 +48,7 @@
             margin-bottom: 15px;
             text-align: center;
         }
-        .btn-print {
+        .btn-imprimir {
             background-color: #2563eb;
             color: white;
             border: none;
@@ -65,8 +65,8 @@
 </head>
 <body>
     <div class="sin-impresion">
-        <button class="btn-print" onclick="window.print()">Imprimir Ticket</button>
-        <button class="btn-print" style="background:#64748b;" onclick="window.close()">Cerrar</button>
+        <button class="btn-imprimir" onclick="window.print()">Imprimir Ticket</button>
+        <button class="btn-imprimir" style="background:#64748b;" onclick="window.close()">Cerrar</button>
     </div>
 
     <div class="contenedor-ticket">
@@ -77,7 +77,7 @@
             <div>Tel: @telefono</div>
         </div>
 
-        <div class="divider"></div>
+        <div class="divisor"></div>
 
         <div>
             <div><strong>TICKET:</strong> @Model.NumeroComprobante</div>
@@ -90,7 +90,7 @@
             }
         </div>
 
-        <div class="divider"></div>
+        <div class="divisor"></div>
 
         <table>
             <thead>
@@ -115,7 +115,7 @@
             </tbody>
         </table>
 
-        <div class="divider"></div>
+        <div class="divisor"></div>
 
         <table>
             <tr>
@@ -139,7 +139,7 @@
             </tr>
         </table>
 
-        <div class="divider"></div>
+        <div class="divisor"></div>
 
         <div><strong>FORMAS DE PAGO:</strong></div>
         <table>

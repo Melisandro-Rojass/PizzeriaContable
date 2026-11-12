@@ -1,5 +1,5 @@
-﻿/* ==========================================================================
-   PIZZERIACONTABLE - LOGIN STYLESHEET (SAY CHEESE IDENTITY)
+/* ==========================================================================
+   PIZZERIACONTABLE - HOJA DE ESTILOS DE ACCESO (IDENTIDAD SAY CHEESE)
    Limpio, visual, accesible y enfocado en el acceso al sistema
    ========================================================================== */
 
@@ -372,7 +372,7 @@ body.cuerpo-acceso::before {
     margin: 0;
 }
 
-/* Responsive */
+/* Diseño Responsivo */
 @media (max-width: 480px) {
     body.cuerpo-acceso {
         padding: 12px;

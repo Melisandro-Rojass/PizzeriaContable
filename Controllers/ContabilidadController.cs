@@ -264,19 +264,19 @@ public class ContabilidadController : Controller
                 apuntes.Add(("1.1.04.01", model.InventarioInicial, 0, "Apertura - Inventario Inicial de Materia Prima"));
 
             if (model.MobiliarioEquipo > 0)
-                apuntes.Add(("1.2.01.01", model.MobiliarioEquipo, 0, "Apertura - Mobiliario y Equipo de Local"));
+                apuntes.Add(("1.2.01", model.MobiliarioEquipo, 0, "Apertura - Mobiliario y Equipo de Local"));
 
             if (model.HornosYEquipos > 0)
-                apuntes.Add(("1.2.02.01", model.HornosYEquipos, 0, "Apertura - Hornos y Maquinaria de Pizzería"));
+                apuntes.Add(("1.2.02", model.HornosYEquipos, 0, "Apertura - Hornos y Maquinaria de Pizzería"));
 
             if (model.CuentasPorPagarProveedores > 0)
                 apuntes.Add(("2.1.01.01", 0, model.CuentasPorPagarProveedores, "Apertura - Deudas Iniciales con Proveedores"));
 
             if (model.OtrasObligaciones > 0)
-                apuntes.Add(("2.1.02.01", 0, model.OtrasObligaciones, "Apertura - Otras Obligaciones por Pagar"));
+                apuntes.Add(("2.1.02", 0, model.OtrasObligaciones, "Apertura - Otras Obligaciones por Pagar"));
 
             if (model.CapitalSocial > 0)
-                apuntes.Add(("3.1.01.01", 0, model.CapitalSocial, "Apertura - Capital Social / Patrimonio Inicial"));
+                apuntes.Add(("3.1.01", 0, model.CapitalSocial, "Apertura - Capital Social / Patrimonio Inicial"));
 
             string? usuario = User.Identity?.Name ?? "Admin";
 
@@ -285,7 +285,8 @@ public class ContabilidadController : Controller
                 "Apertura",
                 null,
                 apuntes,
-                usuario);
+                usuario,
+                model.FechaApertura);
 
             TempData["SuccessMessage"] = $"Asiento de Apertura {asientoCreado.NumeroAsiento} registrado exitosamente con equilibrio patrimonial.";
             return RedirectToAction(nameof(Apertura));

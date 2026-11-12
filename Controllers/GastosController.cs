@@ -37,7 +37,7 @@ public class GastosController : Controller
 
         if (hasta.HasValue)
         {
-            query = query.Where(g => g.FechaGasto <= hasta.Value.Date);
+            query = query.Where(g => g.FechaGasto < hasta.Value.Date.AddDays(1));
         }
 
         ViewData["Categoria"] = categoria;
@@ -76,6 +76,32 @@ public class GastosController : Controller
             ModelState.AddModelError("Monto", "El monto del gasto debe ser un valor positivo.");
         }
 
+        var categoriasPermitidas = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "Alquiler", "Electricidad", "Agua", "Internet", "Salarios", "Mantenimiento", "Transporte", "Otros", "Servicios Básicos"
+        };
+        var estadosPermitidos = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "Pagado", "Pendiente"
+        };
+        var metodosPagoPermitidos = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Efectivo", "Transferencia", "Cheque", "Pendiente"
+        };
+
+        if (!categoriasPermitidas.Contains(gasto.CategoriaGasto))
+        {
+            ModelState.AddModelError("CategoriaGasto", "La categoría del gasto no es válida.");
+        }
+        if (!estadosPermitidos.Contains(gasto.Estado))
+        {
+            ModelState.AddModelError("Estado", "El estado del gasto no es válido.");
+        }
+        if (!metodosPagoPermitidos.Contains(gasto.MetodoPago?.Trim() ?? string.Empty))
+        {
+            ModelState.AddModelError("MetodoPago", "La forma de pago no es válida.");
+        }
+
         if (ModelState.IsValid)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -106,7 +132,8 @@ public class GastosController : Controller
                     "Gasto",
                     gasto.Id,
                     apuntes,
-                    User.Identity?.Name);
+                    User.Identity?.Name,
+                    gasto.FechaGasto);
 
                 await transaction.CommitAsync();
                 TempData["SuccessMessage"] = $"Gasto de {gasto.Monto:C2} registrado y contabilizado.";
@@ -158,7 +185,7 @@ public class GastosController : Controller
                 var contraAsiento = new AsientoContable
                 {
                     NumeroAsiento = $"AS-{DateTime.Now.Year}-{totalAsientos:D5}",
-                    Fecha = DateTime.Today,
+                    Fecha = gasto.FechaGasto.Date,
                     Concepto = $"Reversión de Gasto #{gasto.Id} - {gasto.Descripcion}",
                     TipoOrigen = "ReversionGasto",
                     DocumentoOrigenId = gasto.Id,

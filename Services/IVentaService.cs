@@ -12,5 +12,5 @@ public interface IVentaService
 
     Task AnularVentaAsync(int ventaId, string motivo, string? usuario);
 
-    Task<string> GenerarNumeroComprobanteAsync();
+    Task<string> GenerarNumeroComprobanteAsync(DateTime? fecha = null);
 }

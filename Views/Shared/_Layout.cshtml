@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -18,7 +18,7 @@
 </head>
 <body>
     <div class="envoltura-app">
-        <!-- Sidebar Navigation -->
+        <!-- Menú de navegación lateral -->
         <aside class="barra-lateral" id="sidebarMenu">
             <div class="marca-lateral-contenedor">
                 <a asp-controller="Home" asp-action="Index" class="marca-lateral">
@@ -211,9 +211,9 @@
         <!-- Backdrop para dispositivos móviles -->
         <div class="fondo-lateral d-lg-none" id="sidebarBackdrop"></div>
 
-        <!-- Main Content Wrapper -->
+        <!-- Contenedor principal de la aplicación -->
         <div class="contenido-principal">
-            <!-- Topbar Header -->
+            <!-- Barra superior de navegación -->
             <header class="barra-superior shadow-sm">
                 <div class="d-flex align-items-center">
                     <button class="btn btn-outline-secondary d-lg-none me-2" type="button" onclick="document.getElementById('sidebarMenu').classList.toggle('show')">
@@ -296,12 +296,12 @@
                 </div>
             </header>
 
-            <!-- Page Body -->
+            <!-- Contenido principal de la vista -->
             <main class="cuerpo-contenido">
                 @RenderBody()
             </main>
 
-            <!-- Footer -->
+            <!-- Pie de página -->
             <footer class="bg-white border-top py-3 px-4 text-muted small text-center text-md-start" style="border-color: var(--sc-border-warm) !important;">
                 <div class="container-fluid d-flex justify-content-between align-items-center flex-column flex-md-row gap-2">
                     <div class="d-flex align-items-center gap-2">
@@ -314,7 +314,7 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts y librerías -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

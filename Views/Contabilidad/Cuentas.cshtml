@@ -1,4 +1,4 @@
-@model IEnumerable<PizzeriaContable.Models.CuentaContable>
+﻿@model IEnumerable<PizzeriaContable.Models.CuentaContable>
 @{
     ViewData["Title"] = "Catálogo de Cuentas Contables";
     var cuentasPadre = ViewBag.CuentasPadre as List<PizzeriaContable.Models.CuentaContable> ?? new List<PizzeriaContable.Models.CuentaContable>();
@@ -9,14 +9,14 @@
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     }
 
@@ -164,7 +164,7 @@
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fw-bold" id="modalCrearCuentaLabel"><i class="bi bi-plus-circle me-2"></i>Nueva Cuenta Contable</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">

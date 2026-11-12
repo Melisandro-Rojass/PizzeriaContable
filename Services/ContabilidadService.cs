@@ -33,7 +33,8 @@ public class ContabilidadService : IContabilidadService
         string tipoOrigen,
         int? documentoId,
         List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)> apuntes,
-        string? usuario)
+        string? usuario,
+        DateTime? fecha = null)
     {
         if (apuntes == null || apuntes.Count < 2)
         {
@@ -114,7 +115,7 @@ public class ContabilidadService : IContabilidadService
             var asiento = new AsientoContable
             {
                 NumeroAsiento = numeroAsiento,
-                Fecha = DateTime.Today,
+                Fecha = (fecha ?? DateTime.Today).Date,
                 Concepto = concepto,
                 TipoOrigen = tipoOrigen,
                 DocumentoOrigenId = documentoId,
