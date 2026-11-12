@@ -55,7 +55,7 @@
                         <option value="Mantenimiento" selected="@(categoria == "Mantenimiento")">Mantenimiento y Reparaciones</option>
                         <option value="Transporte" selected="@(categoria == "Transporte")">Transporte y Combustible</option>
                         <option value="Publicidad" selected="@(categoria == "Publicidad")">Publicidad y Marketing</option>
-                        <option value="Otro" selected="@(categoria == "Otro")">Otros Gastos</option>
+                        <option value="Otros" selected="@(categoria == "Otros")">Otros Gastos</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -66,6 +66,7 @@
                 </div>
                 <div class="col-md-2 text-end">
                     <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+                    <a asp-action="Index" asp-route-desde="2026-07-01" asp-route-hasta="2026-09-30" class="btn btn-outline-secondary btn-sm">Q3 2026</a>
                     <a asp-action="Index" class="btn btn-link btn-sm text-decoration-none">Limpiar</a>
                 </div>
             </form>
@@ -105,7 +106,14 @@
                             <tr class="@(g.Estado == "Anulado" ? "table-light text-muted text-decoration-line-through" : "")">
                                 <td>@g.FechaGasto.ToString("dd/MM/yyyy")</td>
                                 <td><span class="badge bg-light text-dark border">@g.CategoriaGasto</span></td>
-                                <td class="fw-semibold">@g.Descripcion</td>
+                                <td class="fw-semibold">
+                                    @g.Descripcion
+                                    @if (g.EsRegistroConsolidadoImportado)
+                                    {
+                                        <span class="badge bg-warning text-dark d-block mt-1">Resumen diario importado</span>
+                                        <small class="d-block text-muted fw-normal">@g.Observaciones</small>
+                                    }
+                                </td>
                                 <td>@(g.Proveedor?.Nombre ?? "-")</td>
                                 <td class="font-monospace small">@(g.NumeroComprobante ?? "-")</td>
                                 <td>@g.MetodoPago</td>
@@ -116,7 +124,7 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    @if (g.Estado != "Anulado")
+                                    @if (g.Estado != "Anulado" && !g.EsRegistroConsolidadoImportado)
                                     {
                                         <form asp-action="Anular" asp-route-id="@g.Id" method="post" class="d-inline" onsubmit="return confirm('¿Seguro que deseas anular este gasto y revertir el asiento contable?')">
                                             @Html.AntiForgeryToken()

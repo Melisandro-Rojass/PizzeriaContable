@@ -5,6 +5,8 @@ namespace PizzeriaContable.Models;
 
 public class Gasto
 {
+    public const string CsvQ3ObservacionesPrefix = "Importación CSV Q3 2026 | Registro diario consolidado";
+
     public int Id { get; set; }
 
     [Required(ErrorMessage = "La categoría del gasto es obligatoria.")]
@@ -53,4 +55,8 @@ public class Gasto
     [StringLength(250)]
     [Display(Name = "Observaciones")]
     public string? Observaciones { get; set; }
+
+    [NotMapped]
+    public bool EsRegistroConsolidadoImportado =>
+        Observaciones?.StartsWith(CsvQ3ObservacionesPrefix, StringComparison.Ordinal) == true;
 }

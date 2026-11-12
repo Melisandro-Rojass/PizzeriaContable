@@ -293,15 +293,23 @@
                         @foreach (var c in historial)
                         {
                             <tr>
-                                <td class="font-monospace fw-bold text-warning">#@c.Id</td>
+                                <td class="font-monospace fw-bold text-warning">
+                                    #@c.Id
+                                    @if (c.EsRegistroConsolidadoImportado)
+                                    {
+                                        <span class="badge bg-warning text-dark d-block mt-1">CSV Q3 2026</span>
+                                    }
+                                </td>
                                 <td class="fuente-numerica">@c.FechaApertura.ToString("dd/MM/yy HH:mm")</td>
                                 <td class="fuente-numerica text-muted">@(c.FechaCierre.HasValue ? c.FechaCierre.Value.ToString("dd/MM/yy HH:mm") : "-")</td>
                                 <td class="text-end fuente-numerica">@c.MontoInicial.ToString("C2")</td>
                                 <td class="text-end fuente-numerica text-success">+@c.TotalVentasEfectivo.ToString("C2")</td>
                                 <td class="text-end fuente-numerica fw-semibold">@c.EfectivoEsperado.ToString("C2")</td>
-                                <td class="text-end fuente-numerica fw-semibold">@c.EfectivoContado.ToString("C2")</td>
+                                <td class="text-end fuente-numerica fw-semibold">
+                                    @(c.EsRegistroConsolidadoImportado ? "Sin arqueo" : c.EfectivoContado.ToString("C2"))
+                                </td>
                                 <td class="text-end fuente-numerica fw-bold @(c.Diferencia < 0 ? "text-danger" : c.Diferencia > 0 ? "text-primary" : "text-success")">
-                                    @c.Diferencia.ToString("C2")
+                                    @(c.EsRegistroConsolidadoImportado ? "-" : c.Diferencia.ToString("C2"))
                                 </td>
                                 <td class="text-center">
                                     <span class="badge rounded-pill @(c.Estado == "Abierta" ? "bg-success" : "bg-secondary")">

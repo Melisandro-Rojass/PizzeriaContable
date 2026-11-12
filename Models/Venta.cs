@@ -5,6 +5,8 @@ namespace PizzeriaContable.Models;
 
 public class Venta
 {
+    public const string CsvQ3ObservacionesPrefix = "Importación CSV Q3 2026 | Registro diario consolidado";
+
     public int Id { get; set; }
 
     [Required]
@@ -56,6 +58,10 @@ public class Venta
     [StringLength(50)]
     [Display(Name = "Cajero / Usuario")]
     public string? UsuarioId { get; set; }
+
+    [NotMapped]
+    public bool EsRegistroConsolidadoImportado =>
+        Observaciones?.StartsWith(CsvQ3ObservacionesPrefix, StringComparison.Ordinal) == true;
 
     public ICollection<VentaDetalle> Detalles { get; set; } = new List<VentaDetalle>();
     public ICollection<VentaPago> Pagos { get; set; } = new List<VentaPago>();

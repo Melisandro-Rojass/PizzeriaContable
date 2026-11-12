@@ -226,6 +226,11 @@ public class VentasController : Controller
             return NotFound();
         }
 
+        if (venta.EsRegistroConsolidadoImportado)
+        {
+            return BadRequest("El registro consolidado diario no representa un ticket individual.");
+        }
+
         var config = await _context.Configuraciones.FirstOrDefaultAsync();
         ViewBag.Configuracion = config;
 
@@ -239,6 +244,18 @@ public class VentasController : Controller
     {
         try
         {
+            var venta = await _context.Ventas.FindAsync(id);
+            if (venta == null)
+            {
+                return NotFound();
+            }
+
+            if (venta.EsRegistroConsolidadoImportado)
+            {
+                TempData["ErrorMessage"] = "Los registros diarios importados son consolidados y no se pueden anular como tickets individuales.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             if (string.IsNullOrWhiteSpace(motivo))
             {
                 TempData["ErrorMessage"] = "Debe especificar un motivo justificado para anular la venta.";

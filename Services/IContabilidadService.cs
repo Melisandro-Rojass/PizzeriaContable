@@ -60,6 +60,8 @@ public class EstadoResultadosViewModel
     public decimal MargenBruto => TotalIngresos - TotalCostosVentas;
     public decimal TotalGastosOperativos { get; set; }
     public decimal UtilidadOperativa => MargenBruto - TotalGastosOperativos;
+    public decimal IngresosImportados { get; set; }
+    public decimal GastosImportados { get; set; }
     public List<(string Concepto, decimal Monto)> DetalleIngresos { get; set; } = new();
     public List<(string Concepto, decimal Monto)> DetalleGastos { get; set; } = new();
 }

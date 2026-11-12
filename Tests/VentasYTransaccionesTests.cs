@@ -28,7 +28,12 @@ public class VentasYTransaccionesTests
         context.CuentasContables.AddRange(
             new CuentaContable { Codigo = "1.1.01.01", Nombre = "Caja General", TipoCuenta = "Activo", Naturaleza = "Deudora", PermiteMovimiento = true },
             new CuentaContable { Codigo = "1.1.02.01", Nombre = "Banco Cuenta Corriente", TipoCuenta = "Activo", Naturaleza = "Deudora", PermiteMovimiento = true },
+            new CuentaContable { Codigo = "1.1.04.01", Nombre = "Inventario de Materias Primas", TipoCuenta = "Activo", Naturaleza = "Deudora", PermiteMovimiento = true },
+            new CuentaContable { Codigo = "3.1.01", Nombre = "Capital Social", TipoCuenta = "Capital", Naturaleza = "Acreedora", PermiteMovimiento = true },
             new CuentaContable { Codigo = "4.1.01", Nombre = "Ventas de Pizzas y Alimentos", TipoCuenta = "Ingreso", Naturaleza = "Acreedora", PermiteMovimiento = true },
+            new CuentaContable { Codigo = "4.1.03", Nombre = "Otros Ingresos Operativos", TipoCuenta = "Ingreso", Naturaleza = "Acreedora", PermiteMovimiento = true },
+            new CuentaContable { Codigo = "5.1.01", Nombre = "Costo de Ventas", TipoCuenta = "Costo", Naturaleza = "Deudora", PermiteMovimiento = true },
+            new CuentaContable { Codigo = "5.1.03", Nombre = "Mermas y Desperdicios", TipoCuenta = "Costo", Naturaleza = "Deudora", PermiteMovimiento = true },
             new CuentaContable { Codigo = "2.1.03.01", Nombre = "IVA Débito Fiscal", TipoCuenta = "Pasivo", Naturaleza = "Acreedora", PermiteMovimiento = true }
         );
 
@@ -62,7 +67,7 @@ public class VentasYTransaccionesTests
     {
         // Arrange
         var context = CrearContextoEnMemoria();
-        var invService = new InventarioService(context);
+        var invService = new InventarioService(context, new ContabilidadService(context));
         var contService = new ContabilidadService(context);
         var cajaService = new CajaService(context);
         var ventaService = new VentaService(context, invService, contService, cajaService);
@@ -136,7 +141,7 @@ public class VentasYTransaccionesTests
     {
         // Arrange
         var context = CrearContextoEnMemoria();
-        var invService = new InventarioService(context);
+        var invService = new InventarioService(context, new ContabilidadService(context));
         var contService = new ContabilidadService(context);
         var cajaService = new CajaService(context);
         var ventaService = new VentaService(context, invService, contService, cajaService);
@@ -167,7 +172,7 @@ public class VentasYTransaccionesTests
     {
         // Arrange
         var context = CrearContextoEnMemoria();
-        var invService = new InventarioService(context);
+        var invService = new InventarioService(context, new ContabilidadService(context));
         var contService = new ContabilidadService(context);
         var cajaService = new CajaService(context);
         var ventaService = new VentaService(context, invService, contService, cajaService);
@@ -194,7 +199,7 @@ public class VentasYTransaccionesTests
     {
         // Arrange
         var context = CrearContextoEnMemoria();
-        var invService = new InventarioService(context);
+        var invService = new InventarioService(context, new ContabilidadService(context));
         var contService = new ContabilidadService(context);
         var cajaService = new CajaService(context);
         var ventaService = new VentaService(context, invService, contService, cajaService);
@@ -221,7 +226,7 @@ public class VentasYTransaccionesTests
     {
         // Arrange
         var context = CrearContextoEnMemoria();
-        var invService = new InventarioService(context);
+        var invService = new InventarioService(context, new ContabilidadService(context));
         var contService = new ContabilidadService(context);
         var cajaService = new CajaService(context);
         var ventaService = new VentaService(context, invService, contService, cajaService);
@@ -281,7 +286,7 @@ public class VentasYTransaccionesTests
     {
         // Arrange
         var context = CrearContextoEnMemoria();
-        var invService = new InventarioService(context);
+        var invService = new InventarioService(context, new ContabilidadService(context));
         var contService = new ContabilidadService(context);
         var cajaService = new CajaService(context);
         var ventaService = new VentaService(context, invService, contService, cajaService);
@@ -310,5 +315,96 @@ public class VentasYTransaccionesTests
 
         Assert.Equal(totalVentasInicial, totalVentasFinal);
         Assert.Equal(totalDetallesInicial, totalDetallesFinal);
+    }
+
+    [Fact]
+    public async Task CrearYAnularVenta_ContabilizaYRevierteCostoDeInventario()
+    {
+        var context = CrearContextoEnMemoria();
+        var ingrediente = new Ingrediente
+        {
+            Codigo = "ING-QUESO",
+            Nombre = "Queso",
+            UnidadMedida = "g",
+            CostoUnitario = 2m,
+            StockActual = 500m,
+            Activo = true
+        };
+        context.Ingredientes.Add(ingrediente);
+        await context.SaveChangesAsync();
+
+        context.Recetas.Add(new Receta
+        {
+            ProductoId = 1,
+            Rendimiento = 1,
+            Activo = true,
+            Detalles =
+            {
+                new RecetaDetalle
+                {
+                    IngredienteId = ingrediente.Id,
+                    Cantidad = 100m,
+                    UnidadMedida = "g"
+                }
+            }
+        });
+        await context.SaveChangesAsync();
+
+        var contabilidad = new ContabilidadService(context);
+        var inventario = new InventarioService(context, contabilidad);
+        var servicio = new VentaService(context, inventario, contabilidad, new CajaService(context));
+        var venta = await servicio.CrearVentaTransaccionalAsync(
+            new Venta { ClienteNombre = "Cliente de prueba" },
+            new List<VentaDetalle> { new() { ProductoId = 1, Cantidad = 1 } },
+            new List<VentaPago> { new() { MetodoPago = "Efectivo", Monto = 448.50m } },
+            "cajero1");
+
+        var asientoCosto = await context.AsientosContables
+            .Include(a => a.Detalles)
+            .SingleAsync(a => a.TipoOrigen == "CostoVenta" && a.DocumentoOrigenId == venta.Id);
+        Assert.Equal(200m, asientoCosto.Detalles.Sum(d => d.Debe));
+        Assert.Equal(200m, asientoCosto.Detalles.Sum(d => d.Haber));
+        Assert.Equal(400m, (await context.Ingredientes.SingleAsync()).StockActual);
+
+        await servicio.AnularVentaAsync(venta.Id, "Prueba de reversión", "cajero1");
+
+        var asientoReversion = await context.AsientosContables
+            .Include(a => a.Detalles)
+            .SingleAsync(a => a.TipoOrigen == "ReversionCostoVenta" && a.DocumentoOrigenId == venta.Id);
+        Assert.Equal(200m, asientoReversion.Detalles.Sum(d => d.Debe));
+        Assert.Equal(200m, asientoReversion.Detalles.Sum(d => d.Haber));
+        Assert.Equal(500m, (await context.Ingredientes.SingleAsync()).StockActual);
+    }
+
+    [Fact]
+    public async Task AjustesDeInventario_CreanAsientosSegunSuNaturaleza()
+    {
+        var context = CrearContextoEnMemoria();
+        var ingrediente = new Ingrediente
+        {
+            Codigo = "ING-HARINA",
+            Nombre = "Harina",
+            UnidadMedida = "kg",
+            CostoUnitario = 25m,
+            Activo = true
+        };
+        context.Ingredientes.Add(ingrediente);
+        await context.SaveChangesAsync();
+
+        var inventario = new InventarioService(context, new ContabilidadService(context));
+        await inventario.RegistrarMovimientoAsync(ingrediente.Id, "InventarioInicial", 2m, 25m, null, "Existencia inicial", "Admin");
+        await inventario.RegistrarMovimientoAsync(ingrediente.Id, "SalidaMerma", -0.5m, 25m, null, "Merma", "Admin");
+        await inventario.RegistrarMovimientoAsync(ingrediente.Id, "AjustePositivo", 1m, 25m, null, "Ajuste", "Admin");
+
+        var asientos = await context.AsientosContables
+            .Include(a => a.Detalles)
+            .OrderBy(a => a.Id)
+            .ToListAsync();
+        Assert.Equal(3, asientos.Count);
+        Assert.All(asientos, asiento =>
+            Assert.Equal(asiento.Detalles.Sum(d => d.Debe), asiento.Detalles.Sum(d => d.Haber)));
+        Assert.Equal(50m, asientos[0].Detalles.Sum(d => d.Debe));
+        Assert.Equal(12.5m, asientos[1].Detalles.Sum(d => d.Debe));
+        Assert.Equal(25m, asientos[2].Detalles.Sum(d => d.Debe));
     }
 }
