@@ -13,7 +13,7 @@ public class InventarioYConversionesTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         var context = new ApplicationDbContext(options);
-        return new InventarioService(context);
+        return new InventarioService(context, new ContabilidadService(context));
     }
 
     [Fact]

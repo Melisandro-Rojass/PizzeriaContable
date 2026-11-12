@@ -76,26 +76,43 @@ public class IngredientesController : Controller
 
         if (ModelState.IsValid)
         {
-            decimal stockInicial = ingrediente.StockActual;
-            ingrediente.StockActual = 0;
-            _context.Add(ingrediente);
-            await _context.SaveChangesAsync();
-
-            // Si se ingresó existencia inicial mayor a 0, registrar movimiento de inventario inicial
-            if (stockInicial > 0)
+            bool transaccionPrincipal = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+            await using var transaction = transaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
+            try
             {
-                await _inventarioService.RegistrarMovimientoAsync(
-                    ingrediente.Id,
-                    "InventarioInicial",
-                    stockInicial,
-                    ingrediente.CostoUnitario,
-                    "INVENTARIO-INICIAL",
-                    "Registro de existencia inicial",
-                    User.Identity?.Name);
-            }
+                decimal stockInicial = ingrediente.StockActual;
+                ingrediente.StockActual = 0;
+                _context.Add(ingrediente);
+                await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Ingrediente \"{ingrediente.Nombre}\" creado correctamente.";
-            return RedirectToAction(nameof(Index));
+                if (stockInicial > 0)
+                {
+                    await _inventarioService.RegistrarMovimientoAsync(
+                        ingrediente.Id,
+                        "InventarioInicial",
+                        stockInicial,
+                        ingrediente.CostoUnitario,
+                        "INVENTARIO-INICIAL",
+                        "Registro de existencia inicial",
+                        User.Identity?.Name);
+                }
+
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync();
+                }
+
+                TempData["SuccessMessage"] = $"Ingrediente \"{ingrediente.Nombre}\" creado correctamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+                ModelState.AddModelError("", "Error al registrar el ingrediente y su inventario inicial: " + ex.Message);
+            }
         }
 
         await LoadProveedoresAsync(ingrediente.ProveedorHabitualId);

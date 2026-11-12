@@ -23,10 +23,20 @@ public class CajaController : Controller
     public async Task<IActionResult> Index()
     {
         var sesionActiva = await _cajaService.ObtenerSesionActivaAsync(User.Identity?.Name);
-        var historial = await _context.CajasSesiones
+        var historialReciente = await _context.CajasSesiones
             .OrderByDescending(cs => cs.FechaApertura)
             .Take(15)
             .ToListAsync();
+        var historialImportado = await _context.CajasSesiones
+            .Where(cs => cs.Observaciones != null &&
+                         cs.Observaciones.StartsWith(CajaSesion.CsvQ3ObservacionesPrefix))
+            .OrderByDescending(cs => cs.FechaApertura)
+            .ToListAsync();
+        var historial = historialReciente
+            .Concat(historialImportado)
+            .DistinctBy(cs => cs.Id)
+            .OrderByDescending(cs => cs.FechaApertura)
+            .ToList();
 
         ViewBag.Historial = historial;
         return View(sesionActiva);

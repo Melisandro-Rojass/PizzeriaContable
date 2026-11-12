@@ -1,6 +1,8 @@
 ﻿@model PizzeriaContable.Models.Venta
 @{
-    ViewData["Title"] = $"Detalle de Venta #{Model.NumeroComprobante}";
+    ViewData["Title"] = Model.EsRegistroConsolidadoImportado
+        ? $"Resumen diario #{Model.NumeroComprobante}"
+        : $"Detalle de Venta #{Model.NumeroComprobante}";
     var asiento = ViewBag.Asiento as PizzeriaContable.Models.AsientoContable;
     var auditorias = ViewBag.Auditorias as List<PizzeriaContable.Models.AuditoriaRegistro> ?? new List<PizzeriaContable.Models.AuditoriaRegistro>();
 }
@@ -24,7 +26,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <h2 class="h3 fw-bold text-dark mb-0">Comprobante @Model.NumeroComprobante</h2>
+                <h2 class="h3 fw-bold text-dark mb-0">@(Model.EsRegistroConsolidadoImportado ? "Resumen diario" : "Comprobante") @Model.NumeroComprobante</h2>
                 @if (Model.Estado == "Completada")
                 {
                     <span class="badge bg-success fs-6">Completada</span>
@@ -37,14 +39,17 @@
             <p class="text-muted small mb-0">Emitido el @Model.Fecha.ToString("dd/MM/yyyy hh:mm tt") por @(Model.UsuarioId ?? "Cajero")</p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="Ticket" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-dark">
-                <i class="bi bi-printer me-1"></i> Imprimir Ticket
-            </a>
-            @if (Model.Estado == "Completada")
+            @if (!Model.EsRegistroConsolidadoImportado)
             {
-                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalAnular">
-                    <i class="bi bi-x-circle me-1"></i> Anular Venta
-                </button>
+                <a asp-action="Ticket" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-dark">
+                    <i class="bi bi-printer me-1"></i> Imprimir Ticket
+                </a>
+                @if (Model.Estado == "Completada")
+                {
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalAnular">
+                        <i class="bi bi-x-circle me-1"></i> Anular Venta
+                    </button>
+                }
             }
             <a asp-action="Index" class="btn btn-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Volver al Historial
@@ -52,12 +57,19 @@
         </div>
     </div>
 
+    @if (Model.EsRegistroConsolidadoImportado)
+    {
+        <div class="alert alert-warning" role="alert">
+            Este es un resumen diario importado, no un ticket POS ni un asiento individual. El CSV no contiene productos, desglose de IVA ni separación entre tarjeta y transferencia.
+        </div>
+    }
+
     <div class="row g-4">
         <!-- Detalle de Productos -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
-                    <h5 class="card-title fw-bold mb-0"><i class="bi bi-basket me-2 text-primary"></i>Artículos Facturados</h5>
+                    <h5 class="card-title fw-bold mb-0"><i class="bi bi-basket me-2 text-primary"></i>@(Model.EsRegistroConsolidadoImportado ? "Detalle de productos" : "Artículos Facturados")</h5>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
@@ -71,6 +83,14 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @if (Model.EsRegistroConsolidadoImportado)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        El archivo de origen no contiene el detalle de productos.
+                                    </td>
+                                </tr>
+                            }
                             @foreach (var det in Model.Detalles)
                             {
                                 <tr>
@@ -217,6 +237,8 @@
     </div>
 </div>
 
+@if (!Model.EsRegistroConsolidadoImportado)
+{
 <!-- Modal para Anular Venta -->
 <div class="modal fade" id="modalAnular" tabindex="-1" aria-labelledby="modalAnularLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -244,3 +266,4 @@
         </div>
     </div>
 </div>
+}

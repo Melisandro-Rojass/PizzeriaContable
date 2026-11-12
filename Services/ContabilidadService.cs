@@ -606,15 +606,58 @@ public class ContabilidadService : IContabilidadService
         decimal totalCostos = costos.Sum(c => c.SaldoDeudor - c.SaldoAcreedor);
         decimal totalGastos = gastos.Sum(g => g.SaldoDeudor - g.SaldoAcreedor);
 
+        var inicio = desde.Date;
+        var finExclusivo = hasta.Date.AddDays(1);
+        decimal ingresosImportados = await _context.Ventas
+            .Where(v => v.Fecha >= inicio &&
+                        v.Fecha < finExclusivo &&
+                        v.Estado == "Completada" &&
+                        v.Observaciones != null &&
+                        v.Observaciones.StartsWith(Venta.CsvQ3ObservacionesPrefix) &&
+                        !_context.AsientosContables.Any(a =>
+                            a.TipoOrigen == "Venta" &&
+                            a.DocumentoOrigenId == v.Id &&
+                            !a.Anulado))
+            .SumAsync(v => (decimal?)(v.Subtotal - v.Descuento)) ?? 0m;
+        decimal gastosImportados = await _context.Gastos
+            .Where(g => g.FechaGasto >= inicio &&
+                        g.FechaGasto < finExclusivo &&
+                        g.Estado != "Anulado" &&
+                        g.Observaciones != null &&
+                        g.Observaciones.StartsWith(Gasto.CsvQ3ObservacionesPrefix) &&
+                        !_context.AsientosContables.Any(a =>
+                            a.TipoOrigen == "Gasto" &&
+                            a.DocumentoOrigenId == g.Id &&
+                            !a.Anulado))
+            .SumAsync(g => (decimal?)g.Monto) ?? 0m;
+
+        var detalleIngresos = ingresos
+            .Select(i => (i.Nombre, i.SaldoAcreedor - i.SaldoDeudor))
+            .ToList();
+        if (ingresosImportados > 0)
+        {
+            detalleIngresos.Add(("Ventas diarias importadas (base neta; IVA incluido al 15%)", ingresosImportados));
+        }
+
+        var detalleGastos = gastos
+            .Select(g => (g.Nombre, g.SaldoDeudor - g.SaldoAcreedor))
+            .ToList();
+        if (gastosImportados > 0)
+        {
+            detalleGastos.Add(("Gastos de caja chica importados (resumen diario)", gastosImportados));
+        }
+
         return new EstadoResultadosViewModel
         {
             FechaDesde = desde,
             FechaHasta = hasta,
-            TotalIngresos = Math.Max(0, totalIngresos),
+            TotalIngresos = Math.Max(0, totalIngresos + ingresosImportados),
             TotalCostosVentas = Math.Max(0, totalCostos),
-            TotalGastosOperativos = Math.Max(0, totalGastos),
-            DetalleIngresos = ingresos.Select(i => (i.Nombre, i.SaldoAcreedor - i.SaldoDeudor)).ToList(),
-            DetalleGastos = gastos.Select(g => (g.Nombre, g.SaldoDeudor - g.SaldoAcreedor)).ToList()
+            TotalGastosOperativos = Math.Max(0, totalGastos + gastosImportados),
+            IngresosImportados = ingresosImportados,
+            GastosImportados = gastosImportados,
+            DetalleIngresos = detalleIngresos,
+            DetalleGastos = detalleGastos
         };
     }
 

@@ -7,10 +7,12 @@ namespace PizzeriaContable.Services;
 public class InventarioService : IInventarioService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IContabilidadService _contabilidadService;
 
-    public InventarioService(ApplicationDbContext context)
+    public InventarioService(ApplicationDbContext context, IContabilidadService contabilidadService)
     {
         _context = context;
+        _contabilidadService = contabilidadService;
     }
 
     public decimal ConvertirUnidades(decimal cantidad, string unidadOrigen, string unidadDestino)
@@ -66,49 +68,67 @@ public class InventarioService : IInventarioService
         string? observaciones,
         string? usuario)
     {
-        var ingrediente = await _context.Ingredientes.FindAsync(ingredienteId)
-            ?? throw new ArgumentException($"Ingrediente ID {ingredienteId} no encontrado.");
+        bool transaccionPrincipal = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = transaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
+        try
+        {
+            var ingrediente = await _context.Ingredientes.FindAsync(ingredienteId)
+                ?? throw new ArgumentException($"Ingrediente ID {ingredienteId} no encontrado.");
 
-        var tiposMovimiento = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "InventarioInicial", "EntradaCompra", "SalidaVenta", "Merma", "Devolucion",
-            "AjustePositivo", "AjusteNegativo", "ReversionAnulacion"
-        };
-        if (!tiposMovimiento.Contains(tipoMovimiento))
-        {
-            throw new ArgumentException($"El tipo de movimiento '{tipoMovimiento}' no es válido.");
+            var tiposMovimiento = new HashSet<string>(StringComparer.Ordinal)
+            {
+                "InventarioInicial", "EntradaCompra", "SalidaVenta", "Merma", "SalidaMerma", "Devolucion",
+                "AjustePositivo", "AjusteNegativo", "ReversionAnulacion"
+            };
+            if (!tiposMovimiento.Contains(tipoMovimiento))
+            {
+                throw new ArgumentException($"El tipo de movimiento '{tipoMovimiento}' no es válido.");
+            }
+
+            if (cantidad == 0)
+            {
+                throw new ArgumentException("La cantidad del movimiento no puede ser cero.");
+            }
+            if (costoUnitario < 0)
+            {
+                throw new ArgumentException("El costo unitario no puede ser negativo.");
+            }
+
+            ingrediente.StockActual += cantidad;
+
+            var movimiento = new MovimientoInventario
+            {
+                IngredienteId = ingredienteId,
+                TipoMovimiento = tipoMovimiento,
+                Cantidad = cantidad,
+                CostoUnitario = costoUnitario,
+                Total = Math.Abs(cantidad * costoUnitario),
+                Fecha = DateTime.Now,
+                Referencia = referencia,
+                Observaciones = observaciones,
+                UsuarioId = usuario ?? "Sistema"
+            };
+
+            _context.MovimientosInventario.Add(movimiento);
+            _context.Ingredientes.Update(ingrediente);
+            await _context.SaveChangesAsync();
+            await RegistrarAsientoMovimientoAsync(movimiento, usuario);
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
+            }
+
+            return movimiento;
         }
-
-        if (cantidad == 0)
+        catch
         {
-            throw new ArgumentException("La cantidad del movimiento no puede ser cero.");
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
+            throw;
         }
-        if (costoUnitario < 0)
-        {
-            throw new ArgumentException("El costo unitario no puede ser negativo.");
-        }
-
-        // Actualizar stock de acuerdo al movimiento
-        ingrediente.StockActual += cantidad;
-
-        var movimiento = new MovimientoInventario
-        {
-            IngredienteId = ingredienteId,
-            TipoMovimiento = tipoMovimiento,
-            Cantidad = cantidad,
-            CostoUnitario = costoUnitario,
-            Total = Math.Abs(cantidad * costoUnitario),
-            Fecha = DateTime.Now,
-            Referencia = referencia,
-            Observaciones = observaciones,
-            UsuarioId = usuario ?? "Sistema"
-        };
-
-        _context.MovimientosInventario.Add(movimiento);
-        _context.Ingredientes.Update(ingrediente);
-        await _context.SaveChangesAsync();
-
-        return movimiento;
     }
 
     public async Task DescontarInventarioPorVentaAsync(int ventaId, string? usuario)
@@ -122,97 +142,171 @@ public class InventarioService : IInventarioService
             return;
         }
 
-        var venta = await _context.Ventas
-            .Include(v => v.Detalles)
-            .FirstOrDefaultAsync(v => v.Id == ventaId)
-            ?? throw new ArgumentException($"Venta ID {ventaId} no encontrada.");
-
-        foreach (var detalle in venta.Detalles)
+        bool transaccionPrincipal = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = transaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
+        try
         {
-            var receta = await _context.Recetas
-                .Include(r => r.Detalles)
-                    .ThenInclude(d => d.Ingrediente)
-                .FirstOrDefaultAsync(r => r.ProductoId == detalle.ProductoId && r.Activo);
+            var venta = await _context.Ventas
+                .Include(v => v.Detalles)
+                .FirstOrDefaultAsync(v => v.Id == ventaId)
+                ?? throw new ArgumentException($"Venta ID {ventaId} no encontrada.");
 
-            if (receta == null)
+            foreach (var detalle in venta.Detalles)
             {
-                // Producto sin receta (ej. bebidas embotelladas directamente o ítems sin receta desglosada)
-                continue;
+                var receta = await _context.Recetas
+                    .Include(r => r.Detalles)
+                        .ThenInclude(d => d.Ingrediente)
+                    .FirstOrDefaultAsync(r => r.ProductoId == detalle.ProductoId && r.Activo);
+
+                if (receta == null)
+                {
+                    // Producto sin receta (ej. bebidas embotelladas directamente o ítems sin receta desglosada)
+                    continue;
+                }
+
+                int rendimiento = receta.Rendimiento > 0 ? receta.Rendimiento : 1;
+                decimal factorMerma = 1 + (receta.MermaPrevistaPorcentaje / 100m);
+
+                foreach (var recetaDetalle in receta.Detalles)
+                {
+                    var ingrediente = recetaDetalle.Ingrediente;
+                    if (ingrediente == null) continue;
+
+                    // Cantidad unitaria según rendimiento y merma
+                    decimal cantPorUnidad = (recetaDetalle.Cantidad / rendimiento) * factorMerma;
+                    decimal cantTotalReceta = cantPorUnidad * detalle.Cantidad;
+
+                    // Conversión de unidades si la unidad de la receta difiere de la del inventario
+                    decimal cantidadADescontar = ConvertirUnidades(cantTotalReceta, recetaDetalle.UnidadMedida, ingrediente.UnidadMedida);
+
+                    // Descontar inventario (cantidad negativa)
+                    ingrediente.StockActual -= cantidadADescontar;
+
+                    var movimiento = new MovimientoInventario
+                    {
+                        IngredienteId = ingrediente.Id,
+                        TipoMovimiento = "SalidaVenta",
+                        Cantidad = -cantidadADescontar,
+                        CostoUnitario = ingrediente.CostoUnitario,
+                        Total = Math.Round(cantidadADescontar * ingrediente.CostoUnitario, 2),
+                        Fecha = venta.Fecha != default ? venta.Fecha : DateTime.Now,
+                        Referencia = $"VENTA-{ventaId}",
+                        Observaciones = $"Consumo por venta de {detalle.Cantidad}x Producto ID {detalle.ProductoId}",
+                        UsuarioId = usuario ?? "Sistema"
+                    };
+
+                    _context.MovimientosInventario.Add(movimiento);
+                    _context.Ingredientes.Update(ingrediente);
+                }
             }
 
-            int rendimiento = receta.Rendimiento > 0 ? receta.Rendimiento : 1;
-            decimal factorMerma = 1 + (receta.MermaPrevistaPorcentaje / 100m);
-
-            foreach (var recetaDetalle in receta.Detalles)
+            await _context.SaveChangesAsync();
+            decimal costoTotal = _context.MovimientosInventario.Local
+                .Where(m => m.Referencia == $"VENTA-{ventaId}" && m.TipoMovimiento == "SalidaVenta")
+                .Sum(m => m.Total);
+            if (costoTotal > 0)
             {
-                var ingrediente = recetaDetalle.Ingrediente;
-                if (ingrediente == null) continue;
+                await _contabilidadService.CrearAsientoAutomaticoAsync(
+                    $"Costo de ventas e inventario - Venta #{ventaId}",
+                    "CostoVenta",
+                    ventaId,
+                    new List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)>
+                    {
+                    ("5.1.01", costoTotal, 0, $"Consumo de inventario por Venta #{ventaId}"),
+                    ("1.1.04.01", 0, costoTotal, $"Salida de inventario por Venta #{ventaId}")
+                    },
+                    usuario,
+                    venta.Fecha);
+            }
 
-                // Cantidad unitaria según rendimiento y merma
-                decimal cantPorUnidad = (recetaDetalle.Cantidad / rendimiento) * factorMerma;
-                decimal cantTotalReceta = cantPorUnidad * detalle.Cantidad;
-
-                // Conversión de unidades si la unidad de la receta difiere de la del inventario
-                decimal cantidadADescontar = ConvertirUnidades(cantTotalReceta, recetaDetalle.UnidadMedida, ingrediente.UnidadMedida);
-
-                // Descontar inventario (cantidad negativa)
-                ingrediente.StockActual -= cantidadADescontar;
-
-                var movimiento = new MovimientoInventario
-                {
-                    IngredienteId = ingrediente.Id,
-                    TipoMovimiento = "SalidaVenta",
-                    Cantidad = -cantidadADescontar,
-                    CostoUnitario = ingrediente.CostoUnitario,
-                    Total = Math.Round(cantidadADescontar * ingrediente.CostoUnitario, 2),
-                    Fecha = venta.Fecha != default ? venta.Fecha : DateTime.Now,
-                    Referencia = $"VENTA-{ventaId}",
-                    Observaciones = $"Consumo por venta de {detalle.Cantidad}x Producto ID {detalle.ProductoId}",
-                    UsuarioId = usuario ?? "Sistema"
-                };
-
-                _context.MovimientosInventario.Add(movimiento);
-                _context.Ingredientes.Update(ingrediente);
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
             }
         }
-
-        await _context.SaveChangesAsync();
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
+            throw;
+        }
     }
 
     public async Task RevertirInventarioPorAnulacionVentaAsync(int ventaId, string? usuario)
     {
-        var movimientosPrevios = await _context.MovimientosInventario
-            .Where(m => m.Referencia == $"VENTA-{ventaId}" && m.TipoMovimiento == "SalidaVenta")
-            .ToListAsync();
-
-        foreach (var movimientoPrevio in movimientosPrevios)
+        bool yaRevertido = await _context.MovimientosInventario
+            .AnyAsync(m => m.Referencia == $"ANULACION-VENTA-{ventaId}" && m.TipoMovimiento == "ReversionAnulacion");
+        if (yaRevertido)
         {
-            var ingrediente = await _context.Ingredientes.FindAsync(movimientoPrevio.IngredienteId);
-            if (ingrediente != null)
-            {
-                decimal cantidadARevertir = Math.Abs(movimientoPrevio.Cantidad);
-                ingrediente.StockActual += cantidadARevertir;
-
-                // Registra la entrada de reversión para mantener la trazabilidad del inventario
-                var movimientoReversion = new MovimientoInventario
-                {
-                    IngredienteId = ingrediente.Id,
-                    TipoMovimiento = "ReversionAnulacion",
-                    Cantidad = cantidadARevertir,
-                    CostoUnitario = movimientoPrevio.CostoUnitario,
-                    Total = movimientoPrevio.Total,
-                    Fecha = DateTime.Now,
-                    Referencia = $"ANULACION-VENTA-{ventaId}",
-                    Observaciones = $"Reversión de salida por anulación de Venta #{ventaId}",
-                    UsuarioId = usuario ?? "Sistema"
-                };
-
-                _context.MovimientosInventario.Add(movimientoReversion);
-                _context.Ingredientes.Update(ingrediente);
-            }
+            return;
         }
 
-        await _context.SaveChangesAsync();
+        bool transaccionPrincipal = _context.Database.IsRelational() && _context.Database.CurrentTransaction == null;
+        await using var transaction = transaccionPrincipal ? await _context.Database.BeginTransactionAsync() : null;
+        try
+        {
+            var movimientosPrevios = await _context.MovimientosInventario
+                .Where(m => m.Referencia == $"VENTA-{ventaId}" && m.TipoMovimiento == "SalidaVenta")
+                .ToListAsync();
+
+            foreach (var movimientoPrevio in movimientosPrevios)
+            {
+                var ingrediente = await _context.Ingredientes.FindAsync(movimientoPrevio.IngredienteId);
+                if (ingrediente != null)
+                {
+                    decimal cantidadARevertir = Math.Abs(movimientoPrevio.Cantidad);
+                    ingrediente.StockActual += cantidadARevertir;
+
+                    // Registra la entrada de reversión para mantener la trazabilidad del inventario
+                    var movimientoReversion = new MovimientoInventario
+                    {
+                        IngredienteId = ingrediente.Id,
+                        TipoMovimiento = "ReversionAnulacion",
+                        Cantidad = cantidadARevertir,
+                        CostoUnitario = movimientoPrevio.CostoUnitario,
+                        Total = movimientoPrevio.Total,
+                        Fecha = DateTime.Now,
+                        Referencia = $"ANULACION-VENTA-{ventaId}",
+                        Observaciones = $"Reversión de salida por anulación de Venta #{ventaId}",
+                        UsuarioId = usuario ?? "Sistema"
+                    };
+
+                    _context.MovimientosInventario.Add(movimientoReversion);
+                    _context.Ingredientes.Update(ingrediente);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            decimal costoTotal = movimientosPrevios.Sum(m => m.Total);
+            if (costoTotal > 0)
+            {
+                await _contabilidadService.CrearAsientoAutomaticoAsync(
+                    $"Reversión de costo de ventas - Venta #{ventaId}",
+                    "ReversionCostoVenta",
+                    ventaId,
+                    new List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)>
+                    {
+                    ("1.1.04.01", costoTotal, 0, $"Reingreso de inventario por anulación de Venta #{ventaId}"),
+                    ("5.1.01", 0, costoTotal, $"Reversión de costo por anulación de Venta #{ventaId}")
+                    },
+                    usuario);
+            }
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
+            }
+        }
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
+            throw;
+        }
     }
 
     public async Task AumentarInventarioPorCompraAsync(int compraId, string? usuario)
@@ -267,6 +361,54 @@ public class InventarioService : IInventarioService
         }
 
         await _context.SaveChangesAsync();
+    }
+
+    private async Task RegistrarAsientoMovimientoAsync(MovimientoInventario movimiento, string? usuario)
+    {
+        string? cuentaDebe;
+        string? cuentaHaber;
+
+        switch (movimiento.TipoMovimiento)
+        {
+            case "InventarioInicial":
+                cuentaDebe = "1.1.04.01";
+                cuentaHaber = "3.1.01";
+                break;
+            case "AjustePositivo":
+                cuentaDebe = "1.1.04.01";
+                cuentaHaber = "4.1.03";
+                break;
+            case "Merma":
+            case "SalidaMerma":
+            case "AjusteNegativo":
+                cuentaDebe = "5.1.03";
+                cuentaHaber = "1.1.04.01";
+                break;
+            case "Devolucion":
+            case "ReversionAnulacion":
+                cuentaDebe = "1.1.04.01";
+                cuentaHaber = "5.1.01";
+                break;
+            default:
+                return;
+        }
+
+        if (movimiento.Total <= 0)
+        {
+            return;
+        }
+
+        await _contabilidadService.CrearAsientoAutomaticoAsync(
+            $"Movimiento de inventario {movimiento.TipoMovimiento} #{movimiento.Id}",
+            "MovimientoInventario",
+            movimiento.Id,
+            new List<(string codigoCuenta, decimal debe, decimal haber, string? detalle)>
+            {
+                (cuentaDebe, movimiento.Total, 0, movimiento.Observaciones),
+                (cuentaHaber, 0, movimiento.Total, movimiento.Observaciones)
+            },
+            usuario,
+            movimiento.Fecha);
     }
 
     public async Task<List<Ingrediente>> ObtenerAlertasStockBajoAsync()

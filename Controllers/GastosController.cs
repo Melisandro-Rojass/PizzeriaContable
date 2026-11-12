@@ -158,6 +158,12 @@ public class GastosController : Controller
         var gasto = await _context.Gastos.FindAsync(id);
         if (gasto == null) return NotFound();
 
+        if (gasto.EsRegistroConsolidadoImportado)
+        {
+            TempData["ErrorMessage"] = "Los gastos diarios importados son resúmenes consolidados y no se pueden anular individualmente.";
+            return RedirectToAction(nameof(Index));
+        }
+
         if (gasto.Estado == "Anulado")
         {
             TempData["ErrorMessage"] = "El gasto ya se encuentra anulado.";
