@@ -16,29 +16,81 @@
 
 ---
 
-## 2. Requisitos del Entorno
+## 2. Requisitos
 
-1. **.NET 10 SDK** (`10.0.402` o superior instalado en el equipo).
-2. **SQL Server LocalDB** (`(localdb)\mssqllocaldb`) o SQL Server estándar.
-3. **PowerShell 5.1 o 7+** (disponible de forma nativa en Windows).
+Este proyecto está preparado para **Windows** y necesita:
 
----
+1. **.NET 10 SDK**. Comprueba la instalación con `dotnet --list-sdks`.
+2. **SQL Server Express LocalDB** (instancia `MSSQLLocalDB`), o una instancia de SQL Server accesible.
+   LocalDB se instala por separado; puedes incluirlo desde el instalador de SQL Server Express o desde Visual Studio Installer.
+3. **PowerShell 5.1 o superior** para los comandos de esta guía.
+4. **`dotnet-ef` 10.0.13**, necesario para crear/actualizar el esquema de la base de datos.
 
-## 3. Puesta en Marcha Rápida (1 Solo Paso)
+## 3. Instalación y primer inicio
 
-Ejecuta el script de inicio en la raíz del proyecto:
+Abre PowerShell en la carpeta raíz del repositorio (donde está `PizzeriaContable.csproj`) y ejecuta estos pasos.
+
+### 3.1. Comprobar e iniciar LocalDB
 
 ```powershell
-.\iniciar.ps1
+sqllocaldb info MSSQLLocalDB
+sqllocaldb start MSSQLLocalDB
 ```
 
-El script verificará el SDK de .NET, iniciará el servicio de LocalDB si estuviese detenido, sincronizará las migraciones de EF Core e iniciará la aplicación en:
-👉 **[http://localhost:5000](http://localhost:5000)**
+La cadena de conexión predeterminada está en `appsettings.json` y `appsettings.Development.json`:
+`(localdb)\MSSQLLocalDB`, base de datos `PizzeriaContableDB`, autenticación de Windows.
+Si usas otra instancia de SQL Server, actualiza `ConnectionStrings:ConexionPizzeria` en ambos archivos y asegúrate de que la cuenta tenga permisos para crear/actualizar la base de datos.
 
-### Credenciales de Acceso Inicial:
-- **Usuario:** `admin@pizzeria.local`
-- **Contraseña:** `AdminPizzeria2026!`
-- **Rol:** `Administrador General`
+### 3.2. Instalar la herramienta de Entity Framework
+
+Instala la versión que corresponde a las dependencias del proyecto:
+
+```powershell
+dotnet tool install --global dotnet-ef --version 10.0.13
+```
+
+Si ya tienes `dotnet-ef` instalado, actualízalo en vez de instalarlo otra vez:
+
+```powershell
+dotnet tool update --global dotnet-ef --version 10.0.13
+```
+
+Si PowerShell no reconoce `dotnet-ef` después de la instalación, cierra y vuelve a abrir la terminal.
+
+### 3.3. Restaurar dependencias y preparar la base de datos
+
+```powershell
+dotnet restore .\PizzeriaContable.csproj
+dotnet ef database update --project .\PizzeriaContable.csproj
+```
+
+El segundo comando crea `PizzeriaContableDB` si aún no existe y aplica las migraciones. Es necesario ejecutarlo antes del primer inicio: la aplicación inicializa datos de ejemplo al arrancar, pero no aplica las migraciones automáticamente.
+
+### 3.4. Iniciar la aplicación
+
+```powershell
+dotnet run --project .\PizzeriaContable.csproj --urls http://localhost:7298
+```
+
+Abre **[http://localhost:7298](http://localhost:7298)**. Para detener el servidor, presiona `Ctrl+C` en la terminal.
+
+También existe `.\iniciar.ps1`, que intenta preparar la base de datos e iniciar el sitio, pero está configurado con la ruta fija `C:\Proyectos\PizzeriaContable`. Si clonaste el repositorio en otra ubicación, usa los comandos anteriores.
+
+### Acceso inicial
+
+En la primera ejecución se crean los roles, los datos de muestra y el usuario administrador:
+
+- **Usuario:** `admin` (también puedes iniciar sesión con `admin@pizzeria.local`)
+- **Contraseña predeterminada:** `AdminPizzeria2026!`
+- **Rol:** `Administrador`
+
+Antes del primer inicio puedes definir otra contraseña inicial en PowerShell:
+
+```powershell
+$env:PIZZERIA_ADMIN_PASSWORD = "EscribeUnaClaveSegura"
+```
+
+Después ejecuta el comando de inicio en esa misma terminal. Esta configuración solo se utiliza cuando se crea el primer administrador; no cambia la contraseña de una cuenta ya existente. Cambia la contraseña predeterminada después del primer acceso.
 
 ---
 
